@@ -1,63 +1,65 @@
 #include "GameObject.h"
+
 #include <algorithm>
-#include "IComponent.h"
+
+#include "Component.h"
 #include "Debug.h"
 
-GameObject::GameObject()
+CGameObject::CGameObject()
 {
 	
 }
 
-GameObject::~GameObject()
+CGameObject::~CGameObject()
 {
-	for (auto component : this->ComponentsToAdd)
+	for (CComponent* const component : mComponentsToAdd)
 	{
 		delete component;
 	}
 
-	for (auto component : this->Components)
+	for (CComponent* const component : mComponents)
 	{
 		delete component;
 	}
 }
 
-void GameObject::RemoveComponent(IComponent* component)
+void CGameObject::RemoveComponent(CComponent* const component)
 {
-	this->ComponentsToRemove.push_back(component);
+	mComponentsToRemove.push_back(component);
 }
 
-void GameObject::Update(float deltaTime)
+void CGameObject::Update(float deltaTime)
 {
-	for (auto component : this->ComponentsToAdd)
+	for (CComponent* const component : mComponentsToAdd)
 	{
-		this->Components.push_back(component);
+		mComponents.push_back(component);
 	}
-	this->ComponentsToAdd.clear();
+	mComponentsToAdd.clear();
 
-	for (auto component : this->Components)
+	for (CComponent* const component : mComponents)
 	{
 		component->Update(deltaTime);
 	}
 
-	for (auto component : this->ComponentsToRemove)
+	for (CComponent* const component : mComponentsToRemove)
 	{
-		this->Components.erase(std::remove(this->Components.begin(), this->Components.end(), component), this->Components.end());
+		mComponents.erase(std::remove(mComponents.begin(), mComponents.end(), component), mComponents.end());
 		delete component;
 	}
-	this->ComponentsToRemove.clear();
+	mComponentsToRemove.clear();
 }
 
-void GameObject::SetPosition(Vector2 vPosition, bool bSweep)
+void CGameObject::SetPosition(SVector2 position, bool sweep)
 {
-	if (bSweep)
+	if (sweep)
 	{
 		// do collision test
 	}
 
-	this->Position = vPosition;
+	mPosition = position;
 }
 
-const std::vector<IComponent*>& GameObject::GetComponents() const
+const std::vector<CComponent*>& CGameObject::GetComponents() const
 {
-	return this->Components;
+	return mComponents;
 }

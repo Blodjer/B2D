@@ -1,18 +1,18 @@
 #pragma once
 
-#include "IComponent.h"
+#include "Component.h"
 
 // sweep
 // only rootcomponent sweeps
-// setposition(Vector2 positon, bool sweep)
+// setposition(SVector2 positon, bool sweep)
 
-class ComponentCollider : public IComponent
+class CComponentCollider : public CComponent
 {
 public:
-	ComponentCollider(GameObject* pOwner);
-	virtual ~ComponentCollider();
+	CComponentCollider(CGameObject* pOwner);
+	virtual ~CComponentCollider();
 
-	virtual void DrawShape(struct SDL_Renderer* pRenderer) = 0;
+	virtual void DrawShape(class CGraphics* pGraphics) = 0;
 
 private:
 	void OnContact() {}

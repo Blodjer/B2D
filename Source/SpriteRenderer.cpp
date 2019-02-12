@@ -1,59 +1,72 @@
 #include "SpriteRenderer.h"
+
 #include <string>
-#include <map>
-#include <SDL2\SDL_image.h>
-#include <SDL2\SDL.h>
-#include "GameEngine.h"
-#include "Graphics.h"
-#include "GameObject.h"
+
 #include "Debug.h"
+#include "GameObject.h"
+#include "Shader.h"
+#include "Texture.h"
 
-SpriteRenderer::SpriteRenderer(GameObject* pOwner) : IComponentRenderer(pOwner)
+CSpriteRenderer::CSpriteRenderer(CGameObject* const owner)
+	: IComponentRenderer(owner)
 {
-	this->SetSprite("Content/Sprites/MissingTexture.png");
+	//SetSprite("Content/Sprites/MissingTexture.png");
+	SetShader(CShader::Load("Content/Shader/SpriteVS.glsl", "Content/Shader/SpriteFS.glsl"));
 }
-static std::map<SDL_Surface*, SDL_Texture*> LoadedTextures;
 
-SpriteRenderer::~SpriteRenderer()
+CSpriteRenderer::~CSpriteRenderer()
 {
-	for (auto a : LoadedTextures)
+	delete(mTexture);
+	delete(mTexture2);
+	delete(mShader);
+}
+
+void CSpriteRenderer::SetSprite(const std::string& filepath)
+{
+	if (mTexture != nullptr)
 	{
-		SDL_DestroyTexture(a.second);
+		delete(mTexture);
 	}
-	LoadedTextures.clear();
-}
-
-void SpriteRenderer::SetSprite(const std::string& filePath)
-{
-	auto graphics = GameEngine::Instance()->GetGraphicsInstance();
-	auto surface = graphics->LoadSprite(filePath);
-	if (surface == NULL)
-		surface = graphics->LoadSprite("Content/Sprites/MissingTexture.png");
-
-	this->Width = surface->w;
-	this->Height = surface->h;
-
-	if (LoadedTextures.find(surface) == LoadedTextures.end())
-	{
-		LoadedTextures[surface] = SDL_CreateTextureFromSurface(graphics->GetRenderer(), surface);
-	}
-
-	this->Texture = LoadedTextures[surface];
-}
-
-void SpriteRenderer::Draw(Graphics* graphics)
-{
-	SDL_Rect a;
-	a.x = 0;
-	a.y = 0;
-	a.w = this->Width;
-	a.h = this->Height;
-
-	SDL_Rect b;
-	b.x = -this->Width * 0.5f + this->GetWorldPosition().X;
-	b.y = -this->Height * 0.5f + this->GetWorldPosition().Y;
-	b.w = this->Width;
-	b.h = this->Height;
 	
-	graphics->BlitSurface(Texture, &a, &b);
+	//glActiveTexture(GL_TEXTURE0);
+	mTexture = new CTexture(filepath);
+
+	//glActiveTexture(GL_TEXTURE1);
+	mTexture2 = new CTexture("Content/Sprites/diff.png");
+
+	mShader->Use();
+	mShader->SetInt("ourTexture", 0);
+	mShader->SetInt("ourTextures", 1);
+	
+	mWidth = mTexture->Width;
+	mHeight = mTexture->Height;
+}
+
+void CSpriteRenderer::SetShader(class CShader* shader)
+{
+	mShader = shader;
+}
+
+void CSpriteRenderer::Draw(CGraphics* graphics)
+{
+	glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+	glBindTexture(GL_TEXTURE_2D, mTexture->Handle);
+	glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 0
+	glBindTexture(GL_TEXTURE_2D, mTexture2->Handle);
+	//glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
+
+	mShader->Use();
+
+	/*
+	glBindTexture(GL_TEXTURE_2D, mTexture->Handle);
+
+	glBegin(GL_QUADS);
+
+	glTexCoord2d(0, 0); glVertex3f(0 - mWidth /100.f, 0 - mHeight /100.f, 0);
+	glTexCoord2d(0, 1); glVertex3f(0 - mWidth /100.f, 0 + mHeight /100.f, 0);
+	glTexCoord2d(1, 1); glVertex3f(0 + mWidth /100.f, 0 + mHeight /100.f, 0);
+	glTexCoord2d(1, 0); glVertex3f(0 + mWidth /100.f, 0 - mHeight /100.f, 0);
+	
+	glEnd();
+	*/
 }

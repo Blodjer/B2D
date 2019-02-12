@@ -1,11 +1,11 @@
 #pragma once
 
-#include "IComponent.h"
+#include "Component.h"
 #include "Graphics.h"
 
-class IComponentRenderer : public IComponent
+class IComponentRenderer : public CComponent
 {
 public:
-	using IComponent::IComponent;
-	virtual void Draw(Graphics* pGraphics) = 0;
+	using CComponent::CComponent;
+	virtual void Draw(CGraphics* pGraphics) = 0;
 };

@@ -1,65 +1,66 @@
-#include <SDL2\SDL.h>
 #include "Input.h"
-#include "InputComponent.h"
-#include "GameObject.h"
-#include "PlayerController.h"
-#include "Debug.h"
 
-InputComponent::InputComponent(GameObject* pOwner) : IComponent(pOwner)
+#include "Debug.h"
+#include "GameObject.h"
+#include "InputComponent.h"
+#include "PlayerController.h"
+
+CInputComponent::CInputComponent(CGameObject* const owner)
+	: CComponent(owner)
 {
 	
 }
 
-InputComponent::~InputComponent()
+CInputComponent::~CInputComponent()
 {
-	this->ClearAllBindings();
+	ClearAllBindings();
 
-	if (this->AssignedController != NULL)
+	if (mAssignedController != NULL)
 	{
-		this->AssignedController->UnregisterInputComponent(this);
+		mAssignedController->UnregisterInputComponent(this);
 	}
 }
 
-void InputComponent::BindController(PlayerController* pController)
+void CInputComponent::BindController(CPlayerController* const controller)
 {
-	if (this->AssignedController != NULL)
+	if (mAssignedController != NULL)
 	{
-		if (this->AssignedController == pController)
+		if (mAssignedController == controller)
 			return;
 
-		this->AssignedController->UnregisterInputComponent(this);
+		mAssignedController->UnregisterInputComponent(this);
 	}
 
-	this->AssignedController = pController;
-	this->AssignedController->RegisterInputComponent(this);
+	mAssignedController = controller;
+	mAssignedController->RegisterInputComponent(this);
 }
 
-void InputComponent::BindKey(SDL_Scancode eKey, KeyEvent eKeyEvent, KeyDelegate delegate)
+void CInputComponent::BindKey(int key, EKeyEvent keyEvent, TKeyDelegate delegate)
 {
-	this->KeyDelegates[KeyBinding(eKey, eKeyEvent)] = delegate;
+	mKeyDelegates[SKeyBinding(key, keyEvent)] = delegate;
 }
 
-void InputComponent::BindAxis(SDL_Scancode eKey, AxisDelegate delegate)
+void CInputComponent::BindAxis(int key, TAxisDelegate delegate)
 {
-	this->AxisDelegates[eKey] = delegate;
+	mAxisDelegates[key] = delegate;
 }
 
-void InputComponent::ClearAllBindings()
+void CInputComponent::ClearAllBindings()
 {
-	this->KeyDelegates.clear();
-	this->AxisDelegates.clear();
+	mKeyDelegates.clear();
+	mAxisDelegates.clear();
 }
 
-void InputComponent::ProcessInputKey(SDL_Scancode eKey, KeyEvent eKeyEvent)
+void CInputComponent::ProcessInputKey(int key, EKeyEvent keyEvent)
 {
-	auto xKeyBinding = KeyBinding(eKey, eKeyEvent);
-	if (this->KeyDelegates.find(xKeyBinding) != this->KeyDelegates.end())
+	auto keyBinding = SKeyBinding(key, keyEvent);
+	if (mKeyDelegates.find(keyBinding) != mKeyDelegates.end())
 	{
-		this->KeyDelegates[xKeyBinding]();
+		mKeyDelegates[keyBinding]();
 	}
 }
 
-void InputComponent::ProcessInputAxis()
+void CInputComponent::ProcessInputAxis()
 {
 
 }

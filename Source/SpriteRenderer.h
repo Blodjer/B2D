@@ -2,19 +2,25 @@
 
 #include "IComponentRenderer.h"
 
-class SpriteRenderer : public IComponentRenderer
+class CTexture;
+class CShader;
+
+class CSpriteRenderer : public IComponentRenderer
 {
 public:
-	SpriteRenderer(GameObject* parent);
-	virtual ~SpriteRenderer();
+	CSpriteRenderer(CGameObject* const owner);
+	virtual ~CSpriteRenderer();
 
 	void SetSprite(const std::string& filepath);
+	void SetShader(CShader* shader);
 
-	virtual void Draw(Graphics* graphics);
-
-	int Width;
-	int Height;
+	virtual void Draw(CGraphics* graphics) override;
 
 private:
-	SDL_Texture* Texture;
+	int mWidth;
+	int mHeight;
+
+	CTexture* mTexture;
+	CTexture* mTexture2;
+	CShader* mShader;
 };

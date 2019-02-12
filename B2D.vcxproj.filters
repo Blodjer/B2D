@@ -31,6 +31,9 @@
     <Filter Include="Source Files\Debug">
       <UniqueIdentifier>{42527300-dc2c-4272-b61c-80c3ee06d6a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{823b00c3-6a74-4380-bb54-324328493d22}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Graphics.cpp">
@@ -72,6 +75,21 @@
     <ClCompile Include="Source\ComponentCollider.cpp">
       <Filter>Source Files\Components</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Viewport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Component.cpp">
+      <Filter>Source Files\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Graphics.h">
@@ -79,9 +97,6 @@
     </ClInclude>
     <ClInclude Include="Source\Input.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\IComponent.h">
-      <Filter>Header Files\Components</Filter>
     </ClInclude>
     <ClInclude Include="Source\GameObject.h">
       <Filter>Header Files</Filter>
@@ -135,6 +150,24 @@
       <Filter>Header Files\Components</Filter>
     </ClInclude>
     <ClInclude Include="Source\ComponentCollider.h">
+      <Filter>Header Files\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\B2DCore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Viewport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Component.h">
       <Filter>Header Files\Components</Filter>
     </ClInclude>
   </ItemGroup>

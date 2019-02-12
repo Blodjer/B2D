@@ -1,11 +1,11 @@
 #include "ComponentCollider.h"
 
-ComponentCollider::ComponentCollider(GameObject* pOwner) : IComponent(pOwner)
+CComponentCollider::CComponentCollider(CGameObject* pOwner) : CComponent(pOwner)
 {
 
 }
 
-ComponentCollider::~ComponentCollider()
+CComponentCollider::~CComponentCollider()
 {
 
 }

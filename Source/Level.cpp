@@ -3,6 +3,7 @@
 #include "Graphics.h"
 #include "Debug.h"
 #include "ComponentCollider.h"
+#include "Camera.h"
 
 /*
 receive input
@@ -17,32 +18,33 @@ SAT
 Raycast
 */
 
-Level::Level()
+CLevel::CLevel()
 {
-	
+	CCamera* pDefaultCamera = this->SpawnGameObject<CCamera>();
+	pDefaultCamera->MakeActive();
 }
 
-Level::~Level()
+CLevel::~CLevel()
 {
-	for (auto gameObject : this->GameObjects)
+	for (CGameObject* pGameObject : this->GameObjects)
 	{
-		delete gameObject;
+		delete pGameObject;
 	}
 }
 
-GameObject* Level::SpawnGameObject(Vector2 vSpawnPosition)
+CGameObject* CLevel::SpawnGameObject(SVector2 vSpawnPosition)
 {
-	return this->SpawnGameObject<GameObject>(vSpawnPosition);
+	return this->SpawnGameObject<CGameObject>(vSpawnPosition);
 }
 
-void Level::Tick(float fDeltaTime)
+void CLevel::Tick(float fDeltaTime)
 {
-	for (auto pGameObject : this->GameObjects)
+	for (CGameObject* pGameObject : this->GameObjects)
 	{
 		pGameObject->Update(fDeltaTime);
 	}
 
-	for (auto pGameObject : this->GameObjectsToAdd)
+	for (CGameObject* pGameObject : this->GameObjectsToAdd)
 	{
 		this->GameObjects.push_back(pGameObject);
 		pGameObject->Update(0.f);
@@ -52,27 +54,27 @@ void Level::Tick(float fDeltaTime)
 	this->HandleCollision();
 }
 
-void Level::HandleCollision()
+void CLevel::HandleCollision()
 {
-	std::vector<ComponentCollider*> aCollisionComponents;
+	std::vector<CComponentCollider*> aCollisionComponents;
 
-	for (auto pGameObject : this->GameObjects)
+	for (const CGameObject* pGameObject : this->GameObjects)
 	{
-		for (auto pComponent : pGameObject->GetComponents())
+		for (const CComponent* pComponent : pGameObject->GetComponents())
 		{
-			//aCollisionComponents.push_back(pComponent);
+			// aCollisionComponents.push_back(pComponent);
 		}
 	}
 
-	for (auto pComponent : aCollisionComponents)
+	for (const CComponent* pComponent : aCollisionComponents)
 	{
 		// if collision
 	}
 }
 
-void Level::Draw(Graphics* pGraphics)
+void CLevel::Draw(CGraphics* pGraphics)
 {
-	for (auto pGameObject : this->GameObjects)
+	for (const CGameObject* pGameObject : this->GameObjects)
 	{
 		pGraphics->Draw(pGameObject);
 	}

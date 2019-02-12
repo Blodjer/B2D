@@ -3,32 +3,22 @@
 #include <map>
 #include <vector>
 
-enum KeyEvent
+enum EKeyEvent
 {
 	KEY_UP,
 	KEY_DOWN
 };
 
-class Input
+class CInput
 {
-	friend class GameEngine;
+	friend class CGameEngine;
 
 public:
-	Input();
-	~Input();
-
-	bool IsKeyPressed(SDL_Scancode key);
-	bool IsKeyDown(SDL_Scancode key);
-	bool IsKeyReleased(SDL_Scancode key);
+	CInput();
+	~CInput();
 
 private:
-	void BeginNewFrame();
-	void KeyDownEvent(const SDL_Event& event);
-	void KeyUpEvent(const SDL_Event& event);
+	static void OnKey(struct GLFWwindow* window, int key, int scancode, int action, int mods);
 
-private:
-	std::map<SDL_Scancode, bool> KeysPressed;
-	std::map<SDL_Scancode, bool> KeysDown;
-	std::map<SDL_Scancode, bool> KeysReleased;
 };
 

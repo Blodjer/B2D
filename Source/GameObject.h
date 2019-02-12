@@ -3,35 +3,37 @@
 #include <vector>
 #include "Vector2.h"
 
-class GameObject
+class CComponent;
+
+class CGameObject
 {
 public:
-	GameObject();
-	~GameObject();
-
+	CGameObject();
+	virtual ~CGameObject();
+	
 	virtual void Update(float fDeltaTime);
 
 	template<class T>
 	T* AddComponent()
 	{
-		static_assert(std::is_base_of<IComponent, T>::value, "T must inherit from IComponent");
+		static_assert(std::is_base_of<CComponent, T>::value, "T must inherit from CComponent");
 
-		T* pComponent = new T(this);
-		this->ComponentsToAdd.push_back(pComponent);
-		return pComponent;
+		T* component = new T(this);
+		mComponentsToAdd.push_back(component);
+		return component;
 	}
 
-	void RemoveComponent(class IComponent* pComponent);
+	void RemoveComponent(CComponent* const pComponent);
 
-	void SetPosition(Vector2 vPosition, bool bSweep = false);
-	Vector2 GetPosition() { return this->Position; }
+	void SetPosition(SVector2 position, bool sweep = false);
+	SVector2 GetPosition() const { return mPosition; }
 
-	const std::vector<IComponent*>& GetComponents() const;
+	const std::vector<CComponent*>& GetComponents() const;
 
 private:
-	Vector2 Position = Vector2::Zero;
+	SVector2 mPosition = SVector2::Zero;
 
-	std::vector<IComponent*> ComponentsToAdd;
-	std::vector<IComponent*> Components;
-	std::vector<IComponent*> ComponentsToRemove;
+	std::vector<CComponent*> mComponentsToAdd;
+	std::vector<CComponent*> mComponents;
+	std::vector<CComponent*> mComponentsToRemove;
 };

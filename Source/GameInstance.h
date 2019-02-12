@@ -6,18 +6,18 @@
 // Handle Events
 // Pause Game
 
-class GameInstance
+class CGameInstance
 {
-	friend class GameEngine;
+	friend class CGameEngine;
 
-	GameInstance();
+	CGameInstance();
 public:
-	~GameInstance();
+	~CGameInstance();
 
 	template<class L>
 	void LoadLevel()
 	{
-		static_assert(std::is_base_of<Level, L>::value, "L must inherit from Scene");
+		static_assert(std::is_base_of<CLevel, L>::value, "L must inherit from Scene");
 
 		if (this->LoadedLevel != NULL)
 		{
@@ -27,16 +27,17 @@ public:
 		this->LoadedLevel = new L();
 	}
 
-	static class PlayerController* AddPlayerController(int iId);
+	static class CPlayerController* AddPlayerController(int iId);
 	static void RemovePlayerController(int iId);
+	static const std::map<int, CPlayerController*>* const GetPlayerControllers() { return &CGameInstance::PlayerControllers; }
 
 private:
-	void HandleInput(union SDL_Event& pEvent);
+	void HandleInput(int pEvent);
 	void Tick(float fDeltaTime);
-	void Draw(class Graphics* pGraphics);
+	void Draw(class CGraphics* pGraphics);
 
 private:
-	class Level* LoadedLevel;
-	static std::map<int, class PlayerController*> PlayerControllers;
+	class CLevel* LoadedLevel;
+	static std::map<int, class CPlayerController*> PlayerControllers;
 };
 

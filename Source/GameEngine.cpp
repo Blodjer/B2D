@@ -1,46 +1,52 @@
 #include "GameEngine.h"
-#include <SDL2\SDL.h>
-#include <iostream>
-#include <chrono>
+
 #include <algorithm>
-#include "Graphics.h"
+#include <chrono>
+#include <iostream>
+
 #include "BMath.h"
 #include "GameInstance.h"
+#include "Graphics.h"
 #include "Input.h"
+#include "Shader.h"
 
-#ifdef _DEBUG
-#include "Debug\debug_new.cpp"
-#include "Debug.h"
+#include "B2DCore.h"
+
+#include <GLFW\glfw3.h>
+
+CGameEngine::CGameEngine()
+{
+#if _DEBUG
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 1 });
 #endif
 
-const int FPS = 240;
-const int MAX_FRAME_TIME = 1000 / FPS;
+	BMath::RandomInit(time(nullptr));
 
-GameEngine::GameEngine()
+	glfwInit();
+	glfwSetErrorCallback([](int error, const char* description)
+	{
+		std::cerr << "Error: " << description << std::endl;
+	});
+
+	mGraphicsInstance = new CGraphics();
+	mGameInstance = new CGameInstance();
+}
+
+CGameEngine::~CGameEngine()
 {
-	BMath::RandomInit(time(NULL));
 	
-	SDL_Init(SDL_INIT_EVERYTHING);
-
-	this->GraphicsI = new Graphics();
-	this->GameI = new GameInstance();
 }
 
-GameEngine::~GameEngine()
+CGameEngine* const CGameEngine::Init()
 {
-	
+	return CGameEngine::Instance();
 }
 
-GameEngine* const GameEngine::Init()
+void CGameEngine::Start()
 {
-	return GameEngine::Instance();
-}
+	GameLoop();
 
-void GameEngine::Start()
-{
-	this->GameLoop();
-
-#if DEBUG_MEMORY
+#if B2D_DEBUG_MEMORY
 	system("cls");
 	_CrtDumpMemoryLeaks();
 	check_leaks();
@@ -48,115 +54,117 @@ void GameEngine::Start()
 #endif
 }
 
-void GameEngine::GameLoop()
+void CGameEngine::GameLoop()
 {
-	Input input;
+	CInput input;
 
-	typedef std::chrono::duration<double, std::milli> duration;
-	typedef std::chrono::high_resolution_clock clock;
+#if _DEBUG
+	HANDLE pOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+#endif
+	using duration = std::chrono::duration<double, std::milli>;
+	using clock = std::chrono::high_resolution_clock;
 	std::chrono::time_point<clock> start;
 
-	int iLastTick = SDL_GetTicks();
-	while (!this->PendingShutdown)
+	int iFrames = 0;
+	int iFps = 0;
+
+	double fLastTick = glfwGetTime();
+	double fNextSecond = glfwGetTime() + 1;
+	while (!glfwWindowShouldClose(GetWindow()))
 	{
-		const int iNow = SDL_GetTicks();
-		float fDeltaTime = (iNow - iLastTick) / 1000.f;
-		iLastTick = iNow;
-		//printf("%dms      \r", static_cast<int>(fDeltaTime * 1000));
+		const double fNow = glfwGetTime();
+		const float fDeltaTime = static_cast<float>(fNow - fLastTick);
+		fLastTick = fNow;
 
-		input.BeginNewFrame();
+		if (fNextSecond < fNow)
+		{
+			iFps = iFrames;
+			iFrames = 0;
+			fNextSecond = fNow + 1;
+		}
 
+		CShader::ReloadAll();
+
+		// Events
 		start = clock::now();
-		this->HandleEvents();
+		HandleEvents();
 		duration ChronoEvents = clock::now() - start;
 
-		if (this->PendingShutdown)
-			break;
-
+		// Tick
 		start = clock::now();
-		this->Tick(fDeltaTime);
+		Tick(fDeltaTime);
 		duration ChronoTick = clock::now() - start;
 		
+		// Draw
 		start = clock::now();
-		this->Draw(this->GraphicsI);
+		Draw(mGraphicsInstance);
 		duration ChronoDraw = clock::now() - start;
-
-		if (this->PendingShutdown)
-			break;
-
-		printf("Events: %fms | Tick: %fms | Draw: %fms                       \r",
-				ChronoEvents.count(), ChronoTick.count(), ChronoDraw.count());
-
-		this->LimitFps();
-	}
-
-	this->CleanUp();
-}
-
-int iNexTick = 0;
-void GameEngine::LimitFps()
-{
-	int iNow = SDL_GetTicks();
-	if (iNexTick > iNow)
-		SDL_Delay(iNexTick - iNow);
-
-	iNexTick = iNow + (iNexTick - iNow) + MAX_FRAME_TIME;
-}
-
-void GameEngine::HandleEvents()
-{
-	SDL_PumpEvents();
-
-	SDL_Event aInputEvents[50];
-	int iEvents = SDL_PeepEvents(aInputEvents, 50, SDL_GETEVENT, SDL_KEYDOWN, SDL_MULTIGESTURE);
-
-	SDL_Event pEvent[1];
-	while (SDL_PeepEvents(pEvent, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT))
-	{
-		if (pEvent[0].type == SDL_QUIT)
-		{
-			this->Shutdown();
-			return;
-		}
-	}
 	
+#if _DEBUG
+		// Debug
+		COORD pos = { -1, -1 };
+		CONSOLE_SCREEN_BUFFER_INFO cbsi;
+		if (GetConsoleScreenBufferInfo(pOutputHandle, &cbsi))
+		{
+			pos = cbsi.dwCursorPosition;
+			SetConsoleCursorPosition(pOutputHandle, { 0, 0 });
+		}
+		
+		printf("Delta: %.2fms | Events: %.2fms | Tick: %.2fms | Draw: %.2fms | Fps: %d               ",
+			    fDeltaTime * 1000, ChronoEvents.count(), ChronoTick.count(), ChronoDraw.count(), iFps);
+		
+		if (pos.X >= 0 && pos.Y >= 0)
+		{
+			SetConsoleCursorPosition(pOutputHandle, pos);
+		}
+#endif
+		iFrames++;
+	}
+
+	CleanUp();
+}
+
+void CGameEngine::HandleEvents()
+{
+	glfwPollEvents();
+
+	/*
 	for (int i = 0; i < iEvents; i++)
 	{
-		this->GameI->HandleInput(aInputEvents[i]);
+		mGameInstance->HandleInput(aInputEvents[i]);
 	}
+	*/
 }
 
-void GameEngine::Tick(float fDeltaTime)
+void CGameEngine::Tick(float deltaTime)
 {
-	this->GameI->Tick(fDeltaTime);
+	mGameInstance->Tick(deltaTime);
 }
 
-void GameEngine::Draw(Graphics* pGraphics)
+void CGameEngine::Draw(CGraphics* const graphics)
 {
-	SDL_Texture* xRenderTarget = SDL_CreateTexture(pGraphics->GetRenderer(), SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_TARGET, 1024, 720);
-	SDL_SetRenderTarget(pGraphics->GetRenderer(), xRenderTarget);
-	
-	pGraphics->Clear();
+	graphics->Clear();
 
-	this->GameI->Draw(pGraphics);
+	mGameInstance->Draw(graphics);
 
-	SDL_SetRenderTarget(pGraphics->GetRenderer(), NULL);
-	SDL_RenderCopyEx(pGraphics->GetRenderer(), xRenderTarget, NULL, NULL, 0, NULL, SDL_FLIP_NONE);
-
-	pGraphics->Flip();
-
-	SDL_DestroyTexture(xRenderTarget);
+	graphics->Swap();
 }
 
-void GameEngine::Shutdown()
+void CGameEngine::Shutdown()
 {
-	this->PendingShutdown = true;
+	glfwSetWindowShouldClose(GetWindow(), GLFW_TRUE);
+	mPendingShutdown = true;
 }
 
-void GameEngine::CleanUp()
+void CGameEngine::CleanUp()
 {
-	delete this->GameI;
-	delete this->GraphicsI;
+	delete mGameInstance;
+	delete mGraphicsInstance;
 
-	SDL_Quit();
+	glfwTerminate();
+}
+
+GLFWwindow* const CGameEngine::GetWindow() const
+{
+	return mGraphicsInstance->GetWindow();
 }

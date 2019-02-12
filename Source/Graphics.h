@@ -1,27 +1,33 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <vector>
 
-class Graphics
+struct GLFWwindow;
+class CGameObject;
+class CShader;
+class CViewport;
+
+class CGraphics
 {
 public:
-	Graphics();
-	~Graphics();
+	CGraphics();
+	~CGraphics();
 	
-	void Draw(class GameObject* gameObject);
-	void Flip();
+	void Draw(const CGameObject* const gameObject);
+	void Draw(const CShader* const shader);
+	void Swap();
 	void Clear();
 
-	struct SDL_Surface* LoadSprite(const std::string& filePath);
-	void BlitSurface(struct SDL_Texture* texture, struct SDL_Rect* source, struct SDL_Rect* target);
+	GLFWwindow* GetWindow() const { return mWindow; }
+	CViewport* GetViewport() const { return mViewport; };
 
-	struct SDL_Renderer* GetRenderer() const;
+public:
+	void OnFramebufferSizeChanged(int width, int height);
 
 private:
-	struct SDL_Window* Window;
-	struct SDL_Renderer* Renderer;
-	
-	std::map<std::string, struct SDL_Surface*> LoadedSprites;
+	GLFWwindow* mWindow;
+	CViewport* mViewport;
+
 };
 

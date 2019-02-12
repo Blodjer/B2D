@@ -1,30 +1,29 @@
-#include <SDL2\SDL.h>
 #include "PlayerController.h"
 #include <algorithm>
 #include "InputComponent.h"
 #include "Debug.h"
 
-PlayerController::PlayerController(int Id) : Id(Id)
+CPlayerController::CPlayerController(int Id) : Id(Id)
 {
 
 }
 
-PlayerController::~PlayerController()
+CPlayerController::~CPlayerController()
 {
 
 }
 
-void PlayerController::RegisterInputComponent(InputComponent* pComponent)
+void CPlayerController::RegisterInputComponent(CInputComponent* pComponent)
 {
 	this->InputComponents.push_back(pComponent);
 }
 
-void PlayerController::UnregisterInputComponent(InputComponent* pComponent)
+void CPlayerController::UnregisterInputComponent(CInputComponent* pComponent)
 {
 	this->InputComponents.erase(std::remove(this->InputComponents.begin(), this->InputComponents.end(), pComponent), this->InputComponents.end());
 }
 
-void PlayerController::ProcessInputKey(SDL_Scancode eScancode, KeyEvent eEvent)
+void CPlayerController::ProcessInputKey(int eScancode, EKeyEvent eEvent)
 {
 	for (auto pInputComponent : this->InputComponents)
 	{
@@ -32,7 +31,7 @@ void PlayerController::ProcessInputKey(SDL_Scancode eScancode, KeyEvent eEvent)
 	}
 }
 
-void PlayerController::ProcessInputAxis()
+void CPlayerController::ProcessInputAxis()
 {
 	for (auto pInputComponent : this->InputComponents)
 	{

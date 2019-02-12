@@ -1,48 +1,32 @@
-#include <SDL2\SDL.h>
 #include "Input.h"
-#include <algorithm>
 #include "Debug.h"
+#include "GameEngine.h"
+#include "PlayerController.h"
+#include "GameInstance.h"
+#include "Shader.h"
+#include <GLFW\glfw3.h>
 
-Input::Input()
+CInput::CInput()
+{
+	glfwSetKeyCallback(CGameEngine::Instance()->GetWindow(), CInput::OnKey);
+}
+
+CInput::~CInput()
 {
 
 }
 
-Input::~Input()
+void CInput::OnKey(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		CGameEngine::Instance()->Shutdown();
 
-}
+	if (key == GLFW_KEY_F5 && action == GLFW_PRESS)
+		CShader::ReloadAll();
 
-void Input::BeginNewFrame()
-{
-	this->KeysPressed.clear();
-	this->KeysDown.clear();
-	this->KeysReleased.clear();
-}
-
-void Input::KeyDownEvent(const SDL_Event & event)
-{
-	this->KeysPressed[event.key.keysym.scancode] = true;
-	this->KeysDown[event.key.keysym.scancode] = true;
-}
-
-void Input::KeyUpEvent(const SDL_Event & event)
-{
-	this->KeysReleased[event.key.keysym.scancode] = true;
-	this->KeysDown[event.key.keysym.scancode] = false;
-}
-
-bool Input::IsKeyPressed(SDL_Scancode key)
-{
-	return this->KeysPressed[key];
-}
-
-bool Input::IsKeyDown(SDL_Scancode key)
-{
-	return this->KeysDown[key];
-}
-
-bool Input::IsKeyReleased(SDL_Scancode key)
-{
-	return this->KeysReleased[key];
+	auto aPlayerControllers = CGameEngine::Instance()->GetGameInstance()->GetPlayerControllers();
+	for (const auto& pPlayerController : *aPlayerControllers)
+	{
+		pPlayerController.second->ProcessInputKey(key, (EKeyEvent)action);
+	}
 }

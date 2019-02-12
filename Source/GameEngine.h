@@ -1,17 +1,24 @@
 #pragma once
 
-class GameEngine
-{
-	GameEngine();
-public:
-	~GameEngine();
+class CGameInstance;
+class CGraphics;
+struct GLFWwindow;
 
-	static GameEngine* Instance() {
-		static GameEngine GameEngineI;
-		return &GameEngineI;
+class CGameEngine
+{
+	CGameEngine();
+	CGameEngine(const CGameEngine&) = delete;
+	void operator=(const CGameEngine&) = delete;
+
+public:
+	~CGameEngine();
+
+	static CGameEngine* const Instance() {
+		static CGameEngine msGameEngine;
+		return &msGameEngine;
 	}
 
-	static GameEngine* const Init();
+	static CGameEngine* const Init();
 	void Start();
 	void Shutdown();
 
@@ -19,18 +26,18 @@ private:
 	void GameLoop();
 	void HandleEvents();
 	void Tick(float deltaTime);
-	void LimitFps();
-	void Draw(class Graphics* graphics);
+	void Draw(CGraphics* const graphics);
 
 	void CleanUp();
 
 public:
-	class Graphics* const GetGraphicsInstance() const { return this->GraphicsI; }
-	class GameInstance* const GetGameInstance() const { return this->GameI; }
+	CGameInstance* const GetGameInstance() const { return mGameInstance; }
+	CGraphics* const GetGraphicsInstance() const { return mGraphicsInstance; }
+	GLFWwindow* const GetWindow() const;
 
 private:
-	bool PendingShutdown = false;
+	bool mPendingShutdown = false;
 
-	class Graphics* GraphicsI;
-	class GameInstance* GameI;
+	CGameInstance* mGameInstance;
+	CGraphics* mGraphicsInstance;
 };

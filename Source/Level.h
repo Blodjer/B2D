@@ -3,18 +3,18 @@
 #include <vector>
 #include "Vector2.h"
 
-class Level
+class CLevel
 {
 public:
-	Level();
-	virtual ~Level();
+	CLevel();
+	virtual ~CLevel();
 
-	class GameObject* SpawnGameObject(Vector2 vSpawnPosition = Vector2::Zero);
+	class CGameObject* SpawnGameObject(SVector2 vSpawnPosition = SVector2::Zero);
 
 	template<class T>
-	T* SpawnGameObject(Vector2 vSpawnPosition = Vector2::Zero)
+	T* SpawnGameObject(SVector2 vSpawnPosition = SVector2::Zero)
 	{
-		static_assert(std::is_base_of<GameObject, T>::value, "T must inherit from GameObject");
+		static_assert(std::is_base_of<CGameObject, T>::value, "T must inherit from CGameObject");
 
 		T* pGameObject = new T();
 		pGameObject->SetPosition(vSpawnPosition);
@@ -27,10 +27,10 @@ public:
 	void Tick(float fDeltaTime);
 	void HandleCollision();
 
-	void Draw(class Graphics* pGraphics);
+	void Draw(class CGraphics* pGraphics);
 
 private:
-	std::vector<class GameObject*> GameObjectsToAdd;
-	std::vector<class GameObject*> GameObjects;
+	std::vector<class CGameObject*> GameObjectsToAdd;
+	std::vector<class CGameObject*> GameObjects;
 };
 

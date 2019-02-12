@@ -1,28 +1,27 @@
 #include "BoxCollider.h"
-#include <SDL2\SDL.h>
+#include "Graphics.h"
 
-BoxCollider::BoxCollider(GameObject* pOwner) : ComponentCollider(pOwner)
+CBoxCollider::CBoxCollider(CGameObject* pOwner) : CComponentCollider(pOwner)
 {
 
 }
 
-BoxCollider::~BoxCollider()
+CBoxCollider::~CBoxCollider()
 {
 
 }
 
-void BoxCollider::DrawShape(SDL_Renderer* pRenderer)
+void CBoxCollider::DrawShape(CGraphics* pGraphics)
 {
-	SDL_Rect xRect = this->GetRect();
-	SDL_RenderDrawRect(pRenderer, &xRect);
+	
 }
 
-void BoxCollider::SetSize(float fWidth, float fHeight)
+void CBoxCollider::SetSize(float fWidth, float fHeight)
 {
-	this->Size = Vector2(fWidth, fHeight);
+	this->Size = SVector2(fWidth, fHeight);
 }
-
-SDL_Rect BoxCollider::GetRect()
+/*
+SDL_Rect CBoxCollider::GetRect()
 {
 	auto vWorldPosition = this->GetWorldPosition();
 	SDL_Rect xRect;
@@ -32,3 +31,4 @@ SDL_Rect BoxCollider::GetRect()
 	xRect.h = this->Size.Y;
 	return xRect;
 }
+*/

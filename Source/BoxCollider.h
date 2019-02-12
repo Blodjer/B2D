@@ -2,20 +2,19 @@
 
 #include "ComponentCollider.h"
 
-class BoxCollider : public ComponentCollider
+class CBoxCollider : public CComponentCollider
 {
 public:
-	BoxCollider(GameObject* pOwner);
-	virtual ~BoxCollider();
+	CBoxCollider(CGameObject* pOwner);
+	virtual ~CBoxCollider();
 
-	void DrawShape(struct SDL_Renderer* pRenderer);
+	void DrawShape(CGraphics* pGraphics);
 
 	void SetSize(float fWidth, float fHeight);
 
-	struct SDL_Rect GetRect();
+	//struct SDL_Rect GetRect();
 
 private:
-	Vector2 Size;
+	SVector2 Size;
 
 };
-

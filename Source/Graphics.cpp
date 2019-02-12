@@ -1,77 +1,174 @@
 #include "Graphics.h"
-#include <SDL2\SDL.h>
-#include <SDL2\SDL_image.h>
-#include "GameObject.h"
-#include "IComponentRenderer.h"
+
+#include <GL\glew.h>
+#include <GLFW\glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <iostream>
+
+#include "Camera.h"
 #include "ComponentCollider.h"
 #include "Debug.h"
+#include "GameObject.h"
+#include "IComponentRenderer.h"
+#include "Shader.h"
+#include "Viewport.h"
 
-Graphics::Graphics()
+CGraphics::CGraphics()
 {
-	SDL_CreateWindowAndRenderer(1024, 720, 0, &this->Window, &this->Renderer);
-	SDL_SetWindowTitle(this->Window, "HelloGameTitle");
-	SDL_SetRenderDrawBlendMode(this->Renderer, SDL_BLENDMODE_BLEND);
-}
+	mWindow = glfwCreateWindow(1280, 720, "Game", nullptr, nullptr);
+	glfwSetWindowUserPointer(mWindow, this);
+	glfwMakeContextCurrent(mWindow);
+	glewInit();
 
-Graphics::~Graphics()
-{
-	SDL_DestroyWindow(this->Window);
-	SDL_DestroyRenderer(this->Renderer);
-
-	for (auto pSprite : this->LoadedSprites)
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 	{
-		SDL_FreeSurface(pSprite.second);
-	}
-	this->LoadedSprites.clear();
+		std::cerr << message << std::endl;
+	}, nullptr);
+
+	printf("Version:  %s\n", glGetString(GL_VERSION));
+	printf("Vendor:	  %s\n", glGetString(GL_VENDOR));
+	printf("Renderer: %s\n\n", glGetString(GL_RENDERER));
+
+	glfwSetFramebufferSizeCallback(mWindow, [](GLFWwindow* window, int width, int height) {
+		CGraphics* pGraphics = (CGraphics*)glfwGetWindowUserPointer(window);
+		pGraphics->OnFramebufferSizeChanged(width, height);
+	});
+
+	glfwSwapInterval(1);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_ALPHA_TEST);
+	glAlphaFunc(GL_GREATER, 0.4f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	mViewport = new CViewport(0, 0, 1280, 720);
+
+	const float vertices[] = {
+		-0.5f, -0.5f,	0.0f, 0.0f,
+		 0.5f, -0.5f,	1.0f, 0.0f,
+		-0.5f,  0.5f,	0.0f, 1.0f,
+		 0.5f,  0.5f,	1.0f, 1.0f,
+	};
+
+	GLuint VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 }
 
-void Graphics::Draw(GameObject* pGameObject)
+CGraphics::~CGraphics()
 {
-	for (auto pComponent : pGameObject->GetComponents())
+	CShader::UnloadAll();
+
+	glfwDestroyWindow(mWindow);
+
+	delete mViewport;
+}
+
+void CGraphics::Draw(const CGameObject* const gameObject)
+{
+	mViewport->Use();
+	CCamera* const pCamera = mViewport->GetCamera();
+	if (pCamera == nullptr)
 	{
-		auto pComponentRenderer = dynamic_cast<IComponentRenderer*>(pComponent);
-		if (pComponentRenderer != NULL)
-			pComponentRenderer->Draw(this);
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		return;
 	}
 
-	Uint8 r, g, b, a;
-	SDL_GetRenderDrawColor(this->Renderer, &r, &g, &b, &a);
-	SDL_SetRenderDrawColor(this->Renderer, 255, 0, 255, SDL_ALPHA_OPAQUE);
-	for (auto pComponent : pGameObject->GetComponents())
+	for (auto component : gameObject->GetComponents())
 	{
-		auto pComponentCollider = dynamic_cast<ComponentCollider*>(pComponent);
-		if (pComponentCollider != NULL)
-			pComponentCollider->DrawShape(this->Renderer);
+		auto componentRenderer = dynamic_cast<IComponentRenderer*>(component);
+		if (componentRenderer != nullptr)
+			componentRenderer->Draw(this);
 	}
-	SDL_SetRenderDrawColor(this->Renderer, r, g, b, a);
-}
 
-void Graphics::Flip()
-{
-	SDL_RenderPresent(this->Renderer);
-}
-
-void Graphics::Clear()
-{
-	SDL_RenderClear(this->Renderer);
-}
-
-SDL_Surface* Graphics::LoadSprite(const std::string& filePath)
-{
-	if (this->LoadedSprites.find(filePath) == LoadedSprites.end())
+	for (auto component : gameObject->GetComponents())
 	{
-		this->LoadedSprites[filePath] = IMG_Load(filePath.c_str());
+		auto componentCollider = dynamic_cast<CComponentCollider*>(component);
+		if (componentCollider != nullptr)
+			componentCollider->DrawShape(this);
 	}
 
-	return this->LoadedSprites[filePath];
+	if (gameObject->GetComponents().size() == 1)
+		return;
+
+	glm::mat4 model;
+	//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(100, 100, 100));
+
+	if (glfwGetKey(mWindow, GLFW_KEY_F3) == GLFW_PRESS)
+		pCamera->SetProjection(CCamera::EProjection::Perspective);
+	if (glfwGetKey(mWindow, GLFW_KEY_F4) == GLFW_PRESS)
+		pCamera->SetProjection(CCamera::EProjection::Orthographic);
+
+	if (glfwGetKey(mWindow, GLFW_KEY_F1) == GLFW_PRESS)
+	{
+		CShader* const wireframeShader = CShader::Load("Content/Shader/SpriteVS.glsl", "Content/Shader/FillFS.glsl");
+		wireframeShader->Use();
+		wireframeShader->SetMatrix("model", glm::value_ptr(model));
+		wireframeShader->SetMatrix("view", pCamera->GetViewMatrix());
+		wireframeShader->SetMatrix("projection", pCamera->GetProjectionMatrix());
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+		delete wireframeShader;
+	}
+
+	CShader* const currentShader = CShader::Load("Content/Shader/SpriteVS.glsl", "Content/Shader/SpriteFS.glsl");
+	currentShader->Use();
+	currentShader->SetMatrix("model", glm::value_ptr(model));
+	currentShader->SetMatrix("view", pCamera->GetViewMatrix());
+	currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix());
+	static float f = 0.0f;
+	f += 0.016f;
+	currentShader->SetFloat("rotation", f);
+	currentShader->SetInt("ourTexture", 0);
+	currentShader->SetInt("ourTextures", 1);
+	
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	model = glm::translate(glm::mat4(), glm::vec3(5, 0, 100));
+	model = glm::scale(model, glm::vec3(100, 100, 100));
+	currentShader->SetMatrix("model", glm::value_ptr(model));
+	currentShader->SetMatrix("view", pCamera->GetViewMatrix());
+	currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix());
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	//delete currentShader;
 }
 
-void Graphics::BlitSurface(SDL_Texture* texture, SDL_Rect* source, SDL_Rect* target)
+void CGraphics::Draw(const CShader* const shader)
 {
-	SDL_RenderCopy(this->Renderer, texture, source, target);
+	shader->Use();
 }
 
-SDL_Renderer* Graphics::GetRenderer() const
+void CGraphics::Swap()
 {
-	return this->Renderer;
+	glfwSwapBuffers(mWindow);
+}
+
+void CGraphics::Clear()
+{
+	glClearColor(0.7f, 0, 0.7f, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void CGraphics::OnFramebufferSizeChanged(int width, int height)
+{
+	mViewport->SetSize(width, height);
 }

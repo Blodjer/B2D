@@ -1,4 +1,4 @@
 #include "Vector2.h"
 
-const Vector2 Vector2::Zero(0, 0);
-const Vector2 Vector2::One(1, 1);
+const SVector2 SVector2::Zero(0, 0);
+const SVector2 SVector2::One(1, 1);

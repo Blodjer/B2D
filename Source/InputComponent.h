@@ -1,52 +1,55 @@
 #pragma once
 
 #include <map>
-#include "IComponent.h"
+
+#include "Component.h"
 #include "Delegate.h"
 
-DECLARE_DELEGATE(KeyDelegate);
-DECLARE_DELEGATE(AxisDelegate, float);
+DECLARE_DELEGATE(TKeyDelegate);
+DECLARE_DELEGATE(TAxisDelegate, float);
 
-class InputComponent : public IComponent
+class CPlayerController;
+
+class CInputComponent : public CComponent
 {
-	friend class PlayerController;
+	friend class CPlayerController;
 
 public:
-	InputComponent(GameObject* pOwner);
-	virtual ~InputComponent();
+	CInputComponent(CGameObject* const owner);
+	virtual ~CInputComponent();
 
-	void BindController(class PlayerController* pController);
-	void BindKey(SDL_Scancode eKey, KeyEvent eKeyEvent, KeyDelegate delegate);
-	void BindAxis(SDL_Scancode eKey, AxisDelegate delegate);
+	void BindController(CPlayerController* const controller);
+	void BindKey(int key, EKeyEvent keyEvent, TKeyDelegate delegate);
+	void BindAxis(int key, TAxisDelegate delegate);
 	void ClearAllBindings();
 
 private:
-	void ProcessInputKey(SDL_Scancode eKey, KeyEvent eKeyEvent);
+	void ProcessInputKey(int key, EKeyEvent keyEvent);
 	void ProcessInputAxis();
 
 private:
-	PlayerController* AssignedController;
+	CPlayerController* mAssignedController;
 
-	struct KeyBinding
+	struct SKeyBinding
 	{
-		SDL_Scancode Scancode;
-		KeyEvent Event;
+		int Scancode;
+		EKeyEvent Event;
 
-		KeyBinding(SDL_Scancode eScancode, KeyEvent eKeyEvent)
+		SKeyBinding(int eScancode, EKeyEvent eKeyEvent)
 			: Scancode(eScancode), Event(eKeyEvent) {}
 
-		bool const operator==(const KeyBinding& o) const
+		bool const operator==(const SKeyBinding& o) const
 		{
 			return Scancode == o.Scancode && Event == o.Event;
 		}
 
-		bool const operator<(const KeyBinding& o) const
+		bool const operator<(const SKeyBinding& o) const
 		{
 			return std::tie(Scancode, Event) < std::tie(o.Scancode, o.Event);
 			return Scancode < o.Scancode || (Scancode == o.Scancode && Event < o.Event);
 		}
 	};
 
-	std::map<KeyBinding, KeyDelegate> KeyDelegates;
-	std::map<SDL_Scancode, AxisDelegate> AxisDelegates;
+	std::map<SKeyBinding, TKeyDelegate> mKeyDelegates;
+	std::map<int, TAxisDelegate> mAxisDelegates;
 };

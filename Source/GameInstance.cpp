@@ -1,45 +1,45 @@
 #include "GameInstance.h"
 #include "GameEngine.h"
-#include <SDL2\SDL.h>
 #include <algorithm>
 #include "PlayerController.h"
 #include "Level.h"
 #include "Input.h"
 #include "Debug.h"
 
-std::map<int, PlayerController*> GameInstance::PlayerControllers;
+std::map<int, CPlayerController*> CGameInstance::PlayerControllers;
 
-GameInstance::GameInstance()
+CGameInstance::CGameInstance()
 {
 
 }
 
-GameInstance::~GameInstance()
+CGameInstance::~CGameInstance()
 {
 	delete this->LoadedLevel;
 
-	for (auto pPlayerController : this->PlayerControllers)
+	for (const auto& pPlayerController : this->PlayerControllers)
 	{
 		delete pPlayerController.second;
 	}
 	this->PlayerControllers.clear();
 }
 
-void GameInstance::HandleInput(SDL_Event& pEvent)
+void CGameInstance::HandleInput(int pEvent)
 {
+	/*
 	if (pEvent.type == SDL_KEYDOWN)
 	{
 		if (pEvent.key.repeat == 0)
 		{
 			if (pEvent.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
 			{
-				GameEngine::Instance()->Shutdown();
+				CGameEngine::Instance()->Shutdown();
 				return;
 			}
 
 			for (auto pPlayerController : this->PlayerControllers)
 			{
-				pPlayerController.second->ProcessInputKey(pEvent.key.keysym.scancode, KeyEvent::KEY_DOWN);
+				pPlayerController.second->ProcessInputKey(pEvent.key.keysym.scancode, EKeyEvent::KEY_DOWN);
 			}
 		}
 	}
@@ -49,13 +49,14 @@ void GameInstance::HandleInput(SDL_Event& pEvent)
 		{
 			for (auto pPlayerController : this->PlayerControllers)
 			{
-				pPlayerController.second->ProcessInputKey(pEvent.key.keysym.scancode, KeyEvent::KEY_UP);
+				pPlayerController.second->ProcessInputKey(pEvent.key.keysym.scancode, EKeyEvent::KEY_UP);
 			}
 		}
 	}
+	*/
 }
 
-void GameInstance::Tick(float fDeltaTime)
+void CGameInstance::Tick(float fDeltaTime)
 {
 	if (this->LoadedLevel != NULL)
 	{
@@ -63,7 +64,7 @@ void GameInstance::Tick(float fDeltaTime)
 	}
 }
 
-void GameInstance::Draw(Graphics* pGraphics)
+void CGameInstance::Draw(CGraphics* pGraphics)
 {
 	if (this->LoadedLevel != NULL)
 	{
@@ -71,17 +72,17 @@ void GameInstance::Draw(Graphics* pGraphics)
 	}
 }
 
-PlayerController* GameInstance::AddPlayerController(int iId)
+CPlayerController* CGameInstance::AddPlayerController(int iId)
 {
 	if (PlayerControllers.find(iId) == PlayerControllers.end())
 	{
-		PlayerControllers[iId] = new PlayerController(iId);
+		PlayerControllers[iId] = new CPlayerController(iId);
 	}
 
 	return PlayerControllers[iId];
 }
 
-void GameInstance::RemovePlayerController(int iId)
+void CGameInstance::RemovePlayerController(int iId)
 {
 	PlayerControllers.erase(iId);
 }
