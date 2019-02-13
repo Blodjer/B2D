@@ -3,10 +3,6 @@
 *.vcxproj.user
 *.suo
 
-# Project
-/Bin/
-/Tmp/
-
 # Prerequisites
 *.d
 
@@ -39,3 +35,8 @@
 *.exe
 *.out
 *.app
+
+# Project
+/Bin/
+/Tmp/
+!/Lib/*
