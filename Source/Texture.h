@@ -5,12 +5,12 @@
 class CTexture
 {
 public:
-	CTexture(std::string filename);
+	CTexture(std::string const& filename);
 	~CTexture() = default;
 
-	int Width;
-	int Height;
+	int mWidth;
+	int mHeight;
 
-	int Handle;
+	int mHandle;
 };
 

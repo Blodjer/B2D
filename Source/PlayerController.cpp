@@ -3,7 +3,7 @@
 #include "InputComponent.h"
 #include "Debug.h"
 
-CPlayerController::CPlayerController(int Id) : Id(Id)
+CPlayerController::CPlayerController(int id) : mId(id)
 {
 
 }
@@ -13,28 +13,28 @@ CPlayerController::~CPlayerController()
 
 }
 
-void CPlayerController::RegisterInputComponent(CInputComponent* pComponent)
+void CPlayerController::RegisterInputComponent(CInputComponent* component)
 {
-	this->InputComponents.push_back(pComponent);
+	mInputComponents.push_back(component);
 }
 
-void CPlayerController::UnregisterInputComponent(CInputComponent* pComponent)
+void CPlayerController::UnregisterInputComponent(CInputComponent* component)
 {
-	this->InputComponents.erase(std::remove(this->InputComponents.begin(), this->InputComponents.end(), pComponent), this->InputComponents.end());
+	mInputComponents.erase(std::remove(mInputComponents.begin(), mInputComponents.end(), component), mInputComponents.end());
 }
 
-void CPlayerController::ProcessInputKey(int eScancode, EKeyEvent eEvent)
+void CPlayerController::ProcessInputKey(int scancode, EKeyEvent event)
 {
-	for (auto pInputComponent : this->InputComponents)
+	for (CInputComponent* const inputComponent : mInputComponents)
 	{
-		pInputComponent->ProcessInputKey(eScancode, eEvent);
+		inputComponent->ProcessInputKey(scancode, event);
 	}
 }
 
 void CPlayerController::ProcessInputAxis()
 {
-	for (auto pInputComponent : this->InputComponents)
+	for (CInputComponent* const inputComponent : mInputComponents)
 	{
-		pInputComponent->ProcessInputAxis();
+		inputComponent->ProcessInputAxis();
 	}
 }

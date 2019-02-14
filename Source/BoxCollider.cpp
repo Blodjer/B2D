@@ -1,7 +1,7 @@
 #include "BoxCollider.h"
 #include "Graphics.h"
 
-CBoxCollider::CBoxCollider(CGameObject* pOwner) : CComponentCollider(pOwner)
+CBoxCollider::CBoxCollider(CGameObject* owner) : CComponentCollider(owner)
 {
 
 }
@@ -11,14 +11,14 @@ CBoxCollider::~CBoxCollider()
 
 }
 
-void CBoxCollider::DrawShape(CGraphics* pGraphics)
+void CBoxCollider::DrawShape(CGraphics* graphics)
 {
 	
 }
 
-void CBoxCollider::SetSize(float fWidth, float fHeight)
+void CBoxCollider::SetSize(float width, float height)
 {
-	this->Size = SVector2(fWidth, fHeight);
+	mSize = SVector2(width, height);
 }
 /*
 SDL_Rect CBoxCollider::GetRect()

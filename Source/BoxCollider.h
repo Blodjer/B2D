@@ -8,13 +8,13 @@ public:
 	CBoxCollider(CGameObject* pOwner);
 	virtual ~CBoxCollider();
 
-	void DrawShape(CGraphics* pGraphics);
+	void DrawShape(CGraphics* graphics);
 
-	void SetSize(float fWidth, float fHeight);
+	void SetSize(float width, float height);
 
 	//struct SDL_Rect GetRect();
 
 private:
-	SVector2 Size;
+	SVector2 mSize;
 
 };

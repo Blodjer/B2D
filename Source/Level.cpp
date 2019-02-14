@@ -20,62 +20,62 @@ Raycast
 
 CLevel::CLevel()
 {
-	CCamera* pDefaultCamera = this->SpawnGameObject<CCamera>();
-	pDefaultCamera->MakeActive();
+	CCamera* defaultCamera = SpawnGameObject<CCamera>();
+	defaultCamera->MakeActive();
 }
 
 CLevel::~CLevel()
 {
-	for (CGameObject* pGameObject : this->GameObjects)
+	for (CGameObject* gameObject : mGameObjects)
 	{
-		delete pGameObject;
+		delete gameObject;
 	}
 }
 
-CGameObject* CLevel::SpawnGameObject(SVector2 vSpawnPosition)
+CGameObject* CLevel::SpawnGameObject(SVector2 spawnPosition)
 {
-	return this->SpawnGameObject<CGameObject>(vSpawnPosition);
+	return SpawnGameObject<CGameObject>(spawnPosition);
 }
 
-void CLevel::Tick(float fDeltaTime)
+void CLevel::Tick(float deltaTime)
 {
-	for (CGameObject* pGameObject : this->GameObjects)
+	for (CGameObject* gameObject : mGameObjects)
 	{
-		pGameObject->Update(fDeltaTime);
+		gameObject->Update(deltaTime);
 	}
 
-	for (CGameObject* pGameObject : this->GameObjectsToAdd)
+	for (CGameObject* gameObject : mGameObjectsToAdd)
 	{
-		this->GameObjects.push_back(pGameObject);
-		pGameObject->Update(0.f);
+		mGameObjects.push_back(gameObject);
+		gameObject->Update(0.f);
 	}
-	this->GameObjectsToAdd.clear();
+	mGameObjectsToAdd.clear();
 
-	this->HandleCollision();
+	HandleCollision();
 }
 
 void CLevel::HandleCollision()
 {
-	std::vector<CComponentCollider*> aCollisionComponents;
+	std::vector<CComponentCollider*> collisionComponents;
 
-	for (const CGameObject* pGameObject : this->GameObjects)
+	for (const CGameObject* gameObject : mGameObjects)
 	{
-		for (const CComponent* pComponent : pGameObject->GetComponents())
+		for (const CComponent* component : gameObject->GetComponents())
 		{
 			// aCollisionComponents.push_back(pComponent);
 		}
 	}
 
-	for (const CComponent* pComponent : aCollisionComponents)
+	for (const CComponent* component : collisionComponents)
 	{
 		// if collision
 	}
 }
 
-void CLevel::Draw(CGraphics* pGraphics)
+void CLevel::Draw(CGraphics* graphics)
 {
-	for (const CGameObject* pGameObject : this->GameObjects)
+	for (const CGameObject* gameObject : mGameObjects)
 	{
-		pGraphics->Draw(pGameObject);
+		graphics->Draw(gameObject);
 	}
 }

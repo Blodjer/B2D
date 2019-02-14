@@ -3,6 +3,9 @@
 #include <map>
 #include <vector>
 
+class CGameEngine;
+struct GLFWwindow;
+
 enum EKeyEvent
 {
 	KEY_UP,
@@ -11,14 +14,14 @@ enum EKeyEvent
 
 class CInput
 {
-	friend class CGameEngine;
+	friend CGameEngine;
 
 public:
 	CInput();
 	~CInput();
 
 private:
-	static void OnKey(struct GLFWwindow* window, int key, int scancode, int action, int mods);
+	static void OnKey(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 };
 

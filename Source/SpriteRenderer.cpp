@@ -38,8 +38,8 @@ void CSpriteRenderer::SetSprite(const std::string& filepath)
 	mShader->SetInt("ourTexture", 0);
 	mShader->SetInt("ourTextures", 1);
 	
-	mWidth = mTexture->Width;
-	mHeight = mTexture->Height;
+	mWidth = mTexture->mWidth;
+	mHeight = mTexture->mHeight;
 }
 
 void CSpriteRenderer::SetShader(class CShader* shader)
@@ -50,9 +50,9 @@ void CSpriteRenderer::SetShader(class CShader* shader)
 void CSpriteRenderer::Draw(CGraphics* graphics)
 {
 	glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
-	glBindTexture(GL_TEXTURE_2D, mTexture->Handle);
+	glBindTexture(GL_TEXTURE_2D, mTexture->mHandle);
 	glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 0
-	glBindTexture(GL_TEXTURE_2D, mTexture2->Handle);
+	glBindTexture(GL_TEXTURE_2D, mTexture2->mHandle);
 	//glActiveTexture(GL_TEXTURE0 + 0); // Texture unit 0
 
 	mShader->Use();

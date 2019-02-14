@@ -12,7 +12,7 @@ class CPlayerController;
 
 class CInputComponent : public CComponent
 {
-	friend class CPlayerController;
+	friend CPlayerController;
 
 public:
 	CInputComponent(CGameObject* const owner);

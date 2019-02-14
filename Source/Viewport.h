@@ -2,9 +2,11 @@
 
 #include "Camera.h"
 
+class CCamera;
+
 class CViewport final
 {
-	friend class CCamera;
+	friend CCamera;
 
 public:
 	CViewport(int x, int y, int width, int height);

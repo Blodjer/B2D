@@ -24,9 +24,9 @@ void CInput::OnKey(GLFWwindow* window, int key, int scancode, int action, int mo
 	if (key == GLFW_KEY_F5 && action == GLFW_PRESS)
 		CShader::ReloadAll();
 
-	auto aPlayerControllers = CGameEngine::Instance()->GetGameInstance()->GetPlayerControllers();
-	for (const auto& pPlayerController : *aPlayerControllers)
+	auto playerControllers = CGameEngine::Instance()->GetGameInstance()->GetPlayerControllers();
+	for (const auto& playerController : *playerControllers)
 	{
-		pPlayerController.second->ProcessInputKey(key, (EKeyEvent)action);
+		playerController.second->ProcessInputKey(key, (EKeyEvent)action);
 	}
 }

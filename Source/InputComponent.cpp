@@ -15,7 +15,7 @@ CInputComponent::~CInputComponent()
 {
 	ClearAllBindings();
 
-	if (mAssignedController != NULL)
+	if (mAssignedController != nullptr)
 	{
 		mAssignedController->UnregisterInputComponent(this);
 	}
@@ -23,7 +23,7 @@ CInputComponent::~CInputComponent()
 
 void CInputComponent::BindController(CPlayerController* const controller)
 {
-	if (mAssignedController != NULL)
+	if (mAssignedController != nullptr)
 	{
 		if (mAssignedController == controller)
 			return;

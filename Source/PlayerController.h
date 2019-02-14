@@ -2,26 +2,31 @@
 
 #include <vector>
 
+class CGameInstance;
+class CInput;
+class CInputComponent;
+enum EKeyEvent;
+
 class CPlayerController
 {
-	friend class CGameInstance;
-	friend class CInputComponent;
-	friend class CInput;
+	friend CGameInstance;
+	friend CInputComponent;
+	friend CInput;
 
 	CPlayerController(int Id);
 public:
 	~CPlayerController();
 
-	const int GetId() const { return this->Id; };
+	const int GetId() const { return mId; };
 
 private:
-	void RegisterInputComponent(class CInputComponent* component);
-	void UnregisterInputComponent(class CInputComponent* component);
+	void RegisterInputComponent(CInputComponent* component);
+	void UnregisterInputComponent(CInputComponent* component);
 
-	void ProcessInputKey(int scancode, enum EKeyEvent event);
+	void ProcessInputKey(int scancode, EKeyEvent event);
 	void ProcessInputAxis();
 
 private:
-	const int Id;
-	std::vector<class CInputComponent*> InputComponents;
+	const int mId;
+	std::vector<CInputComponent*> mInputComponents;
 };

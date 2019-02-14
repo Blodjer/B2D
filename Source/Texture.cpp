@@ -163,7 +163,7 @@ GLuint png_texture_load(const char* file_name, int* width, int* height)
 	return texture;
 }
 
-CTexture::CTexture(std::string filename)
+CTexture::CTexture(std::string const& filename)
 {
-	this->Handle = png_texture_load(filename.c_str(), &this->Width, &this->Height);
+	mHandle = png_texture_load(filename.c_str(), &mWidth, &mHeight);
 }
