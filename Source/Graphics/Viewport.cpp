@@ -1,6 +1,6 @@
 #include "Viewport.h"
 
-#include <GL\glew.h>
+#include <GL/glew.h>
 
 CViewport::CViewport(int x, int y, int width, int height) :
 	mX(x), mY(y),

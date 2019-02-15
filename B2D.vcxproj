@@ -22,7 +22,6 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{EF4E713D-2DCC-4539-8F93-02627A48B85C}</ProjectGuid>
     <RootNamespace>B2D</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -84,7 +83,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <EnablePREfast>false</EnablePREfast>
@@ -103,7 +102,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <EnablePREfast>false</EnablePREfast>
@@ -123,7 +122,7 @@
     <ClCompile>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -149,7 +148,7 @@
     <ClCompile>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Include;$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -173,51 +172,51 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Source\Camera.cpp" />
-    <ClCompile Include="Source\Component.cpp" />
-    <ClCompile Include="Source\Shader.cpp" />
-    <ClCompile Include="Source\ComponentCollider.cpp" />
-    <ClCompile Include="Source\BoxCollider.cpp" />
+    <ClCompile Include="Source\Component\Component.cpp" />
+    <ClCompile Include="Source\Graphics\Shader.cpp" />
+    <ClCompile Include="Source\Component\ComponentCollider.cpp" />
+    <ClCompile Include="Source\Component\BoxCollider.cpp" />
     <ClCompile Include="Source\Debug\debug_new.cpp" />
-    <ClCompile Include="Source\GameInstance.cpp" />
+    <ClCompile Include="Source\Core\GameInstance.cpp" />
     <ClCompile Include="Source\PlayerController.cpp" />
-    <ClCompile Include="Source\InputComponent.cpp" />
+    <ClCompile Include="Source\Component\InputComponent.cpp" />
     <ClCompile Include="Source\Level.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
-    <ClCompile Include="Source\GameEngine.cpp" />
-    <ClCompile Include="Source\Graphics.cpp" />
+    <ClCompile Include="Source\Core\GameEngine.cpp" />
+    <ClCompile Include="Source\Graphics\Graphics.cpp" />
     <ClCompile Include="Source\Input.cpp" />
-    <ClCompile Include="Source\SpriteRenderer.cpp" />
-    <ClCompile Include="Source\Vector2.cpp" />
-    <ClCompile Include="Source\Texture.cpp" />
-    <ClCompile Include="Source\Viewport.cpp" />
+    <ClCompile Include="Source\Component\SpriteRenderer.cpp" />
+    <ClCompile Include="Source\Core\Vector2.cpp" />
+    <ClCompile Include="Source\Graphics\Texture.cpp" />
+    <ClCompile Include="Source\Graphics\Viewport.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Camera.h" />
-    <ClInclude Include="Source\Shader.h" />
-    <ClInclude Include="Source\B2DCore.h" />
-    <ClInclude Include="Source\BoxCollider.h" />
-    <ClInclude Include="Source\ComponentCollider.h" />
-    <ClInclude Include="Source\Debug.h" />
+    <ClInclude Include="Source\Graphics\Shader.h" />
+    <ClInclude Include="Source\Core\B2DCore.h" />
+    <ClInclude Include="Source\Component\BoxCollider.h" />
+    <ClInclude Include="Source\Component\ComponentCollider.h" />
+    <ClInclude Include="Source\Debug\Debug.h" />
     <ClInclude Include="Source\Debug\c++11.h" />
     <ClInclude Include="Source\Debug\debug_new.h" />
     <ClInclude Include="Source\Debug\fast_mutex.h" />
     <ClInclude Include="Source\Debug\_nvwa.h" />
-    <ClInclude Include="Source\GameInstance.h" />
+    <ClInclude Include="Source\Core\GameInstance.h" />
     <ClInclude Include="Source\PlayerController.h" />
-    <ClInclude Include="Source\Delegate.h" />
-    <ClInclude Include="Source\InputComponent.h" />
-    <ClInclude Include="Source\BMath.h" />
+    <ClInclude Include="Source\Core\Delegate.h" />
+    <ClInclude Include="Source\Component\InputComponent.h" />
+    <ClInclude Include="Source\Math\BMath.h" />
     <ClInclude Include="Source\Level.h" />
     <ClInclude Include="Source\GameObject.h" />
-    <ClInclude Include="Source\Component.h" />
-    <ClInclude Include="Source\GameEngine.h" />
-    <ClInclude Include="Source\Graphics.h" />
-    <ClInclude Include="Source\IComponentRenderer.h" />
+    <ClInclude Include="Source\Component\Component.h" />
+    <ClInclude Include="Source\Core\GameEngine.h" />
+    <ClInclude Include="Source\Graphics\Graphics.h" />
+    <ClInclude Include="Source\Component\IComponentRenderer.h" />
     <ClInclude Include="Source\Input.h" />
-    <ClInclude Include="Source\SpriteRenderer.h" />
-    <ClInclude Include="Source\Vector2.h" />
-    <ClInclude Include="Source\Texture.h" />
-    <ClInclude Include="Source\Viewport.h" />
+    <ClInclude Include="Source\Component\SpriteRenderer.h" />
+    <ClInclude Include="Source\Core\Vector2.h" />
+    <ClInclude Include="Source\Graphics\Texture.h" />
+    <ClInclude Include="Source\Graphics\Viewport.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

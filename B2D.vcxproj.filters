@@ -1,174 +1,136 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Header Files\Components">
+    <Filter Include="Component">
       <UniqueIdentifier>{c38adbe0-fd18-4a33-bd74-e5f221cca8b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Components">
-      <UniqueIdentifier>{1a2ff16b-1f2c-4f91-b014-315974599798}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Math">
-      <UniqueIdentifier>{3abe1228-6029-420c-86fd-22e70d7a794b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Math">
-      <UniqueIdentifier>{e1ba1557-bde6-448d-b150-dd17b6746701}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Debug">
+    <Filter Include="Debug">
       <UniqueIdentifier>{9f32587f-89f9-4731-a8aa-ee59bd3260bc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Debug">
-      <UniqueIdentifier>{42527300-dc2c-4272-b61c-80c3ee06d6a9}</UniqueIdentifier>
+    <Filter Include="Math">
+      <UniqueIdentifier>{3abe1228-6029-420c-86fd-22e70d7a794b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Graphics">
-      <UniqueIdentifier>{823b00c3-6a74-4380-bb54-324328493d22}</UniqueIdentifier>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{8924d34a-f8c3-4d2b-a92d-713e06ca542c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{a5224aea-b2c3-490f-9abd-6c1781167025}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Graphics.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Input.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GameObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\SpriteRenderer.cpp">
-      <Filter>Source Files\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Vector2.cpp">
-      <Filter>Source Files\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\InputComponent.cpp">
-      <Filter>Source Files\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\PlayerController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GameInstance.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GameEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Debug\debug_new.cpp">
-      <Filter>Source Files\Debug</Filter>
+      <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Level.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\GameEngine.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Source\BoxCollider.cpp">
-      <Filter>Source Files\Components</Filter>
+    <ClCompile Include="Source\Core\GameInstance.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ComponentCollider.cpp">
-      <Filter>Source Files\Components</Filter>
+    <ClCompile Include="Source\Graphics\Shader.cpp">
+      <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Texture.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Graphics\Texture.cpp">
+      <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Shader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Graphics\Viewport.cpp">
+      <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Camera.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\GameObject.cpp" />
+    <ClCompile Include="Source\Input.cpp" />
+    <ClCompile Include="Source\Level.cpp" />
+    <ClCompile Include="Source\PlayerController.cpp" />
+    <ClCompile Include="Source\Component\BoxCollider.cpp">
+      <Filter>Component</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Viewport.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Component\Component.cpp">
+      <Filter>Component</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Component.cpp">
-      <Filter>Source Files\Components</Filter>
+    <ClCompile Include="Source\Component\ComponentCollider.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Component\InputComponent.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Component\SpriteRenderer.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics\Graphics.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Camera.cpp" />
+    <ClCompile Include="Source\Core\Vector2.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Graphics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Input.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GameObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\IComponentRenderer.h">
-      <Filter>Header Files\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Vector2.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\SpriteRenderer.h">
-      <Filter>Header Files\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\BMath.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\InputComponent.h">
-      <Filter>Header Files\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Delegate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\PlayerController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GameInstance.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GameEngine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Debug.h">
-      <Filter>Header Files\Debug</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Debug\debug_new.h">
-      <Filter>Header Files\Debug</Filter>
+      <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="Source\Debug\_nvwa.h">
-      <Filter>Header Files\Debug</Filter>
+      <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="Source\Debug\c++11.h">
-      <Filter>Header Files\Debug</Filter>
+      <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="Source\Debug\fast_mutex.h">
-      <Filter>Header Files\Debug</Filter>
+      <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Level.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Math\BMath.h">
+      <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="Source\BoxCollider.h">
-      <Filter>Header Files\Components</Filter>
+    <ClInclude Include="Source\Component\BoxCollider.h">
+      <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="Source\ComponentCollider.h">
-      <Filter>Header Files\Components</Filter>
+    <ClInclude Include="Source\Component\Component.h">
+      <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="Source\B2DCore.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Component\ComponentCollider.h">
+      <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Texture.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Component\IComponentRenderer.h">
+      <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Shader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Component\InputComponent.h">
+      <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Camera.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Component\SpriteRenderer.h">
+      <Filter>Component</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Viewport.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Debug\Debug.h">
+      <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Component.h">
-      <Filter>Header Files\Components</Filter>
+    <ClInclude Include="Source\Core\B2DCore.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Delegate.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\GameEngine.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\GameInstance.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Graphics.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Shader.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Texture.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Viewport.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameObject.h" />
+    <ClInclude Include="Source\Input.h" />
+    <ClInclude Include="Source\Level.h" />
+    <ClInclude Include="Source\PlayerController.h" />
+    <ClInclude Include="Source\Camera.h" />
+    <ClInclude Include="Source\Core\Vector2.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

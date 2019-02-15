@@ -1,10 +1,12 @@
 #include "GameInstance.h"
+
+#include "Debug/Debug.h"
 #include "GameEngine.h"
-#include <algorithm>
-#include "PlayerController.h"
-#include "Level.h"
 #include "Input.h"
-#include "Debug.h"
+#include "Level.h"
+#include "PlayerController.h"
+
+#include <algorithm>
 
 std::map<int, CPlayerController*> CGameInstance::PlayerControllers;
 

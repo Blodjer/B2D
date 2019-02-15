@@ -1,11 +1,11 @@
 #include "Shader.h"
 
+#include "Debug/Debug.h"
+
 #include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
-#include "Debug.h"
 
 std::map<const std::string, GLuint> CShader::msLoadedShaders;
 std::vector<CShader> CShader::msShaders;

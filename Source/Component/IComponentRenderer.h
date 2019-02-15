@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Component.h"
-#include "Graphics.h"
+#include "Component/Component.h"
+#include "Graphics/Graphics.h"
 
 class IComponentRenderer : public CComponent
 {

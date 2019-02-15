@@ -1,8 +1,8 @@
-#include "Input.h"
-
-#include "Debug.h"
-#include "GameObject.h"
 #include "InputComponent.h"
+
+#include "Debug/Debug.h"
+#include "GameObject.h"
+#include "Input.h"
 #include "PlayerController.h"
 
 CInputComponent::CInputComponent(CGameObject* const owner)

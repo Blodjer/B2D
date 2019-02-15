@@ -1,19 +1,19 @@
 #include "Graphics.h"
 
-#include <GL\glew.h>
-#include <GLFW\glfw3.h>
+#include "Camera.h"
+#include "Component/ComponentCollider.h"
+#include "Component/IComponentRenderer.h"
+#include "Debug/Debug.h"
+#include "GameObject.h"
+#include "Shader.h"
+#include "Viewport.h"
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-
-#include "Camera.h"
-#include "ComponentCollider.h"
-#include "Debug.h"
-#include "GameObject.h"
-#include "IComponentRenderer.h"
-#include "Shader.h"
-#include "Viewport.h"
 
 CGraphics::CGraphics()
 {

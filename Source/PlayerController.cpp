@@ -1,7 +1,9 @@
 #include "PlayerController.h"
+
+#include "Component/InputComponent.h"
+#include "Debug/Debug.h"
+
 #include <algorithm>
-#include "InputComponent.h"
-#include "Debug.h"
 
 CPlayerController::CPlayerController(int id) : mId(id)
 {

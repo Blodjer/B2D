@@ -1,9 +1,10 @@
 #include "Level.h"
-#include "GameObject.h"
-#include "Graphics.h"
-#include "Debug.h"
-#include "ComponentCollider.h"
+
 #include "Camera.h"
+#include "Component/ComponentCollider.h"
+#include "Debug/Debug.h"
+#include "GameObject.h"
+#include "Graphics/Graphics.h"
 
 /*
 receive input

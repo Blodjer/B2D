@@ -1,9 +1,8 @@
 #include "Texture.h"
 
-#include <libpng\png.h>
-
-#include "GL\glew.h"
-#include "GLFW\glfw3.h"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <libpng/png.h>
 
 GLuint png_texture_load(const char* file_name, int* width, int* height)
 {

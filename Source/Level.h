@@ -1,7 +1,8 @@
 #pragma once
 
+#include "Core/Vector2.h"
+
 #include <vector>
-#include "Vector2.h"
 
 class CGameObject;
 class CGraphics;

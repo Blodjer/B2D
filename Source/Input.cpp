@@ -1,10 +1,12 @@
 #include "Input.h"
-#include "Debug.h"
-#include "GameEngine.h"
+
+#include "Core/GameEngine.h"
+#include "Core/GameInstance.h"
+#include "Debug/Debug.h"
+#include "Graphics/Shader.h"
 #include "PlayerController.h"
-#include "GameInstance.h"
-#include "Shader.h"
-#include <GLFW\glfw3.h>
+
+#include <GLFW/glfw3.h>
 
 CInput::CInput()
 {

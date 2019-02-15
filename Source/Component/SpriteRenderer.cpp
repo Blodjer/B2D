@@ -1,11 +1,11 @@
 #include "SpriteRenderer.h"
 
-#include <string>
-
-#include "Debug.h"
+#include "Debug/Debug.h"
 #include "GameObject.h"
-#include "Shader.h"
-#include "Texture.h"
+#include "Graphics/Shader.h"
+#include "Graphics/Texture.h"
+
+#include <string>
 
 CSpriteRenderer::CSpriteRenderer(CGameObject* const owner)
 	: IComponentRenderer(owner)

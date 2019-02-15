@@ -1,18 +1,16 @@
 #include "GameEngine.h"
 
+#include "B2DCore.h"
+#include "GameInstance.h"
+#include "Graphics/Graphics.h"
+#include "Graphics/Shader.h"
+#include "Input.h"
+#include "Math/BMath.h"
+
 #include <algorithm>
 #include <chrono>
+#include <GLFW/glfw3.h>
 #include <iostream>
-
-#include "BMath.h"
-#include "GameInstance.h"
-#include "Graphics.h"
-#include "Input.h"
-#include "Shader.h"
-
-#include "B2DCore.h"
-
-#include <GLFW\glfw3.h>
 
 CGameEngine::CGameEngine()
 {

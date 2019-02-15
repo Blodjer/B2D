@@ -1,5 +1,6 @@
 #include "BoxCollider.h"
-#include "Graphics.h"
+
+#include "Graphics/Graphics.h"
 
 CBoxCollider::CBoxCollider(CGameObject* owner) : CComponentCollider(owner)
 {

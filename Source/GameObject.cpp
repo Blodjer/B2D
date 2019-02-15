@@ -1,9 +1,9 @@
 #include "GameObject.h"
 
-#include <algorithm>
+#include "Component/Component.h"
+#include "Debug/Debug.h"
 
-#include "Component.h"
-#include "Debug.h"
+#include <algorithm>
 
 CGameObject::CGameObject()
 {

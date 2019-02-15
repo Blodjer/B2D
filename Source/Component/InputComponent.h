@@ -1,9 +1,10 @@
 #pragma once
 
-#include <map>
+#include "Component/Component.h"
+#include "Core/Delegate.h"
+#include "Input.h"
 
-#include "Component.h"
-#include "Delegate.h"
+#include <map>
 
 DECLARE_DELEGATE(TKeyDelegate);
 DECLARE_DELEGATE(TAxisDelegate, float);

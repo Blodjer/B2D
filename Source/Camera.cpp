@@ -1,9 +1,9 @@
 #include "Camera.h"
 
-#include "BMath.h"
-#include "GameEngine.h"
-#include "Graphics.h"
-#include "Viewport.h"
+#include "Core/GameEngine.h"
+#include "Graphics/Graphics.h"
+#include "Graphics/Viewport.h"
+#include "Math/BMath.h"
 
 CCamera::CCamera()
 	: CGameObject()
