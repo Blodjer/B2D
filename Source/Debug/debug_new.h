@@ -23,6 +23,8 @@
 *
 */
 
+#if B2D_DEBUG_MEMORY
+
 #ifndef NVWA_DEBUG_NEW_H
 #define NVWA_DEBUG_NEW_H
 
@@ -194,3 +196,5 @@ static debug_new_counter __debug_new_count;
 NVWA_NAMESPACE_END
 
 #endif // NVWA_DEBUG_NEW_H
+
+#endif

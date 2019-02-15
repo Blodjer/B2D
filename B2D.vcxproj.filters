@@ -100,9 +100,6 @@
     <ClInclude Include="Source\Debug\Debug.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\B2DCore.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Core\Delegate.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -130,6 +127,12 @@
     <ClInclude Include="Source\PlayerController.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\Core\Vector2.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Core.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\BasicTypes.h">
       <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,7 +3,6 @@
 #include "Camera.h"
 #include "Component/ComponentCollider.h"
 #include "Component/IComponentRenderer.h"
-#include "Debug/Debug.h"
 #include "GameObject.h"
 #include "Shader.h"
 #include "Viewport.h"

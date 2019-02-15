@@ -1,12 +1,13 @@
 #include "GameEngine.h"
 
-#include "B2DCore.h"
+#include "Core.h"
 #include "GameInstance.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Shader.h"
 #include "Input.h"
 #include "Math/BMath.h"
 
+#include <windows.h>
 #include <algorithm>
 #include <chrono>
 #include <GLFW/glfw3.h>
@@ -18,7 +19,7 @@ CGameEngine::CGameEngine()
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 1 });
 #endif
 
-	BMath::RandomInit(time(nullptr));
+	BMath::RandomInit(static_cast<int>(time(nullptr)));
 
 	glfwInit();
 	glfwSetErrorCallback([](int error, const char* description)

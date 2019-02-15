@@ -23,6 +23,8 @@
 *
 */
 
+#if B2D_DEBUG_MEMORY
+
 #include <new>                  // std::bad_alloc/nothrow_t
 #include <assert.h>             // assert
 #include <stdio.h>              // fprintf/stderr
@@ -1174,3 +1176,5 @@ void operator delete[](void* ptr, const std::nothrow_t&) _NOEXCEPT
 // This is to make Doxygen happy
 #undef _DEBUG_NEW_REMEMBER_STACK_TRACE
 #define _DEBUG_NEW_REMEMBER_STACK_TRACE 0
+
+#endif

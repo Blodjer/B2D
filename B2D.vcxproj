@@ -191,9 +191,10 @@
     <ClCompile Include="Source\Graphics\Viewport.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Core\BasicTypes.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\Graphics\Shader.h" />
-    <ClInclude Include="Source\Core\B2DCore.h" />
+    <ClInclude Include="Source\Core\Core.h" />
     <ClInclude Include="Source\Component\BoxCollider.h" />
     <ClInclude Include="Source\Component\ComponentCollider.h" />
     <ClInclude Include="Source\Debug\Debug.h" />

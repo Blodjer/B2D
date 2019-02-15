@@ -1,13 +1,12 @@
 #include "GameObject.h"
 
 #include "Component/Component.h"
-#include "Debug/Debug.h"
 
 #include <algorithm>
 
 CGameObject::CGameObject()
 {
-	
+    
 }
 
 CGameObject::~CGameObject()

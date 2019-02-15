@@ -8,7 +8,7 @@
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>  
 #include <crtdbg.h>
-#include "Debug/debug_new.h"
+#include "Debug/debug_new.cpp"
 #define new DEBUG_NEW
 #endif
 

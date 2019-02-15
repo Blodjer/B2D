@@ -1,7 +1,5 @@
 #include "Shader.h"
 
-#include "Debug/Debug.h"
-
 #include <algorithm>
 #include <iostream>
 #include <fstream>

@@ -1,6 +1,5 @@
 #include "SpriteRenderer.h"
 
-#include "Debug/Debug.h"
 #include "GameObject.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Texture.h"
