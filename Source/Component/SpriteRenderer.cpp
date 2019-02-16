@@ -17,7 +17,6 @@ CSpriteRenderer::~CSpriteRenderer()
 {
 	delete(mTexture);
 	delete(mTexture2);
-	delete(mShader);
 }
 
 void CSpriteRenderer::SetSprite(const std::string& filepath)
