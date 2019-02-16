@@ -23,6 +23,8 @@
 *
 */
 
+#ifdef B2D_DEBUG_MEMORY
+
 #ifndef NVWA_FAST_MUTEX_H
 #define NVWA_FAST_MUTEX_H
 
@@ -414,3 +416,5 @@ private:
 NVWA_NAMESPACE_END
 
 #endif // NVWA_FAST_MUTEX_H
+
+#endif

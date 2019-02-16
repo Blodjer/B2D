@@ -1,10 +1,9 @@
 #include "Texture.h"
 
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <libpng/png.h>
 
-GLuint png_texture_load(const char* file_name, int* width, int* height)
+GLuint CTexture::LoadTexture(const char* file_name, uint32& width, uint32& height)
 {
 	// This function was originally written by David Grayson for
 	// https://github.com/DavidEGrayson/ahrs-visualizer
@@ -82,8 +81,8 @@ GLuint png_texture_load(const char* file_name, int* width, int* height)
 	png_get_IHDR(png_ptr, info_ptr, &temp_width, &temp_height, &bit_depth, &color_type,
 		NULL, NULL, NULL);
 
-	if (width) { *width = temp_width; }
-	if (height) { *height = temp_height; }
+	width = temp_width;
+	height = temp_height;
 
 	//printf("%s: %lux%lu %d\n", file_name, temp_width, temp_height, color_type);
 
@@ -164,5 +163,5 @@ GLuint png_texture_load(const char* file_name, int* width, int* height)
 
 CTexture::CTexture(std::string const& filename)
 {
-	mHandle = png_texture_load(filename.c_str(), &mWidth, &mHeight);
+	mHandle = LoadTexture(filename.c_str(), mWidth, mHeight);
 }

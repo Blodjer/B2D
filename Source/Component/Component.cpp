@@ -8,17 +8,17 @@ CComponent::CComponent(CGameObject* const owner)
 
 }
 
-SVector2 CComponent::GetWorldPosition() const
+TVec2 CComponent::GetWorldPosition() const
 {
 	return mOwner->GetPosition() + mRelativPosition;
 }
 
-const SVector2& CComponent::GetRelativePosition() const
+const TVec2& CComponent::GetRelativePosition() const
 {
 	return mRelativPosition;
 }
 
-void CComponent::SetRelativePosition(const SVector2& position)
+void CComponent::SetRelativePosition(const TVec2& position)
 {
 	mRelativPosition = position;
 }

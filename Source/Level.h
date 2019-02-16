@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Vector2.h"
+#include "Core/Core.h"
 
 #include <vector>
 
@@ -13,10 +13,10 @@ public:
 	CLevel();
 	virtual ~CLevel();
 
-	CGameObject* SpawnGameObject(SVector2 spawnPosition = SVector2::Zero);
+	CGameObject* SpawnGameObject(TVec2 spawnPosition = TVec2::Zero);
 
 	template<class T>
-	T* SpawnGameObject(SVector2 spawnPosition = SVector2::Zero)
+	T* SpawnGameObject(TVec2 spawnPosition = TVec2::Zero)
 	{
 		static_assert(std::is_base_of<CGameObject, T>::value, "T must inherit from CGameObject");
 

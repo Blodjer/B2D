@@ -5,7 +5,6 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/Shader.h"
 #include "Input.h"
-#include "Math/BMath.h"
 
 #include <windows.h>
 #include <algorithm>
@@ -45,7 +44,7 @@ void CGameEngine::Start()
 {
 	GameLoop();
 
-#if B2D_DEBUG_MEMORY
+#if defined(B2D_DEBUG_MEMORY)
 	system("cls");
 	_CrtDumpMemoryLeaks();
 	check_leaks();
@@ -57,15 +56,15 @@ void CGameEngine::GameLoop()
 {
 	CInput input;
 
-#if _DEBUG
+#ifdef _DEBUG
 	HANDLE pOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
 	using duration = std::chrono::duration<double, std::milli>;
 	using clock = std::chrono::high_resolution_clock;
 	std::chrono::time_point<clock> start;
 
-	int iFrames = 0;
-	int iFps = 0;
+	uint32 iFrames = 0;
+	uint32 iFps = 0;
 
 	double fLastTick = glfwGetTime();
 	double fNextSecond = glfwGetTime() + 1;
@@ -99,7 +98,7 @@ void CGameEngine::GameLoop()
 		Draw(mGraphicsInstance);
 		duration ChronoDraw = clock::now() - start;
 	
-#if _DEBUG
+#ifdef _DEBUG
 		// Debug
 		COORD pos = { -1, -1 };
 		CONSOLE_SCREEN_BUFFER_INFO cbsi;
@@ -128,7 +127,7 @@ void CGameEngine::HandleEvents()
 	glfwPollEvents();
 
 	/*
-	for (int i = 0; i < iEvents; i++)
+	for (uint32 i = 0; i < iEvents; i++)
 	{
 		mGameInstance->HandleInput(aInputEvents[i]);
 	}

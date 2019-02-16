@@ -1,11 +1,13 @@
 #pragma once
 
+#include "Core/Core.h"
+
 #include <vector>
 
 class CGameInstance;
 class CInput;
 class CInputComponent;
-enum EKeyEvent;
+enum class EKeyEvent : uint8;
 
 class CPlayerController
 {
@@ -13,11 +15,11 @@ class CPlayerController
 	friend CInputComponent;
 	friend CInput;
 
-	CPlayerController(int Id);
+	CPlayerController(uint32 Id);
 public:
 	~CPlayerController();
 
-	const int GetId() const { return mId; };
+	const uint32 GetId() const { return mId; };
 
 private:
 	void RegisterInputComponent(CInputComponent* component);
@@ -27,6 +29,6 @@ private:
 	void ProcessInputAxis();
 
 private:
-	const int mId;
+	const uint32 mId;
 	std::vector<CInputComponent*> mInputComponents;
 };

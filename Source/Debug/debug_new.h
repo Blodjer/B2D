@@ -23,7 +23,7 @@
 *
 */
 
-#if B2D_DEBUG_MEMORY
+#ifdef B2D_DEBUG_MEMORY
 
 #ifndef NVWA_DEBUG_NEW_H
 #define NVWA_DEBUG_NEW_H

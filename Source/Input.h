@@ -1,12 +1,14 @@
 #pragma once
 
+#include "Core/Core.h"
+
 #include <map>
 #include <vector>
 
 class CGameEngine;
 struct GLFWwindow;
 
-enum EKeyEvent
+enum class EKeyEvent : uint8
 {
 	KEY_UP,
 	KEY_DOWN

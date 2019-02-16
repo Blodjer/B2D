@@ -23,7 +23,7 @@
 *
 */
 
-#if B2D_DEBUG_MEMORY
+#ifdef B2D_DEBUG_MEMORY
 
 #include <new>                  // std::bad_alloc/nothrow_t
 #include <assert.h>             // assert

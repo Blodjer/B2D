@@ -19,7 +19,7 @@ void CBoxCollider::DrawShape(CGraphics* graphics)
 
 void CBoxCollider::SetSize(float width, float height)
 {
-	mSize = SVector2(width, height);
+	mSize = TVec2(width, height);
 }
 /*
 SDL_Rect CBoxCollider::GetRect()

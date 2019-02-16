@@ -3,7 +3,6 @@
 #include "Core/GameEngine.h"
 #include "Graphics/Graphics.h"
 #include "Graphics/Viewport.h"
-#include "Math/BMath.h"
 
 CCamera::CCamera()
 	: CGameObject()
@@ -12,7 +11,7 @@ CCamera::CCamera()
 	mTargetProjection = mProjection;
 	mProjectionLerp = 0.f;
 
-	SVector2 const vPosition = GetPosition();
+	TVec2 const vPosition = GetPosition();
 	mViewMatrix = glm::lookAt(
 		glm::vec3(vPosition.X, vPosition.Y, -300.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f),
@@ -26,7 +25,7 @@ static glm::mat4 MatrixLerp(const glm::mat4& from, const glm::mat4& to, float fT
 	float ret[16] = { 0.0 };
 	const float* f = (const float*)glm::value_ptr(from);
 	const float* t = (const float*)glm::value_ptr(to);
-	for (int i = 0; i < 16; i++)
+	for (uint8 i = 0; i < 16; i++)
 		ret[i] = f[i] + fTime * (t[i] - f[i]);
 
 	return glm::make_mat4(ret);
@@ -39,7 +38,7 @@ void CCamera::Update(float deltaTime)
 	static float acc = 0.f;
 	acc += deltaTime;
 
-	SVector2 vPosition = GetPosition();
+	TVec2 vPosition = GetPosition();
 
 	float radius = 100.0f;
 	float camX = sin(acc) * radius + vPosition.X;
@@ -77,16 +76,16 @@ glm::mat4 CCamera::CreateProjectionMatrix(EProjection projection)
 	if (mCurrentViewport == nullptr)
 		return glm::mat4();
 
-	int width = mCurrentViewport->GetWidth();
-	int height = mCurrentViewport->GetHeight();
+	uint32 width = mCurrentViewport->GetWidth();
+	uint32 height = mCurrentViewport->GetHeight();
 
 	if (projection == EProjection::Perspective)
 	{
-		return glm::perspective<float>(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100000.0f);
+		return glm::perspective<float>(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 100000.0f);
 	}
 	else if (projection == EProjection::Orthographic)
 	{
-		return glm::ortho<float>(width * -0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, 0.1f, 10000.0f);
+		return glm::ortho<float>(width * -0.5f, width * 0.5f, height * -0.5f, height * 0.5f, 0.1f, 10000.0f);
 	}
 
 	return glm::mat4();

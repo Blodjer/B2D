@@ -16,6 +16,9 @@
     <Filter Include="Core">
       <UniqueIdentifier>{a5224aea-b2c3-490f-9abd-6c1781167025}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Types">
+      <UniqueIdentifier>{fc29aa59-adc5-4d7b-aae2-a2df01a3106d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Debug\debug_new.cpp">
@@ -59,8 +62,8 @@
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Source\Camera.cpp" />
-    <ClCompile Include="Source\Core\Vector2.cpp">
-      <Filter>Core</Filter>
+    <ClCompile Include="Source\Core\Types\Vector2.cpp">
+      <Filter>Core\Types</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,9 +103,6 @@
     <ClInclude Include="Source\Debug\Debug.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\Delegate.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Core\GameEngine.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -126,14 +126,20 @@
     <ClInclude Include="Source\Level.h" />
     <ClInclude Include="Source\PlayerController.h" />
     <ClInclude Include="Source\Camera.h" />
-    <ClInclude Include="Source\Core\Vector2.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="Source\Core\Types\Vector2.h">
+      <Filter>Core\Types</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Core.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\BasicTypes.h">
-      <Filter>Core</Filter>
+    <ClInclude Include="Source\Core\Types\BasicTypes.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Types\Matrix.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Types\Delegate.h">
+      <Filter>Core\Types</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

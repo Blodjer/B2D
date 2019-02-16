@@ -32,7 +32,7 @@ CLevel::~CLevel()
 	}
 }
 
-CGameObject* CLevel::SpawnGameObject(SVector2 spawnPosition)
+CGameObject* CLevel::SpawnGameObject(TVec2 spawnPosition)
 {
 	return SpawnGameObject<CGameObject>(spawnPosition);
 }

@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-CPlayerController::CPlayerController(int id) : mId(id)
+CPlayerController::CPlayerController(uint32 id) : mId(id)
 {
 
 }

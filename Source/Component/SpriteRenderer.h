@@ -17,8 +17,8 @@ public:
 	virtual void Draw(CGraphics* graphics) override;
 
 private:
-	int mWidth;
-	int mHeight;
+	uint32 mWidth;
+	uint32 mHeight;
 
 	CTexture* mTexture;
 	CTexture* mTexture2;

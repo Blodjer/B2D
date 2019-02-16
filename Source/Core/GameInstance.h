@@ -1,14 +1,21 @@
 #pragma once
 
+#include "Core/Core.h"
+
 #include <map>
 
 // Only one instance per engine
 // Handle Events
 // Pause Game
 
+class CGameEngine;
+class CGraphics;
+class CLevel;
+class CPlayerController;
+
 class CGameInstance
 {
-	friend class CGameEngine;
+	friend CGameEngine;
 
 	CGameInstance();
 public:
@@ -19,7 +26,7 @@ public:
 	{
 		static_assert(std::is_base_of<CLevel, L>::value, "L must inherit from Scene");
 
-		if (this->LoadedLevel != NULL)
+		if (this->LoadedLevel != nullptr)
 		{
 			delete this->LoadedLevel;
 		}
@@ -27,17 +34,17 @@ public:
 		this->LoadedLevel = new L();
 	}
 
-	static class CPlayerController* AddPlayerController(int iId);
-	static void RemovePlayerController(int iId);
-	static const std::map<int, CPlayerController*>* const GetPlayerControllers() { return &CGameInstance::PlayerControllers; }
+	static CPlayerController* AddPlayerController(uint32 iId);
+	static void RemovePlayerController(uint32 iId);
+	static const std::map<uint32, CPlayerController*>* const GetPlayerControllers() { return &CGameInstance::PlayerControllers; }
 
 private:
-	void HandleInput(int pEvent);
+	void HandleInput(uint32 pEvent);
 	void Tick(float fDeltaTime);
-	void Draw(class CGraphics* pGraphics);
+	void Draw(CGraphics* pGraphics);
 
 private:
-	class CLevel* LoadedLevel;
-	static std::map<int, class CPlayerController*> PlayerControllers;
+	CLevel* LoadedLevel;
+	static std::map<uint32, CPlayerController*> PlayerControllers;
 };
 

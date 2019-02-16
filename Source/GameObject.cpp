@@ -48,7 +48,7 @@ void CGameObject::Update(float deltaTime)
 	mComponentsToRemove.clear();
 }
 
-void CGameObject::SetPosition(SVector2 position, bool sweep)
+void CGameObject::SetPosition(TVec2 position, bool sweep)
 {
 	if (sweep)
 	{

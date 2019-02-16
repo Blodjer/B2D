@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-std::map<int, CPlayerController*> CGameInstance::PlayerControllers;
+std::map<uint32, CPlayerController*> CGameInstance::PlayerControllers;
 
 CGameInstance::CGameInstance()
 {
@@ -25,7 +25,7 @@ CGameInstance::~CGameInstance()
 	this->PlayerControllers.clear();
 }
 
-void CGameInstance::HandleInput(int pEvent)
+void CGameInstance::HandleInput(uint32 pEvent)
 {
 	/*
 	if (pEvent.type == SDL_KEYDOWN)
@@ -73,7 +73,7 @@ void CGameInstance::Draw(CGraphics* pGraphics)
 	}
 }
 
-CPlayerController* CGameInstance::AddPlayerController(int iId)
+CPlayerController* CGameInstance::AddPlayerController(uint32 iId)
 {
 	if (PlayerControllers.find(iId) == PlayerControllers.end())
 	{
@@ -83,7 +83,7 @@ CPlayerController* CGameInstance::AddPlayerController(int iId)
 	return PlayerControllers[iId];
 }
 
-void CGameInstance::RemovePlayerController(int iId)
+void CGameInstance::RemovePlayerController(uint32 iId)
 {
 	PlayerControllers.erase(iId);
 }

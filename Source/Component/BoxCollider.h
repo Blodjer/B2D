@@ -15,6 +15,6 @@ public:
 	//struct SDL_Rect GetRect();
 
 private:
-	SVector2 mSize;
+	TVec2 mSize;
 
 };

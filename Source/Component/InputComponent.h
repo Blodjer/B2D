@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Component/Component.h"
-#include "Core/Delegate.h"
 #include "Input.h"
 
 #include <map>

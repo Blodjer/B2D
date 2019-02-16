@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Vector2.h"
+#include "Core/Core.h"
 
 #include <vector>
 
@@ -26,13 +26,13 @@ public:
 
 	void RemoveComponent(CComponent* const pComponent);
 
-	void SetPosition(SVector2 position, bool sweep = false);
-	SVector2 GetPosition() const { return mPosition; }
+	void SetPosition(TVec2 position, bool sweep = false);
+	TVec2 GetPosition() const { return mPosition; }
 
 	const std::vector<CComponent*>& GetComponents() const;
 
 private:
-	SVector2 mPosition = SVector2::Zero;
+	TVec2 mPosition = TVec2::Zero;
 
 	std::vector<CComponent*> mComponentsToAdd;
 	std::vector<CComponent*> mComponents;

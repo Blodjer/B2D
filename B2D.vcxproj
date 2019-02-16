@@ -187,12 +187,13 @@
     <ClCompile Include="Source\Graphics\Graphics.cpp" />
     <ClCompile Include="Source\Input.cpp" />
     <ClCompile Include="Source\Component\SpriteRenderer.cpp" />
-    <ClCompile Include="Source\Core\Vector2.cpp" />
+    <ClCompile Include="Source\Core\Types\Vector2.cpp" />
     <ClCompile Include="Source\Graphics\Texture.cpp" />
     <ClCompile Include="Source\Graphics\Viewport.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Core\BasicTypes.h" />
+    <ClInclude Include="Source\Core\Types\Matrix.h" />
+    <ClInclude Include="Source\Core\Types\BasicTypes.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\Graphics\Shader.h" />
     <ClInclude Include="Source\Core\Core.h" />
@@ -205,7 +206,7 @@
     <ClInclude Include="Source\Debug\_nvwa.h" />
     <ClInclude Include="Source\Core\GameInstance.h" />
     <ClInclude Include="Source\PlayerController.h" />
-    <ClInclude Include="Source\Core\Delegate.h" />
+    <ClInclude Include="Source\Core\Types\Delegate.h" />
     <ClInclude Include="Source\Component\InputComponent.h" />
     <ClInclude Include="Source\Math\BMath.h" />
     <ClInclude Include="Source\Level.h" />
@@ -216,7 +217,7 @@
     <ClInclude Include="Source\Component\IComponentRenderer.h" />
     <ClInclude Include="Source\Input.h" />
     <ClInclude Include="Source\Component\SpriteRenderer.h" />
-    <ClInclude Include="Source\Core\Vector2.h" />
+    <ClInclude Include="Source\Core\Types\Vector2.h" />
     <ClInclude Include="Source\Graphics\Texture.h" />
     <ClInclude Include="Source\Graphics\Viewport.h" />
   </ItemGroup>

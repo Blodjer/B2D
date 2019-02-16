@@ -2,7 +2,7 @@
 
 #include <GL/glew.h>
 
-CViewport::CViewport(int x, int y, int width, int height) :
+CViewport::CViewport(int32 x, int32 y, uint32 width, uint32 height) :
 	mX(x), mY(y),
 	mWidth(width), mHeight(height)
 {
@@ -23,7 +23,7 @@ CCamera* CViewport::GetCamera() const
 	return mCurrentCamera;
 }
 
-void CViewport::SetSize(int width, int height)
+void CViewport::SetSize(uint32 width, uint32 height)
 {
 	mWidth = width;
 	mHeight = height;
@@ -34,12 +34,12 @@ void CViewport::SetSize(int width, int height)
 	}
 }
 
-int CViewport::GetWidth() const
+uint32 CViewport::GetWidth() const
 {
 	return mWidth;
 }
 
-int CViewport::GetHeight() const
+uint32 CViewport::GetHeight() const
 {
 	return mHeight;
 }
