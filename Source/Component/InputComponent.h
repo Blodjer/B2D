@@ -19,12 +19,12 @@ public:
 	virtual ~CInputComponent();
 
 	void BindController(CPlayerController* const controller);
-	void BindKey(int key, EKeyEvent keyEvent, TKeyDelegate delegate);
-	void BindAxis(int key, TAxisDelegate delegate);
+	void BindKey(EKey key, EKeyEvent keyEvent, TKeyDelegate delegate);
+	void BindAxis(int axis, TAxisDelegate delegate);
 	void ClearAllBindings();
 
 private:
-	void ProcessInputKey(int key, EKeyEvent keyEvent);
+	void ProcessInputKey(EKey key, EKeyEvent keyEvent);
 	void ProcessInputAxis();
 
 private:
@@ -32,21 +32,21 @@ private:
 
 	struct SKeyBinding
 	{
-		int Scancode;
-		EKeyEvent Event;
+		EKey mKey;
+		EKeyEvent mEvent;
 
-		SKeyBinding(int eScancode, EKeyEvent eKeyEvent)
-			: Scancode(eScancode), Event(eKeyEvent) {}
+		SKeyBinding(EKey key, EKeyEvent event)
+			: mKey(key), mEvent(event) {}
 
 		bool const operator==(const SKeyBinding& o) const
 		{
-			return Scancode == o.Scancode && Event == o.Event;
+			return mKey == o.mKey && mEvent == o.mEvent;
 		}
 
 		bool const operator<(const SKeyBinding& o) const
 		{
-			return std::tie(Scancode, Event) < std::tie(o.Scancode, o.Event);
-			return Scancode < o.Scancode || (Scancode == o.Scancode && Event < o.Event);
+			return std::tie(mKey, mEvent) < std::tie(o.mKey, o.mEvent);
+			return mKey < o.mKey || (mKey == o.mKey && mEvent < o.mEvent);
 		}
 	};
 

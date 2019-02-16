@@ -17,17 +17,20 @@ CInput::~CInput()
 
 }
 
-void CInput::OnKey(GLFWwindow* window, int key, int scancode, int action, int mods)
+void CInput::OnKey(GLFWwindow* window, int glfwKey, int scancode, int glfwAction, int glfwMods)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	EKey const key = static_cast<EKey>(glfwKey);
+	EKeyEvent const keyEvent = static_cast<EKeyEvent>(glfwAction);
+
+	if (key == EKey::ESCAPE && keyEvent == EKeyEvent::KEY_DOWN)
 		CGameEngine::Instance()->Shutdown();
 
-	if (key == GLFW_KEY_F5 && action == GLFW_PRESS)
+	if (key == EKey::F5 && keyEvent == EKeyEvent::KEY_DOWN)
 		CShader::ReloadAll();
 
 	auto playerControllers = CGameEngine::Instance()->GetGameInstance()->GetPlayerControllers();
 	for (const auto& playerController : *playerControllers)
 	{
-		playerController.second->ProcessInputKey(key, (EKeyEvent)action);
+		playerController.second->ProcessInputKey(key, keyEvent);
 	}
 }

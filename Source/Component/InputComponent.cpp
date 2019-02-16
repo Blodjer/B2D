@@ -34,14 +34,14 @@ void CInputComponent::BindController(CPlayerController* const controller)
 	mAssignedController->RegisterInputComponent(this);
 }
 
-void CInputComponent::BindKey(int key, EKeyEvent keyEvent, TKeyDelegate delegate)
+void CInputComponent::BindKey(EKey key, EKeyEvent keyEvent, TKeyDelegate delegate)
 {
 	mKeyDelegates[SKeyBinding(key, keyEvent)] = delegate;
 }
 
-void CInputComponent::BindAxis(int key, TAxisDelegate delegate)
+void CInputComponent::BindAxis(int axis, TAxisDelegate delegate)
 {
-	mAxisDelegates[key] = delegate;
+	mAxisDelegates[axis] = delegate;
 }
 
 void CInputComponent::ClearAllBindings()
@@ -50,7 +50,7 @@ void CInputComponent::ClearAllBindings()
 	mAxisDelegates.clear();
 }
 
-void CInputComponent::ProcessInputKey(int key, EKeyEvent keyEvent)
+void CInputComponent::ProcessInputKey(EKey key, EKeyEvent keyEvent)
 {
 	auto keyBinding = SKeyBinding(key, keyEvent);
 	if (mKeyDelegates.find(keyBinding) != mKeyDelegates.end())

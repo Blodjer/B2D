@@ -7,6 +7,7 @@
 class CGameInstance;
 class CInput;
 class CInputComponent;
+enum class EKey : int16;
 enum class EKeyEvent : uint8;
 
 class CPlayerController
@@ -25,7 +26,7 @@ private:
 	void RegisterInputComponent(CInputComponent* component);
 	void UnregisterInputComponent(CInputComponent* component);
 
-	void ProcessInputKey(int scancode, EKeyEvent event);
+	void ProcessInputKey(EKey key, EKeyEvent event);
 	void ProcessInputAxis();
 
 private:

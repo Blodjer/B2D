@@ -24,11 +24,11 @@ void CPlayerController::UnregisterInputComponent(CInputComponent* component)
 	mInputComponents.erase(std::remove(mInputComponents.begin(), mInputComponents.end(), component), mInputComponents.end());
 }
 
-void CPlayerController::ProcessInputKey(int scancode, EKeyEvent event)
+void CPlayerController::ProcessInputKey(EKey key, EKeyEvent event)
 {
 	for (CInputComponent* const inputComponent : mInputComponents)
 	{
-		inputComponent->ProcessInputKey(scancode, event);
+		inputComponent->ProcessInputKey(key, event);
 	}
 }
 
