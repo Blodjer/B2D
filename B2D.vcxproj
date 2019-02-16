@@ -195,6 +195,7 @@
     <ClInclude Include="Source\Core\Types\Matrix.h" />
     <ClInclude Include="Source\Core\Types\BasicTypes.h" />
     <ClInclude Include="Source\Camera.h" />
+    <ClInclude Include="Source\Core\Types\Vector3.h" />
     <ClInclude Include="Source\Graphics\Shader.h" />
     <ClInclude Include="Source\Core\Core.h" />
     <ClInclude Include="Source\Component\BoxCollider.h" />

@@ -9,9 +9,6 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 CGraphics::CGraphics()
@@ -102,9 +99,9 @@ void CGraphics::Draw(const CGameObject* const gameObject)
 	if (gameObject->GetComponents().size() == 1)
 		return;
 
-	glm::mat4 model;
-	//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(100, 100, 100));
+	TMatrix model;
+	//model = TMatrix::Rotate(model, static_cast<float>(glfwGetTime()) * glm::radians(50.0f), TVec3(0.5f, 1.0f, 0.0f));
+	model = TMatrix::Scale(model, TVec3(100, 100, 100));
 
 	if (glfwGetKey(mWindow, GLFW_KEY_F3) == GLFW_PRESS)
 		pCamera->SetProjection(CCamera::EProjection::Perspective);
@@ -115,9 +112,9 @@ void CGraphics::Draw(const CGameObject* const gameObject)
 	{
 		CShader* const wireframeShader = CShader::Load("Content/Shader/SpriteVS.glsl", "Content/Shader/FillFS.glsl");
 		wireframeShader->Use();
-		wireframeShader->SetMatrix("model", glm::value_ptr(model));
-		wireframeShader->SetMatrix("view", pCamera->GetViewMatrix());
-		wireframeShader->SetMatrix("projection", pCamera->GetProjectionMatrix());
+		wireframeShader->SetMatrix("model", model.GetPtr());
+		wireframeShader->SetMatrix("view", pCamera->GetViewMatrix().GetPtr());
+		wireframeShader->SetMatrix("projection", pCamera->GetProjectionMatrix().GetPtr());
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -127,9 +124,9 @@ void CGraphics::Draw(const CGameObject* const gameObject)
 
 	CShader* const currentShader = CShader::Load("Content/Shader/SpriteVS.glsl", "Content/Shader/SpriteFS.glsl");
 	currentShader->Use();
-	currentShader->SetMatrix("model", glm::value_ptr(model));
-	currentShader->SetMatrix("view", pCamera->GetViewMatrix());
-	currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix());
+	currentShader->SetMatrix("model", model.GetPtr());
+	currentShader->SetMatrix("view", pCamera->GetViewMatrix().GetPtr());
+	currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix().GetPtr());
 	static float f = 0.0f;
 	f += 0.016f;
 	currentShader->SetFloat("rotation", f);
@@ -139,11 +136,11 @@ void CGraphics::Draw(const CGameObject* const gameObject)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-	model = glm::translate(glm::mat4(), glm::vec3(5, 0, 100));
-	model = glm::scale(model, glm::vec3(100, 100, 100));
-	currentShader->SetMatrix("model", glm::value_ptr(model));
-	currentShader->SetMatrix("view", pCamera->GetViewMatrix());
-	currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix());
+	model = TMatrix::Translate(TMatrix(), TVec3(5, 0, 100));
+	model = TMatrix::Scale(model, TVec3(100, 100, 100));
+	currentShader->SetMatrix("model", model.GetPtr());
+	currentShader->SetMatrix("view", pCamera->GetViewMatrix().GetPtr());
+	currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix().GetPtr());
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

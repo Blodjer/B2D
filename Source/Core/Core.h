@@ -16,4 +16,6 @@
 
 #include "Core/Types/BasicTypes.h"
 #include "Core/Types/Vector2.h"
+#include "Core/Types/Vector3.h"
+#include "Core/Types/Matrix.h"
 #include "Core/Types/Delegate.h"

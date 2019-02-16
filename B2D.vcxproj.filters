@@ -141,5 +141,8 @@
     <ClInclude Include="Source\Core\Types\Delegate.h">
       <Filter>Core\Types</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Core\Types\Vector3.h">
+      <Filter>Core\Types</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

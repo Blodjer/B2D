@@ -2,9 +2,6 @@
 
 #include "GameObject.h"
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 class CViewport;
 
 class CCamera final : public CGameObject
@@ -25,20 +22,20 @@ public:
 	virtual void Update(float deltaTime) override;
 
 	void SetProjection(EProjection projection);
-	glm::mat4 CreateProjectionMatrix(EProjection projection);
+	TMatrix CreateProjectionMatrix(EProjection projection);
 
 	void MakeActive();
 
-	const float* GetViewMatrix() const;
-	const float* GetProjectionMatrix() const;
+	TMatrix const& GetViewMatrix() const;
+	TMatrix const& GetProjectionMatrix() const;
 
 private:
 	void SetViewport(CViewport* viewport);
 	void OnViewportSizeChanged();
 
 private:
-	glm::mat4 mViewMatrix;
-	glm::mat4 mProjectionMatrix;
+	TMatrix mViewMatrix;
+	TMatrix mProjectionMatrix;
 
 	EProjection mProjection;
 	EProjection mTargetProjection;
