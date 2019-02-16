@@ -5,21 +5,37 @@
 #include <math.h>
 #include <algorithm>
 
-class BMath
+class CGameEngine;
+
+class UMath
 {
+	friend CGameEngine;
+
 public:
-	FORCEINLINE static float Min(float fA, float fB) { return std::min(fA, fB); }
-	FORCEINLINE static float Max(float fA, float fB) { return std::max(fA, fB); }
-	FORCEINLINE static float Clamp(float fValue, float fMin, float fMax) { return std::clamp(fValue, fMin, fMax); }
-	FORCEINLINE static float Clamp01(float fValue) { return Clamp(fValue, 0.0f, 1.0f); }
+	template<typename T>
+	FORCEINLINE static T Min(T a, T b) { return std::min(a, b); }
 
-	FORCEINLINE static float Sin(float value) { return sin(value); }
-	FORCEINLINE static float Cos(float value) { return cos(value); }
-	FORCEINLINE static float Tan(float value) { return tan(value); }
+	template<typename T>
+	FORCEINLINE static T Max(T a, T b) { return std::max(a, b); }
 
-	FORCEINLINE static void RandomInit(int seed) { srand(seed); }
-	FORCEINLINE static float RandomRange(float min, float max) { return min + (max - min) * (rand() / static_cast<float>(RAND_MAX)); }
+	template<typename T>
+	FORCEINLINE static T Clamp(T value, T min, T max) { return std::clamp(value, min, max); }
+
+	template<typename T>
+	FORCEINLINE static T Clamp01(T value) { return Clamp<T>(value, 0, 1); }
+
+	FORCEINLINE static float Sin(float value) { return std::sin(value); }
+	FORCEINLINE static float Cos(float value) { return std::cos(value); }
+	FORCEINLINE static float Tan(float value) { return std::tan(value); }
+
+	template<typename T>
+	FORCEINLINE static T RandomRange(T min, T max) { return min + (max - min) * (rand() / static_cast<float>(RAND_MAX)); }
+
+	template<typename T>
+	FORCEINLINE static float Lerp(T a, T b, T alpha) { return (static_cast<T>(1) - alpha) * a + alpha * b; }
 
 private:
-	BMath() = default;
+	UMath() = default;
+
+	FORCEINLINE static void RandomInit(unsigned int seed) { srand(seed); }
 };

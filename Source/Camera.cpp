@@ -30,13 +30,13 @@ void CCamera::Update(float deltaTime)
 	TVec2 vPosition = GetPosition();
 
 	float radius = 100.0f;
-	float camX = sin(acc) * radius + vPosition.X;
-	float camY = cos(acc) * radius + vPosition.Y;
+	float camX = UMath::Sin(acc) * radius + vPosition.X;
+	float camY = UMath::Cos(acc) * radius + vPosition.Y;
 	mViewMatrix = TMatrix::LookAt(TVec3(camX, camY, -300), TVec3(0.0, 0.0, 0.0), TVec3(0.0, 1.0, 0.0));
 
 	if (mProjectionLerp < 1.f)
 	{
-		mProjectionLerp = BMath::Min(mProjectionLerp + deltaTime, 1.f);
+		mProjectionLerp = UMath::Min(mProjectionLerp + deltaTime, 1.f);
 
 		auto from = CreateProjectionMatrix(mProjection);
 		auto to = CreateProjectionMatrix(mTargetProjection);

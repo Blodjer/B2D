@@ -18,7 +18,7 @@ CGameEngine::CGameEngine()
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 1 });
 #endif
 
-	BMath::RandomInit(static_cast<int>(time(nullptr)));
+	UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
 
 	glfwInit();
 	glfwSetErrorCallback([](int error, const char* description)
