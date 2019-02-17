@@ -15,9 +15,10 @@ project "B2D"
 
 	includedirs
 	{
-		"%{prj.location}/Include/",
 		"%{prj.location}/Source/",
-		"%{prj.location}/Libraries/GLFW/include/"
+		"%{prj.location}/Include/",
+		"%{prj.location}/Libraries/GLFW/include/",
+		"%{prj.location}/Libraries/glm/"
 	}
 
 	defines

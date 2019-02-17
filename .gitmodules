@@ -1,3 +1,6 @@
 [submodule "Libraries/GLFW"]
 	path = Libraries/GLFW
 	url = https://github.com/Blodjer/glfw.git
+[submodule "Libraries/glm"]
+	path = Libraries/glm
+	url = git@github.com:g-truc/glm.git
