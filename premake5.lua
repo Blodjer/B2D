@@ -1,6 +1,7 @@
 mLibdir = "%{prj.location}/Lib/%{cfg.architecture}/"
 
 group "Libraries"
+	include "Libraries/glew"
 	include "Libraries/GLFW"
 group ""
 
@@ -20,6 +21,7 @@ project "B2D"
 		"%{prj.location}/Source/",
 		"%{prj.location}/Include/",
 		"%{prj.location}/Libraries/",
+		"%{prj.location}/Libraries/glew/include/",
 		"%{prj.location}/Libraries/GLFW/include/",
 		"%{prj.location}/Libraries/glm/"
 	}
@@ -32,13 +34,8 @@ project "B2D"
 	links
 	{
 		"GLFW",
-		"glew32s.lib",
+		"glew",
 		"opengl32.lib"
-	}
-
-	postbuildcommands
-	{
-		("{COPY} \"" .. mLibdir .. "*.dll\" \"%{cfg.targetdir}/\"")
 	}
 
 	filter "system:windows"
