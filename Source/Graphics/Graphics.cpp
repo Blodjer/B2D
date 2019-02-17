@@ -99,9 +99,9 @@ void CGraphics::Draw(const CGameObject* const gameObject)
 	if (gameObject->GetComponents().size() == 1)
 		return;
 
-	TMatrix model;
+	TMatrix model(1.0f);
 	//model = TMatrix::Rotate(model, static_cast<float>(glfwGetTime()) * glm::radians(50.0f), TVec3(0.5f, 1.0f, 0.0f));
-	model = TMatrix::Scale(model, TVec3(100, 100, 100));
+	model = TMatrix::Scale(model, TVec3(150, 150, 150));
 
 	if (glfwGetKey(mWindow, GLFW_KEY_F3) == GLFW_PRESS)
 		pCamera->SetProjection(CCamera::EProjection::Perspective);
@@ -119,7 +119,7 @@ void CGraphics::Draw(const CGameObject* const gameObject)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-		delete wireframeShader;
+		//delete wireframeShader;
 	}
 
 	CShader* const currentShader = CShader::Load("Content/Shader/SpriteVS.glsl", "Content/Shader/SpriteFS.glsl");
@@ -136,8 +136,8 @@ void CGraphics::Draw(const CGameObject* const gameObject)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-	model = TMatrix::Translate(TMatrix(), TVec3(5, 0, 100));
-	model = TMatrix::Scale(model, TVec3(100, 100, 100));
+	model = TMatrix::Translate(model, TVec3(0, 0, 3));
+	model = TMatrix::Scale(model, TVec3(2, 2, 2));
 	currentShader->SetMatrix("model", model.GetPtr());
 	currentShader->SetMatrix("view", pCamera->GetViewMatrix().GetPtr());
 	currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix().GetPtr());

@@ -10,8 +10,8 @@
 class TMatrix : public glm::mat4
 {
 public:
-  	template <class... Args>
-  	FORCEINLINE TMatrix(Args... args) : glm::mat4(args...) { }
+  	template <typename... Args>
+	FORCEINLINE TMatrix(Args... args) : glm::mat4(args...) { }
 
 	FORCEINLINE static TMatrix LookAt(TVec3 const& eyePosition, TVec3 const& lookAtPosition, TVec3 const& upVector)
 	{
