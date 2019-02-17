@@ -1,5 +1,7 @@
 mLibdir = "%{prj.location}/Lib/%{cfg.architecture}/"
 
+include "Libraries/GLFW"
+
 project "B2D"
 	language "C++"
 	kind "StaticLib"
@@ -14,7 +16,8 @@ project "B2D"
 	includedirs
 	{
 		"%{prj.location}/Include/",
-		"%{prj.location}/Source/"
+		"%{prj.location}/Source/",
+		"%{prj.location}/Libraries/GLFW/include/"
 	}
 
 	defines
@@ -24,7 +27,7 @@ project "B2D"
 
 	links
 	{
-		"glfw3.lib",
+		"GLFW",
 		"glew32s.lib",
 		"opengl32.lib",
 		"libpng16.lib"
