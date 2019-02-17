@@ -1,6 +1,8 @@
 mLibdir = "%{prj.location}/Lib/%{cfg.architecture}/"
 
-include "Libraries/GLFW"
+group "Libraries"
+	include "Libraries/GLFW"
+group ""
 
 project "B2D"
 	language "C++"
@@ -17,6 +19,7 @@ project "B2D"
 	{
 		"%{prj.location}/Source/",
 		"%{prj.location}/Include/",
+		"%{prj.location}/Libraries/",
 		"%{prj.location}/Libraries/GLFW/include/",
 		"%{prj.location}/Libraries/glm/"
 	}
@@ -30,8 +33,7 @@ project "B2D"
 	{
 		"GLFW",
 		"glew32s.lib",
-		"opengl32.lib",
-		"libpng16.lib"
+		"opengl32.lib"
 	}
 
 	postbuildcommands

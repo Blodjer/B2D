@@ -12,11 +12,11 @@ public:
 	~CTexture() = default;
 
 private:
-	GLuint LoadTexture(const char* file_name, uint32& width, uint32& height);
+	GLuint LoadTexture(std::string const&, int32& width, int32& height);
 
 public:
-	uint32 mWidth;
-	uint32 mHeight;
+	int32 mWidth;
+	int32 mHeight;
 
 	GLuint mHandle;
 };
