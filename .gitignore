@@ -40,3 +40,4 @@
 /Bin/
 /Tmp/
 !/Lib/*
+!/ThirdParty/*
