@@ -3,13 +3,14 @@
 #include "Core/GameEngine.h"
 #include "Core/GameInstance.h"
 #include "Graphics/Shader.h"
+#include "Graphics/Window.h"
 #include "PlayerController.h"
 
 #include <GLFW/glfw3.h>
 
 CInput::CInput()
 {
-	glfwSetKeyCallback(CGameEngine::Instance()->GetWindow(), CInput::OnKey);
+	glfwSetKeyCallback(CGameEngine::Instance()->GetWindow()->GetWindow(), CInput::OnKey);
 }
 
 CInput::~CInput()

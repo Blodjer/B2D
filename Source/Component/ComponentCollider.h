@@ -12,8 +12,6 @@ public:
 	CComponentCollider(CGameObject* pOwner);
 	virtual ~CComponentCollider();
 
-	virtual void DrawShape(class CGraphics* pGraphics) = 0;
-
 private:
 	void OnContact() {}
 

@@ -2,6 +2,7 @@
 
 #include "Camera.h"
 #include "Core/Core.h"
+#include "Graphics/Viewport.h"
 
 class CCamera;
 

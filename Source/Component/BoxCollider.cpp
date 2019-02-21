@@ -1,7 +1,5 @@
 #include "BoxCollider.h"
 
-#include "Graphics/Graphics.h"
-
 CBoxCollider::CBoxCollider(CGameObject* owner) : CComponentCollider(owner)
 {
 
@@ -10,11 +8,6 @@ CBoxCollider::CBoxCollider(CGameObject* owner) : CComponentCollider(owner)
 CBoxCollider::~CBoxCollider()
 {
 
-}
-
-void CBoxCollider::DrawShape(CGraphics* graphics)
-{
-	
 }
 
 void CBoxCollider::SetSize(float width, float height)

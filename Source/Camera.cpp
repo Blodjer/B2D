@@ -1,8 +1,8 @@
 #include "Camera.h"
 
 #include "Core/GameEngine.h"
-#include "Graphics/Graphics.h"
 #include "Graphics/Viewport.h"
+#include "Graphics/Window.h"
 
 CCamera::CCamera()
 	: CGameObject()
@@ -98,7 +98,7 @@ void CCamera::OnViewportSizeChanged()
 
 void CCamera::MakeActive()
 {
-	CGameEngine::Instance()->GetGraphicsInstance()->GetViewport()->SetCamera(this);
+	CGameEngine::Instance()->GetWindow()->GetViewport()->SetCamera(this);
 }
 
 const TMatrix& CCamera::GetViewMatrix() const

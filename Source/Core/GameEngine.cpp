@@ -2,8 +2,10 @@
 
 #include "Core.h"
 #include "GameInstance.h"
-#include "Graphics/Graphics.h"
+#include "Graphics/Renderer.h"
 #include "Graphics/Shader.h"
+#include "Graphics/Viewport.h"
+#include "Graphics/Window.h"
 #include "Input.h"
 
 #include <windows.h>
@@ -26,13 +28,14 @@ CGameEngine::CGameEngine()
 		std::cerr << "Error: " << description << std::endl;
 	});
 
-	mGraphicsInstance = new CGraphics();
+	mWindow = new CWindow(1280, 720, "Game");
+	mGraphicsInstance = new CRenderer();
 	mGameInstance = new CGameInstance();
 }
 
 CGameEngine::~CGameEngine()
 {
-	
+	glfwTerminate();
 }
 
 CGameEngine* const CGameEngine::Init()
@@ -68,8 +71,11 @@ void CGameEngine::GameLoop()
 
 	double fLastTick = glfwGetTime();
 	double fNextSecond = glfwGetTime() + 1;
-	while (!glfwWindowShouldClose(GetWindow()))
+	while (!GetWindow()->ShouldClose())
 	{
+		GetWindow()->MakeContextCurrent();
+		GetWindow()->GetViewport()->Use();
+
 		const double fNow = glfwGetTime();
 		const float fDeltaTime = static_cast<float>(fNow - fLastTick);
 		fLastTick = fNow;
@@ -81,7 +87,7 @@ void CGameEngine::GameLoop()
 			fNextSecond = fNow + 1;
 		}
 
-		CShader::ReloadAll();
+		//CShader::ReloadAll();
 
 		// Events
 		start = clock::now();
@@ -95,9 +101,9 @@ void CGameEngine::GameLoop()
 		
 		// Draw
 		start = clock::now();
-		Draw(mGraphicsInstance);
+		Draw(GetWindow()->GetViewport(), mGraphicsInstance);
 		duration ChronoDraw = clock::now() - start;
-	
+		
 #ifdef _DEBUG
 		// Debug
 		COORD pos = { -1, -1 };
@@ -122,16 +128,10 @@ void CGameEngine::GameLoop()
 	CleanUp();
 }
 
+// TODO: Move to window
 void CGameEngine::HandleEvents()
 {
 	glfwPollEvents();
-
-	/*
-	for (uint32 i = 0; i < iEvents; i++)
-	{
-		mGameInstance->HandleInput(aInputEvents[i]);
-	}
-	*/
 }
 
 void CGameEngine::Tick(float deltaTime)
@@ -139,30 +139,24 @@ void CGameEngine::Tick(float deltaTime)
 	mGameInstance->Tick(deltaTime);
 }
 
-void CGameEngine::Draw(CGraphics* const graphics)
+void CGameEngine::Draw(CViewport const* const viewport, CRenderer* const graphics)
 {
 	graphics->Clear();
 
-	mGameInstance->Draw(graphics);
+	mGameInstance->Draw(viewport, graphics);
 
-	graphics->Swap();
+	mWindow->Swap();
 }
 
 void CGameEngine::Shutdown()
 {
-	glfwSetWindowShouldClose(GetWindow(), GLFW_TRUE);
+	GetWindow()->SetShouldClose(true);
 	mPendingShutdown = true;
 }
 
 void CGameEngine::CleanUp()
 {
+	delete mWindow;
 	delete mGameInstance;
 	delete mGraphicsInstance;
-
-	glfwTerminate();
-}
-
-GLFWwindow* const CGameEngine::GetWindow() const
-{
-	return mGraphicsInstance->GetWindow();
 }

@@ -1,11 +1,13 @@
 #pragma once
 
 class CGameInstance;
-class CGraphics;
-struct GLFWwindow;
+class CRenderer;
+class CViewport;
+class CWindow;
 
 class CGameEngine
 {
+private:
 	CGameEngine();
 	CGameEngine(const CGameEngine&) = delete;
 	void operator=(const CGameEngine&) = delete;
@@ -26,18 +28,19 @@ private:
 	void GameLoop();
 	void HandleEvents();
 	void Tick(float deltaTime);
-	void Draw(CGraphics* const graphics);
+	void Draw(CViewport const* const viewport, CRenderer* const graphics);
 
 	void CleanUp();
 
 public:
 	CGameInstance* const GetGameInstance() const { return mGameInstance; }
-	CGraphics* const GetGraphicsInstance() const { return mGraphicsInstance; }
-	GLFWwindow* const GetWindow() const;
+	CRenderer* const GetGraphicsInstance() const { return mGraphicsInstance; }
+	CWindow* const GetWindow() const { return mWindow; }
 
 private:
 	bool mPendingShutdown = false;
 
 	CGameInstance* mGameInstance;
-	CGraphics* mGraphicsInstance;
+	CRenderer* mGraphicsInstance;
+	CWindow* mWindow;
 };

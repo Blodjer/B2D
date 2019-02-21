@@ -8,10 +8,10 @@
 // Handle Events
 // Pause Game
 
-class CGameEngine;
-class CGraphics;
+class CRenderer;
 class CLevel;
 class CPlayerController;
+class CViewport;
 
 class CGameInstance
 {
@@ -26,25 +26,25 @@ public:
 	{
 		static_assert(std::is_base_of<CLevel, L>::value, "L must inherit from Scene");
 
-		if (this->LoadedLevel != nullptr)
+		if (mLoadedLevel != nullptr)
 		{
-			delete this->LoadedLevel;
+			delete mLoadedLevel;
 		}
 
-		this->LoadedLevel = new L();
+		mLoadedLevel = new L();
 	}
 
-	static CPlayerController* AddPlayerController(uint32 iId);
-	static void RemovePlayerController(uint32 iId);
-	static const std::map<uint32, CPlayerController*>* const GetPlayerControllers() { return &CGameInstance::PlayerControllers; }
+	static CPlayerController* AddPlayerController(uint32 id);
+	static void RemovePlayerController(uint32 id);
+	static const std::map<uint32, CPlayerController*>* const GetPlayerControllers() { return &CGameInstance::mPlayerControllers; }
 
 private:
-	void HandleInput(uint32 pEvent);
-	void Tick(float fDeltaTime);
-	void Draw(CGraphics* pGraphics);
+	void HandleInput(uint32 event);
+	void Tick(float deltaTime);
+	void Draw(CViewport const* const viewport, CRenderer* graphics);
 
 private:
-	CLevel* LoadedLevel;
-	static std::map<uint32, CPlayerController*> PlayerControllers;
+	CLevel* mLoadedLevel;
+	static std::map<uint32, CPlayerController*> mPlayerControllers;
 };
 

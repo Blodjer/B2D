@@ -2,25 +2,25 @@
 
 #include "IComponentRenderer.h"
 
+#include <string>
+
+class CMaterial;
 class CTexture;
-class CShader;
 
 class CSpriteRenderer : public IComponentRenderer
 {
 public:
 	CSpriteRenderer(CGameObject* const owner);
-	virtual ~CSpriteRenderer();
+	virtual ~CSpriteRenderer() = default;
 
 	void SetSprite(const std::string& filepath);
-	void SetShader(CShader* shader);
 
-	virtual void Draw(CGraphics* graphics) override;
+	virtual CMaterial* GetMaterial() const override { return mMaterial; }
+	CTexture const* GetTexture() const { return mTexture; }
 
 private:
-	uint32 mWidth;
-	uint32 mHeight;
-
-	CTexture* mTexture;
-	CTexture* mTexture2;
-	CShader* mShader;
+	TVec2 mSize;
+	
+	CMaterial* mMaterial;
+	CTexture const* mTexture;
 };

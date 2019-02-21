@@ -1,8 +1,9 @@
 #include "Shader.h"
 
 #include <algorithm>
-#include <iostream>
 #include <fstream>
+#include <GL/glew.h>
+#include <iostream>
 #include <sstream>
 
 std::map<const std::string, GLuint> CShader::msLoadedShaders;
@@ -50,6 +51,14 @@ CShader::~CShader()
 
 CShader* CShader::Load(const std::string& VSFile, const std::string& FSFile)
 {
+	if (msShaders.size() >= 32)
+	{
+		__debugbreak();
+		return nullptr;
+	}
+
+	msShaders.reserve(32); // if the vector has to be resized on the emplace the 
+
 	if (CShader::msLoadedShaders.find(VSFile) == CShader::msLoadedShaders.end())
 	{
 		auto VSCode = CShader::ReadShader(VSFile);

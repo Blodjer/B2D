@@ -5,7 +5,8 @@
 #include <vector>
 
 class CGameObject;
-class CGraphics;
+class CRenderer;
+class CViewport;
 
 class CLevel
 {
@@ -31,7 +32,7 @@ public:
 	void Tick(float deltaTime);
 	void HandleCollision();
 
-	void Draw(CGraphics* pGraphics);
+	void Draw(CViewport const* const viewport, CRenderer* renderer);
 
 private:
 	std::vector<CGameObject*> mGameObjectsToAdd;

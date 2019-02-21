@@ -1,13 +1,14 @@
 #include "GameInstance.h"
 
 #include "GameEngine.h"
+#include "Graphics/Viewport.h"
 #include "Input.h"
 #include "Level.h"
 #include "PlayerController.h"
 
 #include <algorithm>
 
-std::map<uint32, CPlayerController*> CGameInstance::PlayerControllers;
+std::map<uint32, CPlayerController*> CGameInstance::mPlayerControllers;
 
 CGameInstance::CGameInstance()
 {
@@ -16,74 +17,47 @@ CGameInstance::CGameInstance()
 
 CGameInstance::~CGameInstance()
 {
-	delete this->LoadedLevel;
+	delete mLoadedLevel;
 
-	for (const auto& pPlayerController : this->PlayerControllers)
+	for (const auto& pPlayerController : mPlayerControllers)
 	{
 		delete pPlayerController.second;
 	}
-	this->PlayerControllers.clear();
+	mPlayerControllers.clear();
 }
 
 void CGameInstance::HandleInput(uint32 pEvent)
 {
-	/*
-	if (pEvent.type == SDL_KEYDOWN)
-	{
-		if (pEvent.key.repeat == 0)
-		{
-			if (pEvent.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-			{
-				CGameEngine::Instance()->Shutdown();
-				return;
-			}
-
-			for (auto pPlayerController : this->PlayerControllers)
-			{
-				pPlayerController.second->ProcessInputKey(pEvent.key.keysym.scancode, EKeyEvent::KEY_DOWN);
-			}
-		}
-	}
-	else if (pEvent.type == SDL_KEYUP)
-	{
-		if (pEvent.key.repeat == 0)
-		{
-			for (auto pPlayerController : this->PlayerControllers)
-			{
-				pPlayerController.second->ProcessInputKey(pEvent.key.keysym.scancode, EKeyEvent::KEY_UP);
-			}
-		}
-	}
-	*/
+	
 }
 
-void CGameInstance::Tick(float fDeltaTime)
+void CGameInstance::Tick(float deltaTime)
 {
-	if (this->LoadedLevel != NULL)
+	if (mLoadedLevel != nullptr)
 	{
-		this->LoadedLevel->Tick(fDeltaTime);
+		mLoadedLevel->Tick(deltaTime);
 	}
 }
 
-void CGameInstance::Draw(CGraphics* pGraphics)
+void CGameInstance::Draw(CViewport const* const viewport, CRenderer* graphics)
 {
-	if (this->LoadedLevel != NULL)
+	if (mLoadedLevel != nullptr)
 	{
-		this->LoadedLevel->Draw(pGraphics);
+		mLoadedLevel->Draw(viewport, graphics);
 	}
 }
 
-CPlayerController* CGameInstance::AddPlayerController(uint32 iId)
+CPlayerController* CGameInstance::AddPlayerController(uint32 id)
 {
-	if (PlayerControllers.find(iId) == PlayerControllers.end())
+	if (mPlayerControllers.find(id) == mPlayerControllers.end())
 	{
-		PlayerControllers[iId] = new CPlayerController(iId);
+		mPlayerControllers[id] = new CPlayerController(id);
 	}
 
-	return PlayerControllers[iId];
+	return mPlayerControllers[id];
 }
 
-void CGameInstance::RemovePlayerController(uint32 iId)
+void CGameInstance::RemovePlayerController(uint32 id)
 {
-	PlayerControllers.erase(iId);
+	mPlayerControllers.erase(id);
 }

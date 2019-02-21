@@ -207,6 +207,7 @@
   <ItemGroup>
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\Component\BoxCollider.h" />
+    <ClInclude Include="Source\Component\ComplexSpriteRenderer.h" />
     <ClInclude Include="Source\Component\Component.h" />
     <ClInclude Include="Source\Component\ComponentCollider.h" />
     <ClInclude Include="Source\Component\IComponentRenderer.h" />
@@ -226,10 +227,12 @@
     <ClInclude Include="Source\Debug\debug_new.h" />
     <ClInclude Include="Source\Debug\fast_mutex.h" />
     <ClInclude Include="Source\GameObject.h" />
-    <ClInclude Include="Source\Graphics\Graphics.h" />
+    <ClInclude Include="Source\Graphics\Material.h" />
+    <ClInclude Include="Source\Graphics\Renderer.h" />
     <ClInclude Include="Source\Graphics\Shader.h" />
     <ClInclude Include="Source\Graphics\Texture.h" />
     <ClInclude Include="Source\Graphics\Viewport.h" />
+    <ClInclude Include="Source\Graphics\Window.h" />
     <ClInclude Include="Source\Input.h" />
     <ClInclude Include="Source\Level.h" />
     <ClInclude Include="Source\Math\BMath.h" />
@@ -238,6 +241,7 @@
   <ItemGroup>
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\Component\BoxCollider.cpp" />
+    <ClCompile Include="Source\Component\ComplexSpriteRenderer.cpp" />
     <ClCompile Include="Source\Component\Component.cpp" />
     <ClCompile Include="Source\Component\ComponentCollider.cpp" />
     <ClCompile Include="Source\Component\InputComponent.cpp" />
@@ -247,10 +251,12 @@
     <ClCompile Include="Source\Core\Types\Vector2.cpp" />
     <ClCompile Include="Source\Debug\debug_new.cpp" />
     <ClCompile Include="Source\GameObject.cpp" />
-    <ClCompile Include="Source\Graphics\Graphics.cpp" />
+    <ClCompile Include="Source\Graphics\Material.cpp" />
+    <ClCompile Include="Source\Graphics\Renderer.cpp" />
     <ClCompile Include="Source\Graphics\Shader.cpp" />
     <ClCompile Include="Source\Graphics\Texture.cpp" />
     <ClCompile Include="Source\Graphics\Viewport.cpp" />
+    <ClCompile Include="Source\Graphics\Window.cpp" />
     <ClCompile Include="Source\Input.cpp" />
     <ClCompile Include="Source\Level.cpp" />
     <ClCompile Include="Source\PlayerController.cpp" />

@@ -3,7 +3,7 @@
 #include "Camera.h"
 #include "Component/ComponentCollider.h"
 #include "GameObject.h"
-#include "Graphics/Graphics.h"
+#include "Graphics/Renderer.h"
 
 /*
 receive input
@@ -72,10 +72,7 @@ void CLevel::HandleCollision()
 	}
 }
 
-void CLevel::Draw(CGraphics* graphics)
+void CLevel::Draw(CViewport const* const viewport, CRenderer* renderer)
 {
-	for (const CGameObject* gameObject : mGameObjects)
-	{
-		graphics->Draw(gameObject);
-	}
+	renderer->Draw(viewport, mGameObjects);
 }

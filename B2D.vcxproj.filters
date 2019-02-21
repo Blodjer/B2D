@@ -25,6 +25,9 @@
     <ClInclude Include="Source\Component\BoxCollider.h">
       <Filter>Component</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Component\ComplexSpriteRenderer.h">
+      <Filter>Component</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Component\Component.h">
       <Filter>Component</Filter>
     </ClInclude>
@@ -80,7 +83,10 @@
       <Filter>Debug</Filter>
     </ClInclude>
     <ClInclude Include="Source\GameObject.h" />
-    <ClInclude Include="Source\Graphics\Graphics.h">
+    <ClInclude Include="Source\Graphics\Material.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Renderer.h">
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="Source\Graphics\Shader.h">
@@ -90,6 +96,9 @@
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="Source\Graphics\Viewport.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Window.h">
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="Source\Input.h" />
@@ -102,6 +111,9 @@
   <ItemGroup>
     <ClCompile Include="Source\Camera.cpp" />
     <ClCompile Include="Source\Component\BoxCollider.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Component\ComplexSpriteRenderer.cpp">
       <Filter>Component</Filter>
     </ClCompile>
     <ClCompile Include="Source\Component\Component.cpp">
@@ -129,7 +141,10 @@
       <Filter>Debug</Filter>
     </ClCompile>
     <ClCompile Include="Source\GameObject.cpp" />
-    <ClCompile Include="Source\Graphics\Graphics.cpp">
+    <ClCompile Include="Source\Graphics\Material.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics\Renderer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics\Shader.cpp">
@@ -139,6 +154,9 @@
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics\Viewport.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics\Window.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Source\Input.cpp" />

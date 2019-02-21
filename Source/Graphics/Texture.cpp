@@ -1,9 +1,9 @@
 #include "Texture.h"
 
+#include <GL/glew.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
-
-#include <GLFW/glfw3.h>
 
 GLuint CTexture::LoadTexture(std::string const& filename, int32& width, int32& height)
 {
