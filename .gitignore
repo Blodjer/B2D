@@ -1,6 +1,7 @@
 # Visual Studio
 .vs/
-*.vcxproj.user
+*.vcxproj*
+*.sln
 *.suo
 
 # Prerequisites
