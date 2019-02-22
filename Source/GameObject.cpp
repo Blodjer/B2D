@@ -11,11 +11,6 @@ CGameObject::CGameObject()
 
 CGameObject::~CGameObject()
 {
-	for (CComponent* const component : mComponentsToAdd)
-	{
-		delete component;
-	}
-
 	for (CComponent* const component : mComponents)
 	{
 		delete component;
@@ -29,12 +24,6 @@ void CGameObject::RemoveComponent(CComponent* const component)
 
 void CGameObject::Update(float deltaTime)
 {
-	for (CComponent* const component : mComponentsToAdd)
-	{
-		mComponents.push_back(component);
-	}
-	mComponentsToAdd.clear();
-
 	for (CComponent* const component : mComponents)
 	{
 		component->Update(deltaTime);

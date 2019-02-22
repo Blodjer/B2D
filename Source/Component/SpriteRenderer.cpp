@@ -10,7 +10,7 @@
 CSpriteRenderer::CSpriteRenderer(CGameObject* const owner)
 	: IComponentRenderer(owner)
 {
-	CShader* const shader = CShader::Load("Content/Shader/SimpleSpriteVS.glsl", "Content/Shader/SimpleSpritePS.glsl");
+	CShader* const shader = CShader::Load("Content/Shader/DefaultVS.glsl", "Content/Shader/SimpleSpritePS.glsl");
 	mMaterial = new CMaterial(shader);
 
 	SetSprite("Content/Sprites/MissingTexture.png");

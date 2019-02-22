@@ -20,7 +20,7 @@ public:
 		static_assert(std::is_base_of<CComponent, T>::value, "T must inherit from CComponent");
 
 		T* component = new T(this);
-		mComponentsToAdd.push_back(component);
+        mComponents.push_back(component);
 		return component;
 	}
 
@@ -34,7 +34,6 @@ public:
 private:
 	TVec2 mPosition = TVec2::Zero;
 
-	std::vector<CComponent*> mComponentsToAdd;
 	std::vector<CComponent*> mComponents;
 	std::vector<CComponent*> mComponentsToRemove;
 };
