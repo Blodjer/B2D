@@ -41,6 +41,6 @@ private:
 	EProjection mTargetProjection;
 	float mProjectionLerp;
 
-	CViewport* mCurrentViewport;
+	CViewport* mCurrentViewport = nullptr;
 };
 

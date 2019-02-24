@@ -90,6 +90,13 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 
 		for (uint16 i = 0; i < material->mTextures.size(); ++i)
 		{
+			if (material->mTextures[i] == nullptr)
+			{
+				glActiveTexture(GL_TEXTURE0 + i);
+				glBindTexture(GL_TEXTURE_2D, 0);
+				continue;
+			}
+
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, material->mTextures[i]->mHandle);
 
@@ -100,7 +107,7 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 		}
 
 		TMatrix model(1.0f);
-		model = TMatrix::Translate(model, TVec3(0, 0, component->GetRelativePosition().Y));
+		model = TMatrix::Translate(model, TVec3(component->GetRelativePosition().X, component->GetRelativePosition().Y, component->GetRelativePosition().Y));
 		model = TMatrix::Scale(model, TVec3(140, 140, 140));
 
 		currentShader->SetMatrix("model", model.GetPtr());

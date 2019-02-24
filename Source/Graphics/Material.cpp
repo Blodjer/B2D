@@ -9,21 +9,8 @@ CMaterial::CMaterial(CShader* const shader)
 
 }
 
-void CMaterial::SetTexture(uint32 index, CTexture const* texture)
+void CMaterial::SetTexture(uint32 index, ResourcePtr<CTexture> texture)
 {
-	mShader->Use();
-	
-	std::string s = "texture";
-	s.append(std::to_string(index));
-
-	if (texture == nullptr)
-	{
-		mShader->SetInt(s, -1);
-		return;
-	}
-
-	mShader->SetInt(s, texture->GetHandle());
-
 	if (index < mTextures.size())
 	{
 		mTextures[index] = texture;
@@ -32,4 +19,14 @@ void CMaterial::SetTexture(uint32 index, CTexture const* texture)
 	{
 		mTextures.push_back(texture);
 	}
+}
+
+ResourcePtr<CTexture> CMaterial::GetTexture(uint32 index) const
+{
+	if (index < mTextures.size())
+	{
+		return mTextures[index];
+	}
+	
+	return ResourcePtr<CTexture>::InvalidPtr;
 }

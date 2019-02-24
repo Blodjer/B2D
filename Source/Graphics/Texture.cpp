@@ -5,37 +5,37 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-GLuint CTexture::LoadTexture(std::string const& filename, int32& width, int32& height)
+CTexture::~CTexture()
+{
+	glDeleteTextures(1, &mHandle);
+}
+
+bool CTexture::Load(ResourcePath const& path)
 {
 	stbi_set_flip_vertically_on_load(1);
 
-	int tmpWidth;
-	int tmpHeight;
-	int comp;
+	if (!stbi_info(path.c_str(), &mWidth, &mHeight, &mComponents))
+	{
+		return false;
+	}
 
-	unsigned char* imgPtr = stbi_load(filename.c_str(), &tmpWidth, &tmpHeight, &comp, STBI_rgb_alpha);
+	unsigned char* imgPtr = stbi_load(path.c_str(), &mWidth, &mHeight, &mComponents, STBI_rgb_alpha);
 	if (imgPtr == nullptr)
 	{
-		return GL_INVALID_VALUE;
+		return false;
 	}
 
 	// Generate the OpenGL texture object
 	GLuint texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tmpWidth, tmpHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgPtr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mWidth, mHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, imgPtr);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// clean up
 	stbi_image_free(imgPtr);
 
-	width = tmpWidth;
-	height = tmpHeight;
-	return texture;
-}
-
-CTexture::CTexture(std::string const& filename)
-{
-	mHandle = LoadTexture(filename.c_str(), mWidth, mHeight);
+	mHandle = texture;
+	return mHandle != GL_INVALID_VALUE;
 }

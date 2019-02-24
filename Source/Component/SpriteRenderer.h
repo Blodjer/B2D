@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IComponentRenderer.h"
+#include "Core/Resource.h"
 
 #include <string>
 
@@ -13,14 +14,14 @@ public:
 	CSpriteRenderer(CGameObject* const owner);
 	virtual ~CSpriteRenderer() = default;
 
-	void SetSprite(const std::string& filepath);
+	void SetSprite(const std::string& filepath, bool fitSize = true);
 
 	virtual CMaterial* GetMaterial() const override { return mMaterial; }
-	CTexture const* GetTexture() const { return mTexture; }
+	ResourcePtr<CTexture> GetTexture() const { return mTexture; }
 
 private:
 	TVec2 mSize;
-	
+
 	CMaterial* mMaterial;
-	CTexture const* mTexture;
+	ResourcePtr<CTexture> mTexture;
 };

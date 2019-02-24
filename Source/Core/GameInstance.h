@@ -44,7 +44,7 @@ private:
 	void Draw(CViewport const* const viewport, CRenderer* graphics);
 
 private:
-	CLevel* mLoadedLevel;
+	CLevel* mLoadedLevel = nullptr;
 	static std::map<uint32, CPlayerController*> mPlayerControllers;
 };
 

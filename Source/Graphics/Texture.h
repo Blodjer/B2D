@@ -1,26 +1,22 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Core/Resource.h"
 
 #include <string>
 
-typedef unsigned int GLuint;
-
-class CTexture
+class CTexture : public IResource
 {
 public:
-	CTexture(std::string const& filename);
-	~CTexture() = default;
+	~CTexture();
 
-	GLuint GetHandle() const { return mHandle; }
-
-private:
-	GLuint LoadTexture(std::string const&, int32& width, int32& height);
+	virtual bool Load(ResourcePath const& filePath) override;
+	static ResourcePath const GetFallbackResourcePath() { return "Content/Sprites/MissingTexture.png"; }
 
 public:
 	int32 mWidth;
 	int32 mHeight;
+	int32 mComponents;
 
-	GLuint mHandle;
+	uint32 mHandle;
 };
-
