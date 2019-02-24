@@ -95,7 +95,7 @@ public:
         if (mLoadedResources.find(filePath) == mLoadedResources.end())
 		{
 			T* resource = new T();
-			if (!resource->Load(filePath))
+			if (resource->Load(filePath))
 			{
 				mLoadedResources.emplace(filePath, resource);
 			}
@@ -135,14 +135,16 @@ public:
 		if (resourcePtr == nullptr || (fallback != mLoadedResources.end() && fallback->second == resource))
 		{
 			T* newResource = new T();
-			if (!newResource->Load(path))
+			if (newResource->Load(path))
+			{
+				mLoadedResources[path] = newResource;
+				return true;
+			}
+			else
 			{
 				delete newResource;
 				return false;
 			}
-
-			mLoadedResources[path] = newResource;
-			return true;
 		}
 
 		IResource* newResource = const_cast<IResource*>(resource);
