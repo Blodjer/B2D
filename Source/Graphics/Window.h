@@ -2,8 +2,6 @@
 
 #include "Core/Types/BasicTypes.h"
 
-#include <string>
-
 class CGameEngine;
 struct GLFWwindow;
 class Graphics;

@@ -1,3 +1,4 @@
+#include "B2D_pch.h"
 #include "Component.h"
 
 #include "GameObject.h"

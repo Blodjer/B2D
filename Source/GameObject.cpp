@@ -1,8 +1,7 @@
+#include "B2D_pch.h"
 #include "GameObject.h"
 
 #include "Component/Component.h"
-
-#include <algorithm>
 
 CGameObject::CGameObject()
 {

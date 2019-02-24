@@ -1,8 +1,7 @@
+#include "B2D_pch.h"
 #include "PlayerController.h"
 
 #include "Component/InputComponent.h"
-
-#include <algorithm>
 
 CPlayerController::CPlayerController(uint32 id) : mId(id)
 {

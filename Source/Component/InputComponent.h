@@ -3,8 +3,6 @@
 #include "Component/Component.h"
 #include "Input.h"
 
-#include <map>
-
 DECLARE_DELEGATE(TKeyDelegate);
 DECLARE_DELEGATE(TAxisDelegate, float);
 

@@ -2,8 +2,6 @@
 
 #include "Core/Core.h"
 
-#include <vector>
-
 class CGameObject;
 class CRenderer;
 class CViewport;

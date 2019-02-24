@@ -3,9 +3,6 @@
 #include "Core/Core.h"
 #include "Core/Resource.h"
 
-#include <vector>
-#include <array>
-
 class CRenderer;
 class CShader;
 class CTexture;

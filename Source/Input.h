@@ -2,9 +2,6 @@
 
 #include "Core/Core.h"
 
-#include <map>
-#include <vector>
-
 class CGameEngine;
 struct GLFWwindow;
 

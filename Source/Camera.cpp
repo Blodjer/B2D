@@ -1,3 +1,4 @@
+#include "B2D_pch.h"
 #include "Camera.h"
 
 #include "Core/GameEngine.h"

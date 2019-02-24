@@ -2,10 +2,7 @@
 
 #include "IComponentRenderer.h"
 
-#include <string>
-
 class CMaterial;
-class CTexture;
 
 class CComplexSpriteRenderer : public IComponentRenderer
 {

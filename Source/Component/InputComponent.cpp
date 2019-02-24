@@ -1,7 +1,7 @@
+#include "B2D_pch.h"
 #include "InputComponent.h"
 
 #include "GameObject.h"
-#include "Input.h"
 #include "PlayerController.h"
 
 CInputComponent::CInputComponent(CGameObject* const owner)

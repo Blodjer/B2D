@@ -1,3 +1,4 @@
+#include "B2D_pch.h"
 #include "GameEngine.h"
 
 #include "Core.h"
@@ -8,8 +9,6 @@
 #include "Graphics/Window.h"
 #include "Input.h"
 
-#include <windows.h>
-#include <algorithm>
 #include <chrono>
 #include <GLFW/glfw3.h>
 #include <iostream>

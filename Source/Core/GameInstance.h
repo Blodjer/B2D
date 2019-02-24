@@ -2,8 +2,6 @@
 
 #include "Core/Core.h"
 
-#include <map>
-
 // Only one instance per engine
 // Handle Events
 // Pause Game

@@ -1,11 +1,10 @@
+#include "B2D_pch.h"
 #include "SpriteRenderer.h"
 
 #include "GameObject.h"
 #include "Graphics/Material.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Texture.h"
-
-#include <string>
 
 CSpriteRenderer::CSpriteRenderer(CGameObject* const owner)
 	: IComponentRenderer(owner)

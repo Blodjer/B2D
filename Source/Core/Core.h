@@ -1,5 +1,7 @@
 #pragma once
 
+#include "B2D_pch.h"
+
 #define B2D
 
 #define INLINE inline
@@ -7,7 +9,6 @@
 
 #ifdef _DEBUG
 #define B2D_DEBUG
-#include "Debug/Debug.h"
 #else
 #define B2D_RELEASE
 #endif

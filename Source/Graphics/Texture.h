@@ -3,8 +3,6 @@
 #include "Core/Core.h"
 #include "Core/Resource.h"
 
-#include <string>
-
 class CTexture : public IResource
 {
 public:

@@ -1,6 +1,6 @@
+#include "B2D_pch.h"
 #include "Shader.h"
 
-#include <algorithm>
 #include <fstream>
 #include <GL/glew.h>
 #include <iostream>

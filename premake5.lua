@@ -8,8 +8,12 @@ group ""
 project "B2D"
 	language "C++"
 	kind "StaticLib"
+	staticruntime "On"
 
 	libdirs (mLibdir)
+
+	pchheader "B2D_pch.h"
+	pchsource "%{prj.location}/Source/B2D_pch.cpp"
 
 	files
 	{

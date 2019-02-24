@@ -1,3 +1,4 @@
+#include "B2D_pch.h"
 #include "GameInstance.h"
 
 #include "GameEngine.h"
@@ -5,8 +6,6 @@
 #include "Input.h"
 #include "Level.h"
 #include "PlayerController.h"
-
-#include <algorithm>
 
 std::map<uint32, CPlayerController*> CGameInstance::mPlayerControllers;
 

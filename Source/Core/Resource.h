@@ -1,9 +1,5 @@
 #pragma once
 
-#include <string>
-#include <type_traits>
-#include <unordered_map>
-
 class IResource;
 
 template <typename T>

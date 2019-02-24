@@ -3,7 +3,6 @@
 #include "Core/Core.h"
 
 #include <math.h>
-#include <algorithm>
 
 class CGameEngine;
 
@@ -29,7 +28,7 @@ public:
 	FORCEINLINE static float Tan(float value) { return std::tan(value); }
 
 	template<typename T>
-	FORCEINLINE static T RandomRange(T min, T max) { return min + (max - min) * (rand() / static_cast<float>(RAND_MAX)); }
+	FORCEINLINE static T RandomRange(T min, T max) { return static_cast<T>(min + (max - min) * (rand() / static_cast<float>(RAND_MAX))); }
 
 	template<typename T>
 	FORCEINLINE static float Lerp(T a, T b, T alpha) { return (static_cast<T>(1) - alpha) * a + alpha * b; }

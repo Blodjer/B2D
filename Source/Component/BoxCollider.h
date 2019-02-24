@@ -10,8 +10,6 @@ public:
 
 	void SetSize(float width, float height);
 
-	//struct SDL_Rect GetRect();
-
 private:
 	TVec2 mSize;
 

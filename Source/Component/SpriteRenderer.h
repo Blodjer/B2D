@@ -3,8 +3,6 @@
 #include "IComponentRenderer.h"
 #include "Core/Resource.h"
 
-#include <string>
-
 class CMaterial;
 class CTexture;
 
