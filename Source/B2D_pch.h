@@ -1,8 +1,10 @@
 #pragma once
 
-#define NOMINMAX
-#include <windows.h>
-#undef DELETE
+#ifdef B2D_PLATFORM_WINDOWS
+    #define NOMINMAX
+    #include <windows.h>
+    #undef DELETE
+#endif
 
 #include <algorithm>
 #include <chrono>
@@ -13,5 +15,4 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Core/Types/BasicTypes.h"
-#include "Core/Log.h"
+#include "Core/Core.h"

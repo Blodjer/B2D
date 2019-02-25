@@ -17,7 +17,7 @@ public:
 	template<class T>
 	T* SpawnGameObject(TVec2 spawnPosition = TVec2::Zero)
 	{
-		static_assert(std::is_base_of<CGameObject, T>::value, "T must inherit from CGameObject");
+        B2D_STATIC_ASSERT_TYPE(CGameObject, T);
 
 		T* gameObject = new T();
 		gameObject->SetPosition(spawnPosition);

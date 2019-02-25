@@ -12,9 +12,6 @@ int main(int argc, const char*[])
 	ApplicationConfig config;
 	B2D::Config(config);
 
-#if _DEBUG
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 1 });
-#endif
 	Log::Init(config.name);
 
 	CGameEngine* const engine = new CGameEngine(config);

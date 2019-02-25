@@ -9,7 +9,7 @@ public:
 	~CTexture();
 
 	virtual bool Load(ResourcePath const& filePath) override;
-	static ResourcePath const GetFallbackResourcePath() { return "Content/Sprites/MissingTexture.png"; }
+    static constexpr auto GetFallbackResourcePath() { return "Content/Sprites/MissingTexture.png"; }
 
 public:
 	int32 mWidth;

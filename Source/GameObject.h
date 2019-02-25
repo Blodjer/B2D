@@ -15,7 +15,7 @@ public:
 	template<class T>
 	T* AddComponent()
 	{
-		static_assert(std::is_base_of<CComponent, T>::value, "T must inherit from CComponent");
+        B2D_STATIC_ASSERT_TYPE(CComponent, T)
 
 		T* component = new T(this);
         mComponents.push_back(component);

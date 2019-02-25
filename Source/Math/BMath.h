@@ -2,7 +2,7 @@
 
 #include "Core/Core.h"
 
-#include <math.h>
+#include <cmath>
 
 class CGameEngine;
 

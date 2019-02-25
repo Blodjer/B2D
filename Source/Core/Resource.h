@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(B2D_EDITOR) || defined(B2D_BUILD_DEBUG)
+    #define RESOURCE_FALLBACK
+#endif
+
 class IResource;
 
 template <typename T>
@@ -20,7 +24,7 @@ public:
 
 public:
 	virtual bool Load(ResourcePath const& filePath) = 0;
-	static ResourcePath const GetFallbackResourcePath() { return ""; };
+	static constexpr auto GetFallbackResourcePath();
 };
 
 template <typename T>
@@ -86,11 +90,11 @@ public:
 	template<typename T>
     static ResourcePtr<T> Get(ResourcePath const& path)
     {
-		static_assert(std::is_base_of<IResource, T>::value, "Not a resource!");
+        B2D_STATIC_ASSERT_TYPE(IResource, T);
 		
         if (mLoadedResources.find(path) == mLoadedResources.end())
 		{
-#ifdef _DEBUG
+#ifndef B2D_BUILD_RELEASE
 			auto loadingStartTime = std::chrono::high_resolution_clock::now();
 #endif
 
@@ -99,7 +103,7 @@ public:
 			{
 				mLoadedResources.emplace(path, resource);
 
-#ifdef _DEBUG
+#ifndef B2D_BUILD_RELEASE
 				std::chrono::duration<double> elapsedTime = std::chrono::high_resolution_clock::now() - loadingStartTime;
 				B2D_CORE_INFO("Loaded resource: {0} ({1}s)", path, elapsedTime.count());
 #else
@@ -113,7 +117,7 @@ public:
 
 				B2D_CORE_ERROR("Failed to load resource: {0}", path);
 
-#ifndef RELEASE
+#ifdef RESOURCE_FALLBACK
 				mLoadedResources[path] = TryGetFallback<T>();
 #endif
 			}
@@ -125,22 +129,18 @@ public:
 	template<typename T>
 	static bool Reload(ResourcePtr<T> const resourcePtr)
 	{
-#ifndef RELEASE
-		static_assert(std::is_base_of<IResource, T>::value, "Not a resource!");
+#ifdef B2D_EDITOR
+        B2D_STATIC_ASSERT_TYPE(IResource, T);
 
-		ResourcePath const& path = resourcePtr.mPtr->first;
-		if (mLoadedResources.find(path) == mLoadedResources.end())
-		{
-			// ASSERT/EXCEPTION
-			return false;
-		}
-
-#ifndef MEMDEBUG
-		_CrtMemState memBefore;
-		_CrtMemCheckpoint(&memBefore);
+#ifdef B2D_DEBUG_MEMORY
+        _CrtMemState memBefore;
+        _CrtMemCheckpoint(&memBefore);
 #endif
 
-		IResource const* resource = resourcePtr.mPtr->second;
+		ResourcePath const& path = resourcePtr.mPtr->first;
+        IResource const* resource = resourcePtr.mPtr->second;
+
+        B2D_ASSERT(mLoadedResources.find(path) == mLoadedResources.end());
 
 		ResourceList::iterator fallback = mLoadedResources.find(T::GetFallbackResourcePath());
 		if (resourcePtr == nullptr || (fallback != mLoadedResources.end() && fallback->second == resource))
@@ -170,13 +170,14 @@ public:
 		if (!newResource->Load(path))
 		{
 			delete resource;
+#ifdef RESOURCE_FALLBACK
 			mLoadedResources[path] = TryGetFallback<T>();
-
+#endif
 			B2D_CORE_ERROR("Failed to reload resource: {0}", path);
 			return false;
 		}
 
-#ifndef MEMDEBUG
+#ifdef B2D_DEBUG_MEMORY
 		_CrtMemState memAfter;
 		_CrtMemCheckpoint(&memAfter);
 
@@ -184,7 +185,8 @@ public:
 		if (_CrtMemDifference(&memDiff, &memBefore, &memAfter))
 		{
 			_CrtMemDumpStatistics(&memDiff);
-			__debugbreak();
+            B2D_CORE_WARNING("Memory increased during reload resource: {0}", path);
+            B2D_BREAK();
 		}
 #endif
 
@@ -195,7 +197,7 @@ public:
 #endif
 	}
 
-#ifndef RELEASE
+#ifdef RESOURCE_FALLBACK
 	template<typename T>
 	static T const* TryGetFallback()
 	{
@@ -213,7 +215,7 @@ public:
 
 		tried = true;
 
-		ResourcePath const& path = T::GetFallbackResourcePath();
+		ResourcePath const path = T::GetFallbackResourcePath();
 		if (path.empty())
 		{
 			return nullptr;

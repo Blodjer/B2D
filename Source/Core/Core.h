@@ -2,16 +2,9 @@
 
 #include "B2D_pch.h"
 
-#define B2D
-
-#define INLINE inline
-#define FORCEINLINE __forceinline
-
-#ifdef _DEBUG
-#define B2D_DEBUG
-#else
-#define B2D_RELEASE
-#endif
+#include "Core/CoreDefines.h"
+#include "Core/Log.h"
+#include "Core/CoreAssert.h"
 
 #include "Math/BMath.h"
 

@@ -18,7 +18,7 @@ public:
 	template<class L>
 	L* LoadLevel()
 	{
-		static_assert(std::is_base_of<CLevel, L>::value, "L must inherit from Scene");
+        B2D_STATIC_ASSERT_TYPE(CLevel, L);
 
 		if (mLoadedLevel != nullptr)
 		{

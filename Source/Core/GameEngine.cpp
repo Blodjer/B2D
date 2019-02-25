@@ -51,7 +51,6 @@ CGameEngine::~CGameEngine()
 
 void CGameEngine::Run()
 {
-    B2D_CORE_INFO("Starting game loop");
 	GameLoop();
 }
 
@@ -59,7 +58,7 @@ void CGameEngine::GameLoop()
 {
 	CInput input;
 
-#ifdef _DEBUG
+#if defined(B2D_PLATFORM_WINDOWS) && !defined(B2D_NO_LOGGING)
 	HANDLE pOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
 	using duration = std::chrono::duration<double, std::milli>;
@@ -104,7 +103,7 @@ void CGameEngine::GameLoop()
 		Draw(GetWindow()->GetViewport(), mGraphicsInstance);
 		duration ChronoDraw = clock::now() - start;
 		
-#ifdef _DEBUG
+#if defined(B2D_PLATFORM_WINDOWS) && !defined(B2D_NO_LOGGING)
 		// Debug
 		COORD pos = { -1, -1 };
 		CONSOLE_SCREEN_BUFFER_INFO cbsi;
