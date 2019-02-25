@@ -2,10 +2,6 @@
 
 #include "Core/Core.h"
 
-// Only one instance per engine
-// Handle Events
-// Pause Game
-
 class CRenderer;
 class CLevel;
 class CPlayerController;
@@ -20,7 +16,7 @@ public:
 	~CGameInstance();
 
 	template<class L>
-	void LoadLevel()
+	L* LoadLevel()
 	{
 		static_assert(std::is_base_of<CLevel, L>::value, "L must inherit from Scene");
 
@@ -30,6 +26,7 @@ public:
 		}
 
 		mLoadedLevel = new L();
+        return mLoadedLevel;
 	}
 
 	static CPlayerController* AddPlayerController(uint32 id);

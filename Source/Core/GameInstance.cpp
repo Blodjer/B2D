@@ -32,18 +32,23 @@ void CGameInstance::HandleInput(uint32 pEvent)
 
 void CGameInstance::Tick(float deltaTime)
 {
-	if (mLoadedLevel != nullptr)
+	if (mLoadedLevel == nullptr)
 	{
-		mLoadedLevel->Tick(deltaTime);
+        B2D_CORE_ERROR("No level loaded");
+        return;
 	}
+
+    mLoadedLevel->Tick(deltaTime);
 }
 
 void CGameInstance::Draw(CViewport const* const viewport, CRenderer* graphics)
 {
-	if (mLoadedLevel != nullptr)
-	{
-		mLoadedLevel->Draw(viewport, graphics);
-	}
+    if (mLoadedLevel == nullptr)
+    {
+        return;
+    }
+
+	mLoadedLevel->Draw(viewport, graphics);
 }
 
 CPlayerController* CGameInstance::AddPlayerController(uint32 id)

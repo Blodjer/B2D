@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Core.h"
+
 struct ApplicationConfig
 {
     std::string name = "Game";
@@ -16,7 +18,10 @@ struct ApplicationConfig
     }
 };
 
+class CLevel;
+
 namespace B2D
 {
     void Config(ApplicationConfig& config);
+    void PopulateLevel(CLevel* const level);
 }
