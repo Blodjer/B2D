@@ -84,28 +84,42 @@ public:
 	static ResourceList const& GetLoadedResources() { return mLoadedResources; }
 
 	template<typename T>
-    static ResourcePtr<T> Get(ResourcePath const& filePath)
+    static ResourcePtr<T> Get(ResourcePath const& path)
     {
 		static_assert(std::is_base_of<IResource, T>::value, "Not a resource!");
 		
-        if (mLoadedResources.find(filePath) == mLoadedResources.end())
+        if (mLoadedResources.find(path) == mLoadedResources.end())
 		{
+#ifdef _DEBUG
+			auto loadingStartTime = std::chrono::high_resolution_clock::now();
+#endif
+
 			T* resource = new T();
-			if (resource->Load(filePath))
+			if (resource->Load(path))
 			{
-				mLoadedResources.emplace(filePath, resource);
+				mLoadedResources.emplace(path, resource);
+
+#ifdef _DEBUG
+				std::chrono::duration<double> elapsedTime = std::chrono::high_resolution_clock::now() - loadingStartTime;
+				B2D_CORE_INFO("Loaded resource: {0} ({1}s)", path, elapsedTime.count());
+#else
+				B2D_CORE_INFO("Loaded resource: {0}", path);
+#endif
 			}
 			else
 			{
 				delete resource;
-				mLoadedResources.emplace(filePath, nullptr);
+				mLoadedResources.emplace(path, nullptr);
+
+				B2D_CORE_ERROR("Failed to load resource: {0}", path);
+
 #ifndef RELEASE
-				mLoadedResources[filePath] = TryGetFallback<T>();
+				mLoadedResources[path] = TryGetFallback<T>();
 #endif
 			}
         }
 
-        return ResourcePtr<T>(mLoadedResources.find(filePath));
+        return ResourcePtr<T>(mLoadedResources.find(path));
     }
 
 	template<typename T>
@@ -117,6 +131,7 @@ public:
 		ResourcePath const& path = resourcePtr.mPtr->first;
 		if (mLoadedResources.find(path) == mLoadedResources.end())
 		{
+			// ASSERT/EXCEPTION
 			return false;
 		}
 
@@ -134,11 +149,15 @@ public:
 			if (newResource->Load(path))
 			{
 				mLoadedResources[path] = newResource;
+
+				B2D_CORE_INFO("Reloaded resource: {0}", path);
 				return true;
 			}
 			else
 			{
 				delete newResource;
+
+				B2D_CORE_ERROR("Failed to reload resource: {0}", path);
 				return false;
 			}
 		}
@@ -152,6 +171,8 @@ public:
 		{
 			delete resource;
 			mLoadedResources[path] = TryGetFallback<T>();
+
+			B2D_CORE_ERROR("Failed to reload resource: {0}", path);
 			return false;
 		}
 
@@ -167,6 +188,7 @@ public:
 		}
 #endif
 
+		B2D_CORE_INFO("Reloaded resource: {0}", path);
 		return true;
 #else
 		return false;

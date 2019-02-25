@@ -154,38 +154,43 @@ void CShader::Use() const
 
 void CShader::SetBool(const std::string& name, bool value) const
 {
-	GLuint ul = glGetUniformLocation(mID, name.c_str());
-	if (ul != -1)
-	{
-		glUniform1i(ul, value);
-	}
+	SetInt(name, value);
 }
 
 void CShader::SetInt(const std::string& name, int value) const
 {
 	GLuint ul = glGetUniformLocation(mID, name.c_str());
-	if (ul != -1)
+	if (ul == -1)
 	{
-		glUniform1i(ul, value);
+		B2D_CORE_WARNING("Cannot find shader uniform location: {0}", name);
+		return;
 	}
+
+	glUniform1i(ul, value);
 }
 
 void CShader::SetFloat(const std::string& name, float value) const
 {
 	GLuint ul = glGetUniformLocation(mID, name.c_str());
-	if (ul != -1)
+	if (ul == -1)
 	{
-		glUniform1f(ul, value);
+		B2D_CORE_WARNING("Cannot find shader uniform location: {0}", name);
+		return;
 	}
+
+	glUniform1f(ul, value);
 }
 
 void CShader::SetMatrix(const std::string& name, const float* value) const
 {
 	GLuint ul = glGetUniformLocation(mID, name.c_str());
-	if (ul != -1)
+	if (ul == -1)
 	{
-		glUniformMatrix4fv(ul, 1, GL_FALSE, value);
+		B2D_CORE_WARNING("Cannot find shader uniform location: {0}", name);
+		return;
 	}
+
+	glUniformMatrix4fv(ul, 1, GL_FALSE, value);
 }
 
 bool CShader::CompileShader(GLuint type, const std::string& shader, GLuint* outID)
@@ -193,7 +198,7 @@ bool CShader::CompileShader(GLuint type, const std::string& shader, GLuint* outI
 	GLuint id = glCreateShader(type);
 	const char* sSource = shader.c_str();
 
-	glShaderSource(id, 1, &sSource, NULL);
+	glShaderSource(id, 1, &sSource, nullptr);
 	glCompileShader(id);
 
 	int success;
@@ -204,12 +209,11 @@ bool CShader::CompileShader(GLuint type, const std::string& shader, GLuint* outI
 		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &iLength);
 
 		char* sMessage = (char*)alloca(iLength * sizeof(char));
-		glGetShaderInfoLog(id, 512, NULL, sMessage);
+		glGetShaderInfoLog(id, 512, nullptr, sMessage);
 
 		glDeleteShader(id);
 
-		std::cout << "Shader Compile Error: " << std::endl << sMessage << std::endl;
-
+		B2D_CORE_ERROR("Shader Compile Error: {0}", sMessage);
 		return false;
 	}
 
@@ -237,7 +241,7 @@ const std::string CShader::ReadShader(const std::string& file)
 	}
 	catch (std::ifstream::failure e)
 	{
-		std::cout << "Shader Read Error: " << file << std::endl;
+		B2D_CORE_ERROR("Shader Read Error: {0}", file);
 	}
 
 	return "";

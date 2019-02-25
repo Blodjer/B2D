@@ -9,7 +9,6 @@
 #include "Graphics/Window.h"
 #include "Input.h"
 
-#include <chrono>
 #include <GLFW/glfw3.h>
 #include <iostream>
 
@@ -19,12 +18,13 @@ CGameEngine::CGameEngine()
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 1 });
 #endif
 
+	Log::Init();
 	UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
 
 	glfwInit();
 	glfwSetErrorCallback([](int error, const char* description)
 	{
-		std::cerr << "Error: " << description << std::endl;
+		B2D_CORE_ERROR("GLFW error {0}: {1}", error, description);
 	});
 
 	mWindow = new CWindow(1280, 720, "Game");

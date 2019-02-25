@@ -22,12 +22,29 @@ CRenderer::CRenderer()
 
 	glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 	{
-		std::cerr << message << std::endl;
+		switch (severity)
+		{
+		case GL_DEBUG_SEVERITY_NOTIFICATION:
+			B2D_CORE_INFO(message);
+			break;
+		case GL_DEBUG_SEVERITY_LOW:
+			B2D_CORE_INFO(message);
+			break;
+		case GL_DEBUG_SEVERITY_MEDIUM:
+			B2D_CORE_WARNING(message);
+			break;
+		case GL_DEBUG_SEVERITY_HIGH:
+			B2D_CORE_ERROR(message);
+			break;
+		default:
+			B2D_CORE_WARNING(message);
+			break;
+		}
 	}, nullptr);
 
-	printf("Version:  %s\n", glGetString(GL_VERSION));
-	printf("Vendor:	  %s\n", glGetString(GL_VENDOR));
-	printf("Renderer: %s\n\n", glGetString(GL_RENDERER));
+	B2D_CORE_INFO("Version:  {0}", glGetString(GL_VERSION));
+	B2D_CORE_INFO("Vendor:   {0}", glGetString(GL_VENDOR));
+	B2D_CORE_INFO("Renderer: {0}\n", glGetString(GL_RENDERER));
 
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
@@ -115,9 +132,9 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 		currentShader->SetMatrix("view", pCamera->GetViewMatrix().GetPtr());
 		currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix().GetPtr());
 
-		static float f = 0.0f;
-		f += 0.016f;
-		currentShader->SetFloat("rotation", f);
+// 		static float f = 0.0f;
+// 		f += 0.016f;
+// 		currentShader->SetFloat("rotation", f);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

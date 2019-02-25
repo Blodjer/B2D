@@ -1,5 +1,3 @@
-mLibdir = "%{prj.location}/Lib/%{cfg.architecture}/"
-
 group "Libraries"
 	include "Libraries/glew"
 	include "Libraries/GLFW"
@@ -9,8 +7,6 @@ project "B2D"
 	language "C++"
 	kind "StaticLib"
 	staticruntime "On"
-
-	libdirs (mLibdir)
 
 	pchheader "B2D_pch.h"
 	pchsource "%{prj.location}/Source/B2D_pch.cpp"
@@ -23,11 +19,11 @@ project "B2D"
 	includedirs
 	{
 		"%{prj.location}/Source/",
-		"%{prj.location}/Include/",
 		"%{prj.location}/Libraries/",
 		"%{prj.location}/Libraries/glew/include/",
 		"%{prj.location}/Libraries/GLFW/include/",
-		"%{prj.location}/Libraries/glm/"
+		"%{prj.location}/Libraries/glm/",
+		"%{prj.location}/Libraries/spdlog/include/"
 	}
 
 	defines
