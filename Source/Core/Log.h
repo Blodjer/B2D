@@ -14,7 +14,7 @@ public:
 	static std::shared_ptr<spdlog::logger> GetLoggerCore() { return mLoggerCore; }
 	static std::shared_ptr<spdlog::logger> GetLoggerApp() { return mLoggerApp; }
 
-	static void Init();
+	static void Init(std::string const& applicationName);
 
 	template<typename... Args>
 	static void Info(std::shared_ptr<spdlog::logger> logger, const char* message, Args const&... args)

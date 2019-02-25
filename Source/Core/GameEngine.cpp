@@ -12,13 +12,23 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-CGameEngine::CGameEngine()
-{
-#if _DEBUG
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0, 1 });
-#endif
+CGameEngine* CGameEngine::sInstance = nullptr;
 
-	Log::Init();
+CGameEngine::CGameEngine(ApplicationConfig const config)
+	: mConfig(config)
+{
+	if (sInstance != nullptr)
+	{
+		B2D_CORE_ERROR("Engine already initialized");
+		return;
+	}
+
+	sInstance = this;
+
+	B2D_CORE_INFO("Initialize engine");
+
+	ApplicationConfig::Dump(config);
+
 	UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
 
 	glfwInit();
@@ -27,9 +37,11 @@ CGameEngine::CGameEngine()
 		B2D_CORE_ERROR("GLFW error {0}: {1}", error, description);
 	});
 
-	mWindow = new CWindow(1280, 720, "Game");
+	mWindow = new CWindow(config.windowWidth, config.windowHeight, config.name);
 	mGraphicsInstance = new CRenderer();
 	mGameInstance = new CGameInstance();
+
+	B2D_CORE_INFO("Engine initilized");
 }
 
 CGameEngine::~CGameEngine()
@@ -37,21 +49,10 @@ CGameEngine::~CGameEngine()
 	glfwTerminate();
 }
 
-CGameEngine* const CGameEngine::Init()
+void CGameEngine::Run()
 {
-	return CGameEngine::Instance();
-}
-
-void CGameEngine::Start()
-{
+    B2D_CORE_INFO("Starting game loop");
 	GameLoop();
-
-#if defined(B2D_DEBUG_MEMORY)
-	system("cls");
-	_CrtDumpMemoryLeaks();
-	check_leaks();
-	std::cin.get();
-#endif
 }
 
 void CGameEngine::GameLoop()

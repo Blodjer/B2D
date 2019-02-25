@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Application.h"
+
 class CGameInstance;
 class CRenderer;
 class CViewport;
@@ -7,21 +9,23 @@ class CWindow;
 
 class CGameEngine
 {
+public:
+	CGameEngine(ApplicationConfig const config);
+
+	static CGameEngine* const Instance() {
+		return sInstance;
+	}
+
+	static CGameEngine* sInstance;
+
 private:
-	CGameEngine();
 	CGameEngine(const CGameEngine&) = delete;
 	void operator=(const CGameEngine&) = delete;
 
 public:
 	~CGameEngine();
 
-	static CGameEngine* const Instance() {
-		static CGameEngine msGameEngine;
-		return &msGameEngine;
-	}
-
-	static CGameEngine* const Init();
-	void Start();
+	void Run();
 	void Shutdown();
 
 private:
@@ -39,6 +43,8 @@ public:
 
 private:
 	bool mPendingShutdown = false;
+
+	ApplicationConfig const mConfig;
 
 	CGameInstance* mGameInstance;
 	CRenderer* mGraphicsInstance;

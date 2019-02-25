@@ -6,13 +6,13 @@
 std::shared_ptr<spdlog::logger> Log::mLoggerCore;
 std::shared_ptr<spdlog::logger> Log::mLoggerApp;
 
-void Log::Init()
+void Log::Init(std::string const& applicationName)
 {
 	spdlog::set_pattern("%^[%T] [%n] [%l]%$ %v");
 
 	mLoggerCore = spdlog::stdout_color_mt("Core");
 	mLoggerCore->set_level(spdlog::level::debug);
 
-	mLoggerApp = spdlog::stdout_color_mt("App");
+	mLoggerApp = spdlog::stdout_color_mt(applicationName);
 	mLoggerApp->set_level(spdlog::level::debug);
 }
