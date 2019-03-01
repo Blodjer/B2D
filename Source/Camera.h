@@ -26,8 +26,8 @@ public:
 
 	void MakeActive();
 
-	TMatrix const& GetViewMatrix() const;
-	TMatrix const& GetProjectionMatrix() const;
+    TMatrix const& GetViewMatrix() const { return mViewMatrix; }
+	TMatrix const& GetProjectionMatrix() const { return mProjectionMatrix; }
 
 private:
 	void SetViewport(CViewport* viewport);
@@ -35,7 +35,7 @@ private:
 
 private:
 	TMatrix mViewMatrix;
-	TMatrix mProjectionMatrix;
+    TMatrix mProjectionMatrix;
 
 	EProjection mProjection;
 	EProjection mTargetProjection;

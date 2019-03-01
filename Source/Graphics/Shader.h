@@ -17,10 +17,10 @@ public:
 
 	void Use() const;
 
-	void SetBool(const std::string& name, bool value) const;
-	void SetInt(const std::string& name, int value) const;
-	void SetFloat(const std::string& name, float value) const;
-	void SetMatrix(const std::string& name, const float* value) const;
+	void SetBool(const char* name, bool value) const;
+    void SetInt(const char* name, int value) const;
+	void SetFloat(const char* name, float value) const;
+	void SetMatrix(const char* name, const float* value) const;
 
 	bool const operator==(const CShader& otherShader) const
 	{

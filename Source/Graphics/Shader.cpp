@@ -152,26 +152,26 @@ void CShader::Use() const
 	glUseProgram(mID);
 }
 
-void CShader::SetBool(const std::string& name, bool value) const
+void CShader::SetBool(const char* name, bool value) const
 {
 	SetInt(name, value);
 }
 
-void CShader::SetInt(const std::string& name, int value) const
+void CShader::SetInt(const char* name, int value) const
 {
-	GLuint ul = glGetUniformLocation(mID, name.c_str());
-	if (ul == -1)
-	{
-		B2D_CORE_WARNING("Cannot find shader uniform location: {0}", name);
-		return;
-	}
+    GLuint ul = glGetUniformLocation(mID, name);
+    if (ul == -1)
+    {
+        B2D_CORE_WARNING("Cannot find shader uniform location: {0}", name);
+        return;
+    }
 
-	glUniform1i(ul, value);
+    glUniform1i(ul, value);
 }
 
-void CShader::SetFloat(const std::string& name, float value) const
+void CShader::SetFloat(const char* name, float value) const
 {
-	GLuint ul = glGetUniformLocation(mID, name.c_str());
+	GLuint ul = glGetUniformLocation(mID, name);
 	if (ul == -1)
 	{
 		B2D_CORE_WARNING("Cannot find shader uniform location: {0}", name);
@@ -181,9 +181,9 @@ void CShader::SetFloat(const std::string& name, float value) const
 	glUniform1f(ul, value);
 }
 
-void CShader::SetMatrix(const std::string& name, const float* value) const
+void CShader::SetMatrix(const char* name, const float* value) const
 {
-	GLuint ul = glGetUniformLocation(mID, name.c_str());
+	GLuint ul = glGetUniformLocation(mID, name);
 	if (ul == -1)
 	{
 		B2D_CORE_WARNING("Cannot find shader uniform location: {0}", name);

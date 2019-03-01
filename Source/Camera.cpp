@@ -101,13 +101,3 @@ void CCamera::MakeActive()
 {
 	CGameEngine::Instance()->GetWindow()->GetViewport()->SetCamera(this);
 }
-
-const TMatrix& CCamera::GetViewMatrix() const
-{
-	return mViewMatrix;
-}
-
-const TMatrix& CCamera::GetProjectionMatrix() const
-{
-	return mProjectionMatrix;
-}

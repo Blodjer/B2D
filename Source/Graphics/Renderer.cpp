@@ -95,10 +95,12 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 			auto componentRenderer = dynamic_cast<IComponentRenderer*>(component);
 			if (componentRenderer != nullptr && componentRenderer->GetMaterial() != nullptr)
 			{
-				renderQueue.push_back(componentRenderer);
+				renderQueue.emplace_back(componentRenderer);
 			}
 		}
 	}
+
+    TMatrix const viewProjectionMatrix = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
 
 	for (IComponentRenderer const* const component : renderQueue)
 	{
@@ -118,10 +120,14 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, material->mTextures[i]->mHandle);
 
-			std::string textureUniform = "texture";
-			textureUniform.append(std::to_string(i));
-
-			currentShader->SetInt(textureUniform, i);
+            switch (i)
+            {
+                case 0: currentShader->SetInt("texture0", i); break;
+                case 1: currentShader->SetInt("texture1", i); break;
+                case 2: currentShader->SetInt("texture2", i); break;
+                case 3: currentShader->SetInt("texture3", i); break;
+                default: B2D_BREAK(); break;
+            }
 		}
 
 		TMatrix model(1.0f);
@@ -129,8 +135,7 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 		model = TMatrix::Scale(model, TVec3(140, 140, 140));
 
 		currentShader->SetMatrix("model", model.GetPtr());
-		currentShader->SetMatrix("view", pCamera->GetViewMatrix().GetPtr());
-		currentShader->SetMatrix("projection", pCamera->GetProjectionMatrix().GetPtr());
+		currentShader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());
 
 // 		static float f = 0.0f;
 // 		f += 0.016f;
@@ -143,12 +148,11 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 		{
 			model = TMatrix::Translate(model, TVec3(0, 0, -0.001f));
 			
-			CShader* const wireframeShader = CShader::Load("Content/Shader/SimpleSpriteVS.glsl", "Content/Shader/FillPS.glsl");
+			CShader* const wireframeShader = CShader::Load("Content/Shader/DefaultVS.glsl", "Content/Shader/FillPS.glsl");
 			wireframeShader->Use();
 			wireframeShader->SetMatrix("model", model.GetPtr());
-			wireframeShader->SetMatrix("view", pCamera->GetViewMatrix().GetPtr());
-			wireframeShader->SetMatrix("projection", pCamera->GetProjectionMatrix().GetPtr());
-		
+            wireframeShader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());
+
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		}
