@@ -13,9 +13,3 @@ public:
 	void Clear();
 
 };
-
-struct RenderObject
-{
-	void* mMaterial;
-	void* mMesh;
-};

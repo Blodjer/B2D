@@ -4,22 +4,51 @@
 #include "GameObject.h"
 
 CComponent::CComponent(CGameObject* const owner)
-	: mOwner(owner)
+    : mOwner(owner)
+    , mRelativeTransform()
+    , mWorldTransformMatrix(TMatrix::Identity)
+    , mWorldTransformMatrixIsInvalid(true)
 {
 
 }
 
-TVec2 CComponent::GetWorldPosition() const
+TVec3 const& CComponent::GetRelativePosition() const
 {
-	return mOwner->GetPosition() + mRelativPosition;
+	return mRelativeTransform.GetPosition();
 }
 
-const TVec2& CComponent::GetRelativePosition() const
+void CComponent::SetRelativePosition(TVec3 const& position)
 {
-	return mRelativPosition;
+    if (mRelativeTransform.GetPosition() == position)
+    {
+        return;
+    }
+
+    mRelativeTransform.SetPosition(position);
+    
+    InvalidateWorldTransformMatrix();
 }
 
-void CComponent::SetRelativePosition(const TVec2& position)
+TVec3 CComponent::GetWorldPosition() const
 {
-	mRelativPosition = position;
+    return mOwner->GetPosition() + GetRelativePosition();
+}
+
+TMatrix const& CComponent::GetWorldTransformMatrix()
+{
+    if (mWorldTransformMatrixIsInvalid)
+    {
+        mWorldTransformMatrix = mOwner->GetTransformMatrix();
+        mWorldTransformMatrix = TMatrix::Translate(mWorldTransformMatrix, mRelativeTransform.GetPosition());
+        mWorldTransformMatrix = TMatrix::Scale(mWorldTransformMatrix, mRelativeTransform.GetScale());
+
+        mWorldTransformMatrixIsInvalid = false;
+    }
+
+    return mWorldTransformMatrix;
+}
+
+void CComponent::InvalidateWorldTransformMatrix()
+{
+    mWorldTransformMatrixIsInvalid = true;
 }

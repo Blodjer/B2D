@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Math/Transform.h"
 
 class CGameObject;
 
@@ -11,15 +12,21 @@ public:
 	virtual ~CComponent() = default;
 	virtual void Update(float deltaTime) { };
 
-	TVec2 GetWorldPosition() const;
-	const TVec2& GetRelativePosition() const;
+	void SetRelativePosition(TVec3 const& position);
+	TVec3 const& GetRelativePosition() const;
 
-	void SetRelativePosition(const TVec2& position);
+    TVec3 GetWorldPosition() const;
+
+    TMatrix const& GetWorldTransformMatrix();
+    void InvalidateWorldTransformMatrix();
 
 protected:
 	CGameObject* const mOwner;
 
 private:
-	TVec2 mRelativPosition = TVec2::Zero;
+    Transform mRelativeTransform;
+
+    TMatrix mWorldTransformMatrix;
+    bool mWorldTransformMatrixIsInvalid;
 
 };

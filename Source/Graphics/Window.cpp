@@ -13,7 +13,7 @@ CWindow::CWindow(uint32 width, uint32 height, std::string const& title)
 	glfwSetWindowUserPointer(mGlfwWindow, this);
 	MakeContextCurrent();
 
-	SetVsync(true);
+	SetVsync(false);
 
 	mViewport = new CViewport(0, 0, width, height);
 

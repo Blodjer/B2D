@@ -12,10 +12,10 @@ public:
 	CLevel();
 	virtual ~CLevel();
 
-	CGameObject* SpawnGameObject(TVec2 spawnPosition = TVec2::Zero);
+	CGameObject* SpawnGameObject(TVec3 spawnPosition = TVec3::Zero);
 
 	template<class T>
-	T* SpawnGameObject(TVec2 spawnPosition = TVec2::Zero)
+	T* SpawnGameObject(TVec3 spawnPosition = TVec3::Zero)
 	{
         B2D_STATIC_ASSERT_TYPE(CGameObject, T);
 

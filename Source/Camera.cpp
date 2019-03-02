@@ -12,9 +12,9 @@ CCamera::CCamera()
 	mTargetProjection = mProjection;
 	mProjectionLerp = 0.f;
 
-	TVec2 const vPosition = GetPosition();
+	TVec3 const& position = GetPosition();
 	mViewMatrix = TMatrix::LookAt(
-		TVec3(vPosition.X, vPosition.Y, -300.0f),
+        position,
 		TVec3(0.0f, 0.0f, 0.0f),
 		TVec3(0.0f, 1.0f, 0.0f));
 
@@ -28,12 +28,12 @@ void CCamera::Update(float deltaTime)
 	static float acc = 0.f;
 	acc += deltaTime;
 
-	TVec2 vPosition = GetPosition();
+	TVec3 const& position = GetPosition();
 
-	float radius = 100.0f;
-	float camX = UMath::Sin(acc) * radius + vPosition.X;
-	float camY = UMath::Cos(acc) * radius + vPosition.Y;
-	mViewMatrix = TMatrix::LookAt(TVec3(camX, camY, -300), TVec3(0.0, 0.0, 0.0), TVec3(0.0, 1.0, 0.0));
+	float radius = 2.0f;
+	float camX = UMath::Sin(acc) * radius + position.X;
+	float camY = UMath::Cos(acc) * radius + position.Y;
+	mViewMatrix = TMatrix::LookAt(TVec3(camX, camY, position.Z), TVec3::Zero, TVec3::Up);
 
 	if (mProjectionLerp < 1.f)
 	{

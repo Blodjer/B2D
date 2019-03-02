@@ -84,12 +84,9 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 		return;
 	}
 
-	std::vector<IComponentRenderer const*> renderQueue;
+	std::vector<IComponentRenderer*> renderQueue;
 	for (CGameObject const* const gameObject : gameObjects)
 	{
-		if (gameObject->GetComponents().empty())
-			continue;
-
 		for (auto component : gameObject->GetComponents())
 		{
 			auto componentRenderer = dynamic_cast<IComponentRenderer*>(component);
@@ -102,7 +99,7 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
 
     TMatrix const viewProjectionMatrix = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
 
-	for (IComponentRenderer const* const component : renderQueue)
+	for (IComponentRenderer* const component : renderQueue)
 	{
 		CMaterial const* const material = component->GetMaterial();
 		CShader* const currentShader = material->mShader;
@@ -130,9 +127,7 @@ void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> 
             }
 		}
 
-		TMatrix model(1.0f);
-		model = TMatrix::Translate(model, TVec3(component->GetRelativePosition().X, component->GetRelativePosition().Y, component->GetRelativePosition().Y));
-		model = TMatrix::Scale(model, TVec3(140, 140, 140));
+        TMatrix model = component->GetWorldTransformMatrix();
 
 		currentShader->SetMatrix("model", model.GetPtr());
 		currentShader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());

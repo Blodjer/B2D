@@ -10,27 +10,44 @@
 class TMatrix : public glm::mat4
 {
 public:
+    static const TMatrix Identity;
+
+public:
   	template <typename... Args>
 	FORCEINLINE TMatrix(Args... args) : glm::mat4(args...) { }
 
 	FORCEINLINE static TMatrix LookAt(TVec3 const& eyePosition, TVec3 const& lookAtPosition, TVec3 const& upVector)
 	{
-		return glm::lookAt(eyePosition, lookAtPosition, upVector);
+		return glm::lookAt(
+            glm::vec3(eyePosition.X, eyePosition.Y, eyePosition.Z),
+            glm::vec3(lookAtPosition.X, lookAtPosition.Y, lookAtPosition.Z),
+            glm::vec3(upVector.X, upVector.Y, upVector.Z)
+        );
 	}
 
 	FORCEINLINE static TMatrix Translate(TMatrix const& matrix, TVec3 const& translation)
 	{
-		return glm::translate(matrix, translation);
+		return glm::translate(
+            matrix,
+            glm::vec3(translation.X, translation.Y, translation.Z)
+        );
 	}
 
 	FORCEINLINE static TMatrix Rotate(TMatrix const& matrix, float const angle, TVec3 const& axis)
 	{
-		return glm::rotate(matrix, angle, axis);
+		return glm::rotate(
+            matrix,
+            angle,
+            glm::vec3(axis.X, axis.Y, axis.Z)
+        );
 	}
 
 	FORCEINLINE static TMatrix Scale(TMatrix const& matrix, TVec3 const& scale)
 	{
-		return glm::scale(matrix, scale);
+		return glm::scale(
+            matrix,
+            glm::vec3(scale.X, scale.Y, scale.Z)
+        );
 	}
 
 	FORCEINLINE static TMatrix Perspective(float fovY, float aspect, float zNear, float zFar)

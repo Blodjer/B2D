@@ -23,6 +23,7 @@ CLevel::CLevel()
 {
 	CCamera* defaultCamera = SpawnGameObject<CCamera>();
 	defaultCamera->MakeActive();
+    defaultCamera->SetPosition(TVec3(0.0f, 0.0f, -10.0f));
 }
 
 CLevel::~CLevel()
@@ -33,7 +34,7 @@ CLevel::~CLevel()
 	}
 }
 
-CGameObject* CLevel::SpawnGameObject(TVec2 spawnPosition)
+CGameObject* CLevel::SpawnGameObject(TVec3 spawnPosition)
 {
 	return SpawnGameObject<CGameObject>(spawnPosition);
 }

@@ -2,8 +2,12 @@
 #include "GameObject.h"
 
 #include "Component/Component.h"
+#include "Math/Transform.h"
 
 CGameObject::CGameObject()
+    : mTransform()
+    , mTransformMatrix(TMatrix::Identity)
+    , mTransformMatrixIsInvalid(true)
 {
     
 }
@@ -21,6 +25,11 @@ void CGameObject::RemoveComponent(CComponent* const component)
 	mComponentsToRemove.push_back(component);
 }
 
+std::vector<CComponent*> const& CGameObject::GetComponents() const
+{
+    return mComponents;
+}
+
 void CGameObject::Update(float deltaTime)
 {
 	for (CComponent* const component : mComponents)
@@ -36,17 +45,40 @@ void CGameObject::Update(float deltaTime)
 	mComponentsToRemove.clear();
 }
 
-void CGameObject::SetPosition(TVec2 position, bool sweep)
+void CGameObject::SetPosition(TVec3 position, bool sweep)
 {
+    if (mTransform.GetPosition() == position)
+    {
+        return;
+    }
+
 	if (sweep)
 	{
 		// do collision test
 	}
 
-	mPosition = position;
+    mTransform.SetPosition(position);
+
+    InvalidateTransformMatrix();
 }
 
-const std::vector<CComponent*>& CGameObject::GetComponents() const
+TMatrix const& CGameObject::GetTransformMatrix()
 {
-	return mComponents;
+    if (mTransformMatrixIsInvalid)
+    {
+        mTransform.CalculateMatrix(mTransformMatrix);
+        mTransformMatrixIsInvalid = false;
+    }
+
+    return mTransformMatrix;
+}
+
+void CGameObject::InvalidateTransformMatrix()
+{
+    mTransformMatrixIsInvalid = true;
+
+    for (CComponent* const c : GetComponents())
+    {
+        c->InvalidateWorldTransformMatrix();
+    }
 }

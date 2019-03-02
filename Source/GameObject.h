@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Math/Transform.h"
 
 class CComponent;
 
@@ -24,13 +25,20 @@ public:
 
 	void RemoveComponent(CComponent* const pComponent);
 
-	void SetPosition(TVec2 position, bool sweep = false);
-	TVec2 GetPosition() const { return mPosition; }
+    std::vector<CComponent*> const& GetComponents() const;
 
-	const std::vector<CComponent*>& GetComponents() const;
+	void SetPosition(TVec3 position, bool sweep = false);
+	TVec3 GetPosition() const { return mTransform.GetPosition(); }
+
+    TMatrix const& GetTransformMatrix();
 
 private:
-	TVec2 mPosition = TVec2::Zero;
+    void InvalidateTransformMatrix();
+
+private:
+    Transform mTransform;
+    TMatrix mTransformMatrix;
+    bool mTransformMatrixIsInvalid;
 
 	std::vector<CComponent*> mComponents;
 	std::vector<CComponent*> mComponentsToRemove;
