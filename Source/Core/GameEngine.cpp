@@ -100,7 +100,7 @@ void CGameEngine::GameLoop()
 		
 		// Draw
 		start = clock::now();
-		Draw(GetWindow()->GetViewport(), mGraphicsInstance);
+		//Draw(GetWindow()->GetViewport(), mGraphicsInstance);
 		duration ChronoDraw = clock::now() - start;
 		
 #if defined(B2D_PLATFORM_WINDOWS) && !defined(B2D_NO_LOGGING)

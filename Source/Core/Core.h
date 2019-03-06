@@ -13,3 +13,5 @@
 #include "Core/Types/Vector3.h"
 #include "Core/Types/Matrix.h"
 #include "Core/Types/Delegate.h"
+#include "ECS/EntityID.h"
+#include "ECS/Entity.h"

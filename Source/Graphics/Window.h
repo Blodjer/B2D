@@ -33,7 +33,7 @@ public:
 	void SetShouldClose(bool close);
 	bool ShouldClose() const;
 
-private:
+public:
 	void MakeContextCurrent();
 
 	void Swap();

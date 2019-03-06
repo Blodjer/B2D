@@ -6,13 +6,16 @@
 class CRenderer;
 class CShader;
 class CTexture;
+class RenderSystem;
 
 class CMaterial
 {
-	friend CRenderer;
+    friend CRenderer;
+    friend RenderSystem;
 
 public:
-	CMaterial(CShader* const shader);
+    CMaterial() : mShader(nullptr) {};
+    CMaterial(CShader* const shader);
 	~CMaterial() = default;
 
 	void SetTexture(uint32 index, ResourcePtr<CTexture> texture);

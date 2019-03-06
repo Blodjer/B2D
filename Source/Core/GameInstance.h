@@ -6,6 +6,7 @@ class CRenderer;
 class CLevel;
 class CPlayerController;
 class CViewport;
+class World;
 
 class CGameInstance
 {
@@ -40,6 +41,7 @@ private:
 
 private:
 	CLevel* mLoadedLevel = nullptr;
+    World* mWorld = nullptr;
 	static std::map<uint32, CPlayerController*> mPlayerControllers;
 };
 

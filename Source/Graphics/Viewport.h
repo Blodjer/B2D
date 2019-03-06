@@ -14,6 +14,8 @@ public:
 	CViewport(int32 x, int32 y, uint32 width, uint32 height);
 	~CViewport() = default;
 
+    static CViewport* sy;
+
 private:
 	void SetCamera(CCamera* pCamera);
 public:
