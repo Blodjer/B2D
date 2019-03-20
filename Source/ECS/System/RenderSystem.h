@@ -3,6 +3,8 @@
 
 class RenderSystem : public System
 {
+    DECLARE_SYSTEM(RenderSystem);
+
 public:
     RenderSystem() = default;
 

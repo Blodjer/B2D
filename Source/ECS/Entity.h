@@ -11,14 +11,13 @@ public:
 
     EntityID GetID() const { return mID; }
 
-    bool Has(std::bitset<16> mask) const
+    bool Has(uint16 const mask) const
     {
-        return (mComponentMask & mask) == mask;
+        return (mComponentMask.to_ulong() & mask) == mask;
     }
 
 public:
     EntityID mID;
-    std::vector<std::pair<uint16, size_t>> mComponentIndex;
     std::vector<Component*> mComponents;
     std::bitset<16> mComponentMask;
 };

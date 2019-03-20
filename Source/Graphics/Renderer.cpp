@@ -2,9 +2,6 @@
 #include "Renderer.h"
 
 #include "Camera.h"
-#include "Component/ComponentCollider.h"
-#include "Component/IComponentRenderer.h"
-#include "GameObject.h"
 #include "Material.h"
 #include "Shader.h"
 #include "Texture.h"
@@ -76,82 +73,9 @@ CRenderer::~CRenderer()
 	
 }
 
-void CRenderer::Draw(CViewport const* const viewport, std::vector<CGameObject*> const& gameObjects)
+void CRenderer::Draw(CViewport const* const viewport)
 {
-	CCamera const* const pCamera = viewport->GetCamera();
-	if (pCamera == nullptr)
-	{
-		return;
-	}
-
-	std::vector<IComponentRenderer*> renderQueue;
-	for (CGameObject const* const gameObject : gameObjects)
-	{
-		for (auto component : gameObject->GetComponents())
-		{
-			auto componentRenderer = dynamic_cast<IComponentRenderer*>(component);
-			if (componentRenderer != nullptr && componentRenderer->GetMaterial() != nullptr)
-			{
-				renderQueue.emplace_back(componentRenderer);
-			}
-		}
-	}
-
-    TMatrix const viewProjectionMatrix = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
-
-	for (IComponentRenderer* const component : renderQueue)
-	{
-		CMaterial const* const material = component->GetMaterial();
-		CShader* const currentShader = material->mShader;
-		currentShader->Use();
-
-		for (uint16 i = 0; i < material->mTextures.size(); ++i)
-		{
-			if (material->mTextures[i] == nullptr)
-			{
-				glActiveTexture(GL_TEXTURE0 + i);
-				glBindTexture(GL_TEXTURE_2D, 0);
-				continue;
-			}
-
-			glActiveTexture(GL_TEXTURE0 + i);
-			glBindTexture(GL_TEXTURE_2D, material->mTextures[i]->mHandle);
-
-            switch (i)
-            {
-                case 0: currentShader->SetInt("texture0", i); break;
-                case 1: currentShader->SetInt("texture1", i); break;
-                case 2: currentShader->SetInt("texture2", i); break;
-                case 3: currentShader->SetInt("texture3", i); break;
-                default: B2D_BREAK(); break;
-            }
-		}
-
-        TMatrix model = component->GetWorldTransformMatrix();
-
-		currentShader->SetMatrix("model", model.GetPtr());
-		currentShader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());
-
-// 		static float f = 0.0f;
-// 		f += 0.016f;
-// 		currentShader->SetFloat("rotation", f);
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-		if (false)
-		{
-			model = TMatrix::Translate(model, TVec3(0, 0, -0.001f));
-			
-			CShader* const wireframeShader = CShader::Load("Content/Shader/DefaultVS.glsl", "Content/Shader/FillPS.glsl");
-			wireframeShader->Use();
-			wireframeShader->SetMatrix("model", model.GetPtr());
-            wireframeShader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());
-
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		}
-	}
+	
 }
 
 void CRenderer::Clear()

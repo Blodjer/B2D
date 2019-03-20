@@ -2,12 +2,19 @@
 #include "ECS/Component/Component.h"
 #include "ECS/World.h"
 
+#define DECLARE_SYSTEM(systemname) \
+public: \
+    static constexpr char const* const NAME = #systemname; \
+    virtual char const* const GET_NAME() const override { return NAME; } \
+private:
+
 class System
 {
 public:
     System() = default;
 
     virtual void Update(float deltaTime) = 0;
+    virtual char const* const GET_NAME() const = 0;
 
 public:
     World* mWorld;
@@ -54,7 +61,7 @@ public:
         return GetBit<Comp1>() | GetBit<Comp2, Comps...>();
     }
 
-    static constexpr std::bitset<16> MASK = GetBit<PrimComp, SecoComps...>();
+    static constexpr uint16 MASK = GetBit<PrimComp, SecoComps...>();
 
     iterator begin()
     {

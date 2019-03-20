@@ -16,19 +16,7 @@ class CGameInstance
 public:
 	~CGameInstance();
 
-	template<class L>
-	L* LoadLevel()
-	{
-        B2D_STATIC_ASSERT_TYPE(CLevel, L);
-
-		if (mLoadedLevel != nullptr)
-		{
-			delete mLoadedLevel;
-		}
-
-		mLoadedLevel = new L();
-        return mLoadedLevel;
-	}
+    World* GetWorld() { return mWorld; }
 
 	static CPlayerController* AddPlayerController(uint32 id);
 	static void RemovePlayerController(uint32 id);
@@ -37,10 +25,8 @@ public:
 private:
 	void HandleInput(uint32 event);
 	void Tick(float deltaTime);
-	void Draw(CViewport const* const viewport, CRenderer* graphics);
 
 private:
-	CLevel* mLoadedLevel = nullptr;
     World* mWorld = nullptr;
 	static std::map<uint32, CPlayerController*> mPlayerControllers;
 };

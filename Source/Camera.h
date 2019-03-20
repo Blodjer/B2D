@@ -1,10 +1,8 @@
 #pragma once
 
-#include "GameObject.h"
-
 class CViewport;
 
-class CCamera final : public CGameObject
+class CCamera final
 {
 	friend CViewport;
 
@@ -19,7 +17,7 @@ public:
 	CCamera();
 	~CCamera() = default;
 
-	virtual void Update(float deltaTime) override;
+	void Update(float deltaTime);
 
 	void SetProjection(EProjection projection);
 	TMatrix CreateProjectionMatrix(EProjection projection);

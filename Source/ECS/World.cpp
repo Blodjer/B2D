@@ -1,10 +1,12 @@
 #include "B2D_pch.h"
 #include "World.h"
 #include "ECS/System/System.h"
+#include "Camera.h"
 
 World::World()
 {
-
+    CCamera* defaultCamera = new CCamera();
+    defaultCamera->MakeActive();
 }
 
 World::~World()

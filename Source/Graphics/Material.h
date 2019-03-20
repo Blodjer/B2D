@@ -14,7 +14,7 @@ class CMaterial
     friend RenderSystem;
 
 public:
-    CMaterial() : mShader(nullptr) {};
+    CMaterial();
     CMaterial(CShader* const shader);
 	~CMaterial() = default;
 

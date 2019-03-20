@@ -1,4 +1,5 @@
 #pragma once
+#include "Math/BMath.h"
 
 class World;
 class Entity;
@@ -9,21 +10,19 @@ public:
     Component() = default;
     virtual ~Component() = default;
 
-    Entity* owner;
+    Entity const* owner;
 
-    static constexpr uint16 MASK = 0;
+    virtual uint16 GET_MASK() const = 0;
 
 public:
     template<class C>
     C* Sibling() const
     {
-        std::vector<Component*> const& v = owner->mComponents;
-
-        for (std::pair<uint16, size_t> const& p : owner->mComponentIndex)
+        for (Component* const comp : owner->mComponents)
         {
-            if (p.first == C::MASK)
+            if (comp->GET_MASK() == C::MASK)
             {
-                return static_cast<C*>(v[p.second]);
+                return static_cast<C*>(comp);
             }
         }
 
@@ -32,3 +31,6 @@ public:
     }
 };
 
+#define DECLARE_COMPONENT(name, id) \
+    static constexpr uint16 MASK = UMath::Pow2(id); \
+    virtual uint16 GET_MASK() const override { return MASK; }

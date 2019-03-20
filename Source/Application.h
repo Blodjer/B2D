@@ -23,5 +23,5 @@ class CLevel;
 namespace B2D
 {
     void Config(ApplicationConfig& config);
-    void PopulateLevel(CLevel* const level);
+    void PopulateWorld(World* const world);
 }

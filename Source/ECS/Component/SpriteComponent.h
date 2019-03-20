@@ -8,11 +8,11 @@
 
 struct SpriteComponent : public Component
 {
+    DECLARE_COMPONENT(SpriteComponent, 1);
+
     SpriteComponent() {};
     SpriteComponent(CShader* const shader) : material(shader) {};
 
     CMaterial material;
-
-    static constexpr uint16 MASK = 4;
 };
 

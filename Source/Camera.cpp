@@ -6,15 +6,13 @@
 #include "Graphics/Window.h"
 
 CCamera::CCamera()
-	: CGameObject()
 {
 	mProjection = EProjection::Perspective;
 	mTargetProjection = mProjection;
 	mProjectionLerp = 0.f;
 
-	TVec3 const& position = GetPosition();
 	mViewMatrix = TMatrix::LookAt(
-        position,
+        TVec3(0,0,-10),
 		TVec3(0.0f, 0.0f, 0.0f),
 		TVec3(0.0f, 1.0f, 0.0f));
 
@@ -23,12 +21,10 @@ CCamera::CCamera()
 
 void CCamera::Update(float deltaTime)
 {
-	CGameObject::Update(deltaTime);
-
 	static float acc = 0.f;
 	acc += deltaTime;
 
-	TVec3 const& position = GetPosition();
+	TVec3 const position = TVec3(0, 0, -10);
 
 	float radius = 2.0f;
 	float camX = UMath::Sin(acc) * radius + position.X;

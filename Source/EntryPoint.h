@@ -5,7 +5,7 @@
 #include "Core/GameInstance.h"
 
 extern void B2D::Config(ApplicationConfig& config);
-extern void B2D::PopulateLevel(CLevel* const level);
+extern void B2D::PopulateWorld(World* const world);
 
 int main(int argc, const char*[])
 {
@@ -16,8 +16,8 @@ int main(int argc, const char*[])
 
 	CGameEngine* const engine = new CGameEngine(config);
 
-	CLevel* const level = engine->GetGameInstance()->LoadLevel<CLevel>();
-    B2D::PopulateLevel(level);
+	World* const world = engine->GetGameInstance()->GetWorld();
+    B2D::PopulateWorld(world);
 
 	engine->Run();
 

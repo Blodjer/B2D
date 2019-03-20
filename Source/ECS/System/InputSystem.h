@@ -1,12 +1,12 @@
 #pragma once
 #include "System.h"
 
-class HoverSystem : public System
+class InputSystem : public System
 {
-    DECLARE_SYSTEM(HoverSystem);
+    DECLARE_SYSTEM(InputSystem);
 
 public:
-    HoverSystem();
+    InputSystem();
 
     virtual void Update(float deltaTime) override;
 };

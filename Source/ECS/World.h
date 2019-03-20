@@ -46,7 +46,6 @@ public:
         C* c = &GetComponents<C>().emplace_back(C(a...));
         mEntities[entity]->mComponents.emplace_back(c);
         mEntities[entity]->mComponentMask |= C::MASK;
-        mEntities[entity]->mComponentIndex.emplace_back(std::make_pair(C::MASK, mEntities[entity]->mComponents.size() - 1));
         c->owner = mEntities[entity];
 
         return c;

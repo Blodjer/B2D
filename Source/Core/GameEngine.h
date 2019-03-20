@@ -32,7 +32,7 @@ private:
 	void GameLoop();
 	void HandleEvents();
 	void Tick(float deltaTime);
-	void Draw(CViewport const* const viewport, CRenderer* const graphics);
+	void Draw(CViewport const* const viewport);
 
 	void CleanUp();
 

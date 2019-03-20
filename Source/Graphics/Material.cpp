@@ -10,6 +10,12 @@ CMaterial::CMaterial(CShader* const shader)
 
 }
 
+CMaterial::CMaterial()
+    : mShader(CShader::Load("Content/Shader/DefaultVS.glsl", "Content/Shader/SimpleSpritePS.glsl"))
+{
+
+}
+
 void CMaterial::SetTexture(uint32 index, ResourcePtr<CTexture> texture)
 {
 	if (index < mTextures.size())

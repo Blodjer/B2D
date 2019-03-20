@@ -138,13 +138,9 @@ void CGameEngine::Tick(float deltaTime)
 	mGameInstance->Tick(deltaTime);
 }
 
-void CGameEngine::Draw(CViewport const* const viewport, CRenderer* const graphics)
+void CGameEngine::Draw(CViewport const* const viewport)
 {
-	graphics->Clear();
-
-	mGameInstance->Draw(viewport, graphics);
-
-	mWindow->Swap();
+	
 }
 
 void CGameEngine::Shutdown()

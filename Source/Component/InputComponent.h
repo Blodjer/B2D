@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Component/Component.h"
 #include "Input.h"
 
 DECLARE_DELEGATE(TKeyDelegate);
@@ -8,12 +7,12 @@ DECLARE_DELEGATE(TAxisDelegate, float);
 
 class CPlayerController;
 
-class CInputComponent : public CComponent
+class CInputComponent
 {
 	friend CPlayerController;
 
 public:
-	CInputComponent(CGameObject* const owner);
+	CInputComponent();
 	virtual ~CInputComponent();
 
 	void BindController(CPlayerController* const controller);

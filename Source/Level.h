@@ -2,7 +2,6 @@
 
 #include "Core/Core.h"
 
-class CGameObject;
 class CRenderer;
 class CViewport;
 
@@ -12,28 +11,13 @@ public:
 	CLevel();
 	virtual ~CLevel();
 
-	CGameObject* SpawnGameObject(TVec3 spawnPosition = TVec3::Zero);
+    // Load
+    // Unload
 
-	template<class T>
-	T* SpawnGameObject(TVec3 spawnPosition = TVec3::Zero)
-	{
-        B2D_STATIC_ASSERT_TYPE(CGameObject, T);
+    // AddEntity
+    // RemoveEntity
 
-		T* gameObject = new T();
-		gameObject->SetPosition(spawnPosition);
+    // GetComponents
 
-		mGameObjectsToAdd.push_back(gameObject);
-
-		return gameObject;
-	}
-
-	void Tick(float deltaTime);
-	void HandleCollision();
-
-	void Draw(CViewport const* const viewport, CRenderer* renderer);
-
-private:
-	std::vector<CGameObject*> mGameObjectsToAdd;
-	std::vector<CGameObject*> mGameObjects;
 };
 
