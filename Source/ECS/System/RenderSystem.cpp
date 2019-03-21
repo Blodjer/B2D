@@ -4,25 +4,30 @@
 #include "GL/glew.h"
 #include "ECS/Component/SpriteComponent.h"
 #include "ECS/Component/TransformComponent.h"
-#include "Camera.h"
 #include "Graphics/Viewport.h"
 #include "Core/Types/Matrix.h"
 #include "Core/GameEngine.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/Window.h"
 #include "Graphics/Shader.h"
+#include "ECS/CameraEntity.h"
 
 void RenderSystem::Update(float deltaTime)
 {
-    CGameEngine::Instance()->GetGraphicsInstance()->Clear();
-
-    CCamera const* const pCamera = CViewport::sy->GetCamera();
-    if (pCamera == nullptr)
+    CViewport const* const viewport = CViewport::Instance;
+    if (viewport == nullptr)
     {
         return;
     }
 
-    TMatrix const viewProjectionMatrix = pCamera->GetProjectionMatrix() * pCamera->GetViewMatrix();
+    CGameEngine::Instance()->GetGraphicsInstance()->PreRender();
+
+    TMatrix viewProjectionMatrix;
+    if (!viewport->GetViewProjectionMatrix(viewProjectionMatrix))
+    {
+        CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
+        return;
+    }
 
     for (SpriteComponent const& spriteComponent : ComponentItr<SpriteComponent, TransformComponent>(mWorld))
     {
@@ -30,8 +35,7 @@ void RenderSystem::Update(float deltaTime)
         CShader* const currentShader = material.mShader;
         currentShader->Use();
 
-        uint16 const c = material.mTextures.size();
-        for (uint16 i = 0; i < c; ++i)
+        for (uint32 i = 0; i < material.mTextures.size(); ++i)
         {
             if (material.mTextures[i] == nullptr)
             {
@@ -66,5 +70,5 @@ void RenderSystem::Update(float deltaTime)
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 
-    CGameEngine::Instance()->GetWindow()->Swap();
+    CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
 }

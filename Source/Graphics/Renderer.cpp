@@ -1,11 +1,9 @@
 #include "B2D_pch.h"
 #include "Renderer.h"
 
-#include "Camera.h"
-#include "Material.h"
-#include "Shader.h"
-#include "Texture.h"
 #include "Viewport.h"
+#include "Core/GameEngine.h"
+#include "Graphics/Window.h"
 
 #include <GL/glew.h>
 #include <iostream>
@@ -73,9 +71,14 @@ CRenderer::~CRenderer()
 	
 }
 
-void CRenderer::Draw(CViewport const* const viewport)
+void CRenderer::PreRender()
 {
-	
+    Clear();
+}
+
+void CRenderer::PostRender()
+{
+    CGameEngine::Instance()->GetWindow()->Swap();
 }
 
 void CRenderer::Clear()

@@ -4,8 +4,12 @@
 
 #include "ECS/Entity.h"
 #include "ECS/Component/Component.h"
+#include "SystemEntityObject.h"
 
 class System;
+
+template<typename... C>
+class SystemEntityObject;
 
 class World
 {
@@ -38,12 +42,32 @@ public:
         return entity->GetID();
     }
 
-    template<class C, typename... Args>
-    C* AddComponent(EntityID entity, Args... a)
+    template<class SE, typename... Params>
+    SE* AddSystemEntityObject(Params... p)
+    {
+        B2D_STATIC_ASSERT_TYPE(System, SE);
+        B2D_STATIC_ASSERT_TYPE(Entity, SE);
+
+        static uint32 id = 9999999;
+        SE* se = new SE(id);
+        id++;
+
+        mEntities.emplace(se->GetID(), se);
+
+        System* s = mSystems.emplace_back(se);
+        s->mWorld = this;
+
+        se->Setup(p...);
+
+        return se;
+    }
+
+    template<class C, typename... Params>
+    C* AddComponent(EntityID entity, Params... p)
     {
         B2D_STATIC_ASSERT_TYPE(Component, C);
         
-        C* c = &GetComponents<C>().emplace_back(C(a...));
+        C* c = &GetComponents<C>().emplace_back(C(p...));
         mEntities[entity]->mComponents.emplace_back(c);
         mEntities[entity]->mComponentMask |= C::MASK;
         c->owner = mEntities[entity];

@@ -8,7 +8,10 @@ public:
 	CRenderer();
 	~CRenderer();
 	
-	void Draw(CViewport const* const viewport);
+    void PreRender();
+    void PostRender();
+
+private:
 	void Clear();
 
 };

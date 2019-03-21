@@ -1,12 +1,15 @@
 #include "B2D_pch.h"
 #include "World.h"
 #include "ECS/System/System.h"
-#include "Camera.h"
+#include "CameraEntity.h"
+#include "Core/GameEngine.h"
+#include "Graphics/Window.h"
+#include "Graphics/Viewport.h"
 
 World::World()
 {
-    CCamera* defaultCamera = new CCamera();
-    defaultCamera->MakeActive();
+    CameraEntity* defaultCamera = AddSystemEntityObject<CameraEntity>();
+    CGameEngine::Instance()->GetWindow()->GetViewport()->SetCamera(defaultCamera);
 }
 
 World::~World()

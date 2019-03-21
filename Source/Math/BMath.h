@@ -34,10 +34,10 @@ public:
 	FORCEINLINE static float Lerp(T a, T b, T alpha) { return (static_cast<T>(1) - alpha) * a + alpha * b; }
 
     template<typename T>
-    static constexpr T Pow2(T exp)
-    {
-        return (exp == 0) ? 1 : 2 * Pow2<T>(exp - 1);
-    }
+    FORCEINLINE static float Pow(T base, T exp) { return std::pow(base, exp); }
+
+    template<typename T>
+    static constexpr T Pow2(T exp) { return (exp == 0) ? 1 : 2 * Pow2<T>(exp - 1); }
 
 private:
 	UMath() = default;

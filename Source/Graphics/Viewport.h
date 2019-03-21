@@ -1,39 +1,37 @@
 #pragma once
 
-#include "Camera.h"
 #include "Core/Core.h"
-#include "Graphics/Viewport.h"
 
-class CCamera;
+class CameraEntity;
 
 class CViewport final
 {
-	friend CCamera;
-
 public:
 	CViewport(int32 x, int32 y, uint32 width, uint32 height);
 	~CViewport() = default;
 
-    static CViewport* sy;
+    static CViewport* Instance; // TODO
 
-private:
-	void SetCamera(CCamera* pCamera);
 public:
-	CCamera* GetCamera() const;
-
+	void SetCamera(CameraEntity* camera);
 	void SetSize(uint32 width, uint32 height);
-	uint32 GetWidth() const;
-	uint32 GetHeight() const;
+
+public:
+    bool GetViewProjectionMatrix(TMatrix& matrix) const;
+
+    CameraEntity* GetCamera() const { return mCurrentCamera; }
+    uint32 GetWidth() const { return mWidth; }
+    uint32 GetHeight() const { return mHeight; }
 
 	void Use();
 
 private:
-	CCamera* mCurrentCamera;
+    CameraEntity* mCurrentCamera;
 
-	int32 mX;
-	int32 mY;
-	uint32 mWidth;
-	uint32 mHeight;
+    int32 mX;
+    int32 mY;
+    uint32 mWidth;
+    uint32 mHeight;
 
 };
 

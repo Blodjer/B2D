@@ -2,14 +2,17 @@
 #include "ECS/System/System.h"
 #include "ECS/Entity.h"
 
+#define DECLARE_SYSTEMENTITY(entityname) \
+public: \
+    entityname(EntityID id) : SystemEntityObject(id) {}; \
+private: \
+    DECLARE_SYSTEM(entityname) \
+
 template<typename... Components>
 class SystemEntityObject : public System, public Entity
 {
 public:
-    SystemEntityObject(EntityID id) : Entity(id)
-    {
-    }
-
+    SystemEntityObject(EntityID id) : Entity(id) {};
     ~SystemEntityObject() = default;
 
     void Setup()
@@ -19,13 +22,13 @@ public:
         Initialize();
     }
 
-    virtual void Initialize() {};
+    virtual void Initialize() = 0;
 
-    template<typename Component1, typename Component2, typename... Components>
+    template<typename C1, typename C2, typename... C>
     void AddComponent()
     {
-        AddComponent<Component1>();
-        AddComponent<Component2, Components...>();
+        AddComponent<C1>();
+        AddComponent<C2, C...>();
     }
 
     template<typename C>
@@ -36,9 +39,10 @@ public:
     }
 
     template<typename C>
-    FORCEINLINE C* GetComponent() const
+    FORCEINLINE C& GetComponent() const
     {
-        return static_cast<C*>(std::get<C*>(mComponentTuple));
+        B2D_ASSERT(std::get<C*>(mComponentTuple));
+        return *static_cast<C*>(std::get<C*>(mComponentTuple));
     }
 
 private:

@@ -1,50 +1,44 @@
 #include "B2D_pch.h"
 #include "Viewport.h"
 
+#include "Core/Core.h"
+#include "ECS/CameraEntity.h"
+
 #include <GL/glew.h>
 
-CViewport* CViewport::sy = nullptr;
+CViewport* CViewport::Instance = nullptr;
 
 CViewport::CViewport(int32 x, int32 y, uint32 width, uint32 height) :
 	mX(x), mY(y),
 	mWidth(width), mHeight(height)
 {
-    sy = this;
+    Instance = this;
 }
 
-void CViewport::SetCamera(CCamera* pCamera)
+void CViewport::SetCamera(CameraEntity* camera)
 {
-	if (mCurrentCamera == pCamera)
+	if (mCurrentCamera == camera)
 		return;
 
-	mCurrentCamera = pCamera;
-	mCurrentCamera->SetViewport(this);
-}
-
-CCamera* CViewport::GetCamera() const
-{
-	return mCurrentCamera;
+	mCurrentCamera = camera;
 }
 
 void CViewport::SetSize(uint32 width, uint32 height)
 {
 	mWidth = width;
 	mHeight = height;
-
-	if (mCurrentCamera != nullptr)
-	{
-		mCurrentCamera->OnViewportSizeChanged();
-	}
 }
 
-uint32 CViewport::GetWidth() const
+bool CViewport::GetViewProjectionMatrix(TMatrix& matrix) const
 {
-	return mWidth;
-}
+    if (mCurrentCamera == nullptr)
+    {
+        B2D_CORE_ERROR("No active camera for viewport");
+        return false;
+    }
 
-uint32 CViewport::GetHeight() const
-{
-	return mHeight;
+    matrix = mCurrentCamera->GetProjectionMatrix(this) * mCurrentCamera->GetViewMatrix();
+    return true;
 }
 
 void CViewport::Use()
