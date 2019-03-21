@@ -12,7 +12,7 @@
 #endif
 
 #ifndef B2D_BUILD_RELEASE
-#define B2D_ASSERT(expr) { if (!!(expr)) { B2D_LOG_ASSERT(expr); B2D_BREAK(); } }
+#define B2D_ASSERT(expr) { if (!(expr)) { B2D_LOG_ASSERT(expr); B2D_BREAK(); } }
 #else
-#define B2D_ASSERT(expr) { if (!!(expr)) { B2D_LOG_ASSERT(expr); } }
+#define B2D_ASSERT(expr) { if (!(expr)) { B2D_LOG_ASSERT(expr); } }
 #endif

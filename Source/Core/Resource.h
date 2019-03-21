@@ -140,7 +140,7 @@ public:
 		ResourcePath const& path = resourcePtr.mPtr->first;
         IResource const* resource = resourcePtr.mPtr->second;
 
-        B2D_ASSERT(mLoadedResources.find(path) == mLoadedResources.end());
+        B2D_ASSERT(mLoadedResources.find(path) != mLoadedResources.end());
 
 		ResourceList::iterator fallback = mLoadedResources.find(T::GetFallbackResourcePath());
 		if (resourcePtr == nullptr || (fallback != mLoadedResources.end() && fallback->second == resource))
