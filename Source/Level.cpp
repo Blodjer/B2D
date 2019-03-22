@@ -1,8 +1,6 @@
 #include "B2D_pch.h"
 #include "Level.h"
 
-#include "Camera.h"
-
 /*
 receive input
 update physics

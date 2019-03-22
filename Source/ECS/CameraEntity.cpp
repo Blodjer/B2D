@@ -19,10 +19,6 @@ void CameraEntity::Update(float deltaTime)
             camera.projection = camera.targetProjection;
         }
     }
-    else
-    {
-        SetProjection(camera.projection == EProjection::Orthographic ? EProjection::Perspective : EProjection::Orthographic);
-    }
 }
 
 void CameraEntity::SetProjection(EProjection const projection)
@@ -57,7 +53,7 @@ TMatrix CameraEntity::GetProjectionMatrix(CViewport const* const viewport) const
 TMatrix CameraEntity::CreateProjectionMatrix(EProjection const projection, CViewport const* const viewport) const
 {
     CameraComponent const& camera = GetComponent<CameraComponent>();
-    
+
     if (projection == EProjection::Perspective)
     {
         if (camera.useAspectRatio && camera.aspectRatio > 0.0f)
@@ -74,6 +70,7 @@ TMatrix CameraEntity::CreateProjectionMatrix(EProjection const projection, CView
         return TMatrix::Orthographic(viewport->GetWidth() * -0.5f, viewport->GetWidth() * 0.5f, viewport->GetHeight() * -0.5f, viewport->GetHeight() * 0.5f, camera.nearPlane, camera.farPlane);
     }
 
+    B2D_TRAP("Projection mode {} not implemented", static_cast<uint32>(projection));
     return TMatrix();
 }
 
