@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Core.h"
+
 #if defined(B2D_EDITOR) || defined(B2D_BUILD_DEBUG)
     #define RESOURCE_FALLBACK
 #endif
@@ -94,7 +96,7 @@ public:
 		
         if (mLoadedResources.find(path) == mLoadedResources.end())
 		{
-#ifndef B2D_BUILD_RELEASE
+#ifndef B2D_NO_LOGGING
 			auto loadingStartTime = std::chrono::high_resolution_clock::now();
 #endif
 
@@ -103,11 +105,9 @@ public:
 			{
 				mLoadedResources.emplace(path, resource);
 
-#ifndef B2D_BUILD_RELEASE
+#ifndef B2D_NO_LOGGING
 				std::chrono::duration<double> elapsedTime = std::chrono::high_resolution_clock::now() - loadingStartTime;
 				B2D_CORE_INFO("Loaded resource: {0} ({1}s)", path, elapsedTime.count());
-#else
-				B2D_CORE_INFO("Loaded resource: {0}", path);
 #endif
 			}
 			else
@@ -182,11 +182,9 @@ public:
 		_CrtMemCheckpoint(&memAfter);
 
 		_CrtMemState memDiff;
-		if (_CrtMemDifference(&memDiff, &memBefore, &memAfter))
+		if (B2D_CHECKf(_CrtMemDifference(&memDiff, &memBefore, &memAfter), "Memory increased during reload of resource: {0}", path))
 		{
 			_CrtMemDumpStatistics(&memDiff);
-            B2D_CORE_WARNING("Memory increased during reload resource: {0}", path);
-            B2D_BREAK();
 		}
 #endif
 

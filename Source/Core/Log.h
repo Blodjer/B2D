@@ -2,6 +2,11 @@
 
 #include <spdlog/spdlog.h>
 
+#define CALLSTACK __FILE__, __LINE__, __FUNCSIG__
+#define CALLSTACK_SIGNATURE const char* file, int line, const char* func
+#define CALLSTACK_PARAMS file, line, func
+#define CALLSTACK_LOG_FORMAT "{}:{} {}"
+
 class Log
 {
 private:
@@ -32,9 +37,45 @@ public:
 		logger->error(message, args...);
 	}
 
-    INLINE static void Assert(const char* expr, const char* file, int line)
+    INLINE static void Check(CALLSTACK_SIGNATURE, const char* expr)
     {
-        mLoggerCore->critical("Assertion failed: ({0}) in {1}:{2}", expr, file, line);
+        mLoggerCore->warn("Check failed: ({})", expr);
+        Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
+    }
+
+    template<typename... Args>
+    INLINE static void Checkf(CALLSTACK_SIGNATURE, const char* expr, const char* message, Args const&... args)
+    {
+        mLoggerCore->warn("Check failed: ({})", expr);
+        mLoggerCore->warn(message, args...);
+        Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
+    }
+
+    INLINE static void Assert(CALLSTACK_SIGNATURE, const char* expr)
+    {
+        mLoggerCore->critical("Assertion failed: ({})", expr);
+        Callstack(spdlog::level::level_enum::critical, CALLSTACK_PARAMS);
+    }
+
+    template<typename... Args>
+    INLINE static void Assertf(CALLSTACK_SIGNATURE, const char* expr, const char* message, Args const&... args)
+    {
+        mLoggerCore->critical("Assertion failed: ({})", expr);
+        mLoggerCore->critical(message, args...);
+        Callstack(spdlog::level::level_enum::critical, CALLSTACK_PARAMS);
+    }
+
+    template<typename... Args>
+    INLINE static void Trap(CALLSTACK_SIGNATURE, const char* message, Args const&... args)
+    {
+        mLoggerCore->critical(message, args...);
+        Callstack(spdlog::level::level_enum::critical, CALLSTACK_PARAMS);
+    }
+
+private:
+    INLINE static void Callstack(spdlog::level::level_enum level, CALLSTACK_SIGNATURE)
+    {
+        mLoggerCore->log(level, CALLSTACK_LOG_FORMAT, CALLSTACK_PARAMS);
     }
 };
 
@@ -48,8 +89,6 @@ public:
 #define B2D_WARNING(message, ...)		Log::Warning(Log::GetLoggerApp(), message, __VA_ARGS__)
 #define B2D_ERROR(message, ...)			Log::Error(Log::GetLoggerApp(), message, __VA_ARGS__)
 
-#define B2D_LOG_ASSERT(expr)	        Log::Assert(#expr, __FILE__, __LINE__)
-
 #else
 
 #define B2D_CORE_INFO(message, ...)
@@ -59,7 +98,5 @@ public:
 #define B2D_INFO(message, ...)
 #define B2D_WARNING(message, ...)
 #define B2D_ERROR(message, ...)
-
-#define B2D_LOG_ASSERT(expr)
 
 #endif

@@ -53,7 +53,7 @@ void RenderSystem::Update(float deltaTime)
                 case 1: currentShader->SetInt("texture1", i); break;
                 case 2: currentShader->SetInt("texture2", i); break;
                 case 3: currentShader->SetInt("texture3", i); break;
-                default: B2D_BREAK(); break;
+                default: B2D_TRAP("Not enough texture slots ({})!", i); break;
             }
         }
 

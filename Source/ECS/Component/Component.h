@@ -26,7 +26,7 @@ public:
             }
         }
 
-        B2D_BREAK();
+        B2D_TRAP("Sibling component not found. This function must not be called if the component is not the a sibling!");
         return nullptr;
     }
 };

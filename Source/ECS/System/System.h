@@ -94,21 +94,21 @@ public:
         return mEndIt;
     }
 
-    template<typename Comp>
-    Comp* Sibling()
+    template<typename C>
+    C* Sibling()
     {
         Entity const* const entity = *mIt;
         auto const& components = entity->mComponents;
 
         for (auto const& componentIndex : entity->mComponentIndex)
         {
-            if (componentIndex.first == Comp::MASK)
+            if (componentIndex.first == C::MASK)
             {
-                return static_cast<Comp*>(components[componentIndex.first]);
+                return static_cast<C*>(components[componentIndex.first]);
             }
         }
 
-        B2D_BREAK();
+        B2D_TRAP("Sibling component not found. This function must not be called if the component is not the a sibling!");
         return nullptr;
     }
 
