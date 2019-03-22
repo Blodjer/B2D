@@ -10,11 +10,11 @@
 #include "ECS/Component/HoverComponent.h"
 #include "ECS/Component/SpriteComponent.h"
 #include "ECS/Component/TransformComponent.h"
+#include "ECS/System/CharacterMovementSystem.h"
 #include "ECS/System/HoverSystem.h"
 #include "ECS/System/InputSystem.h"
 #include "ECS/System/RenderSystem.h"
 #include "Graphics/Shader.h"
-#include "ECS/EcsPlayer.h"
 
 std::map<uint32, CPlayerController*> CGameInstance::mPlayerControllers;
 
@@ -24,6 +24,7 @@ CGameInstance::CGameInstance()
 
     mWorld->AddSystem<InputSystem>();
     mWorld->AddSystem<HoverSystem>();
+    mWorld->AddSystem<CharacterMovementSystem>();
     mWorld->AddSystem<RenderSystem>();
 }
 

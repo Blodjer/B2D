@@ -5,6 +5,9 @@ struct TransformComponent : public Component
 {
     DECLARE_COMPONENT(TransformComponent, 0);
 
+    TransformComponent() = default;
+    TransformComponent(TVec3 const& position) : position(position) {}
+
     TVec3 position = TVec3::Zero;
     TVec3 scale = TVec3::One;
 

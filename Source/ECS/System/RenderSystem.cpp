@@ -57,7 +57,7 @@ void RenderSystem::Update(float deltaTime)
             }
         }
 
-        TMatrix const& model = spriteComponent.Sibling<TransformComponent>()->matrix;
+        TMatrix const& model = spriteComponent.Sibling<TransformComponent>().matrix;
 
         currentShader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());
         currentShader->SetMatrix("model", model.GetPtr());

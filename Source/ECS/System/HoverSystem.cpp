@@ -13,12 +13,12 @@ void HoverSystem::Update(float deltaTime)
     static float f = 0;
     f += deltaTime;
 
-    for (HoverComponent& h : ComponentItr<HoverComponent, TransformComponent>(mWorld))
+    for (HoverComponent const& hover : ComponentItr<HoverComponent, TransformComponent>(mWorld))
     {
-        TransformComponent& c = *h.Sibling<TransformComponent>();
+        TransformComponent& transform = hover.Sibling<TransformComponent>();
 
-        c.position.Y = UMath::Sin(f * h.speed) * h.amplitude;
-        c.matrix = TMatrix::Translate(c.matrix, TVec3(0, c.position.Y, 0));
+        transform.position.Y = UMath::Sin(f * hover.speed) * hover.amplitude;
+        transform.matrix = TMatrix::Translate(transform.matrix, TVec3(0, transform.position.Y, 0));
     }
 }
 

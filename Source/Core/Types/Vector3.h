@@ -28,6 +28,14 @@ public:
         return TVec3(X + v.X, Y + v.Y, Z + v.Z);
     }
 
+    FORCEINLINE TVec3& TVec3::operator+=(const TVec3& v)
+    {
+        X += v.X;
+        Y += v.Y;
+        Z += v.Z;
+        return *this;
+    }
+
     FORCEINLINE TVec3 TVec3::operator-(const TVec3& v) const
     {
         return TVec3(X - v.X, Y - v.Y, Z - v.Z);
