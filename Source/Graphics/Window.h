@@ -1,54 +1,53 @@
 #pragma once
 
-#include "Core/Types/BasicTypes.h"
+#include "Core/Core.h"
 
-class CGameEngine;
+class CGameInstance;
 struct GLFWwindow;
-class Graphics;
 class CViewport;
-
-#if _DEBUG
-#define CURRENT_CONTEXT_CHECK() if (!IsCurrentContext()) { __debugbreak(); }
-#else
-#define CURRENT_CONTEXT_CHECK()
-#endif
 
 class CWindow final
 {
-	friend CGameEngine;
-	friend Graphics;
+    friend class CGameEngine;
+    friend class CRenderer;
 
 public:
-	CWindow(uint32 width, uint32 height, std::string const& title);
+	CWindow(GLFWwindow* context, uint32 width, uint32 height);
 	~CWindow();
 
-	bool IsCurrentContext() const { return gCurrentContext == this; }
-	
-	GLFWwindow* GetWindow() const { return mGlfwWindow; }
-	CViewport* GetViewport() const { return mViewport; }
+    bool IsCurrentContext() const;
+    
+    void AssignGameInstance(CGameInstance* gameInstance);
+    CGameInstance* GetAssignedGameInstance() const { return mAssignedGameInstance; }
+
+    CViewport* const GetViewport() const { return mViewports[0]; }
+    std::vector<CViewport*> const& GetViewports() const { return mViewports; }
 
 	void SetSize(uint32 width, uint32 height);
 	void SetVsync(bool enable);
 
+    bool IsFocused() const;
+    void Focus();
+
 	void SetShouldClose(bool close);
 	bool ShouldClose() const;
 
-public:
-	void MakeContextCurrent();
-
-	void Swap();
-
-	void OnFramebufferSizeChanged(int width, int height);
+    GLFWwindow* GetContext() const { return mContext; }
 
 private:
-	static CWindow* gCurrentContext;
+    void MakeContextCurrent();
+	void Swap();
 
+	void OnFramebufferSizeCallback(int width, int height);
+
+private:
 	uint32 mWidth;
 	uint32 mHeight;
 
-private:
-	GLFWwindow* mGlfwWindow;
-	CViewport* mViewport;
+    GLFWwindow* mContext = nullptr;
+    CGameInstance* mAssignedGameInstance = nullptr;
+
+    std::vector<CViewport*> mViewports;
 
 };
 

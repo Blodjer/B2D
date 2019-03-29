@@ -2,15 +2,16 @@
 #include "GameEngine.h"
 
 #include "Core.h"
+#include "Core/PlatformApplication.h"
 #include "GameInstance.h"
 #include "Graphics/Renderer.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Viewport.h"
 #include "Graphics/Window.h"
-#include "Input.h"
+#include "Input/Input.h"
+#include "PlatformInterface.h"
 
 #include <GLFW/glfw3.h>
-#include <iostream>
 
 CGameEngine* CGameEngine::sInstance = nullptr;
 
@@ -27,37 +28,34 @@ CGameEngine::CGameEngine(ApplicationConfig const config)
 
 	B2D_CORE_INFO("Initialize engine");
 
+    mPlatformApplication = new PlatformApplication();
+    mPlatformApplication->Init();
+
 	ApplicationConfig::Dump(config);
 
 	UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
+    
+    mPlatformApplication->MakeWindow(config.windowWidth, 100, "sgopfksg");
+	mMainWindow = mPlatformApplication->MakeWindow(config.windowWidth, config.windowHeight, config.name);
 
-	glfwInit();
-	glfwSetErrorCallback([](int error, const char* description)
-	{
-		B2D_CORE_ERROR("GLFW error {0}: {1}", error, description);
-	});
-
-	mWindow = new CWindow(config.windowWidth, config.windowHeight, config.name);
 	mGraphicsInstance = new CRenderer();
-	mGameInstance = new CGameInstance();
+	mGameInstance = new CGameInstance(mMainWindow);
 
 	B2D_CORE_INFO("Engine initilized");
 }
 
 CGameEngine::~CGameEngine()
 {
-	glfwTerminate();
+    delete mGameInstance;
+    delete mGraphicsInstance;
+
+    // TODO: replace by smart pointer
+    mPlatformApplication->Shutdown();
+    delete mPlatformApplication;
 }
 
 void CGameEngine::Run()
 {
-	GameLoop();
-}
-
-void CGameEngine::GameLoop()
-{
-	CInput input;
-
 #if defined(B2D_PLATFORM_WINDOWS) && !defined(B2D_NO_LOGGING)
 	HANDLE pOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 #endif
@@ -65,43 +63,40 @@ void CGameEngine::GameLoop()
 	using clock = std::chrono::high_resolution_clock;
 	std::chrono::time_point<clock> start;
 
-	uint32 iFrames = 0;
-	uint32 iFps = 0;
+	uint32 frames = 0;
+	uint32 fps = 0;
 
-	double fLastTick = glfwGetTime();
-	double fNextSecond = glfwGetTime() + 1;
-	while (!GetWindow()->ShouldClose())
+	double lastTick = glfwGetTime();
+	double nextSecond = glfwGetTime() + 1;
+	while (!GetMainWindow()->ShouldClose())
 	{
-		GetWindow()->MakeContextCurrent();
-		GetWindow()->GetViewport()->Use();
+		const double now = glfwGetTime();
+		const float deltaTime = static_cast<float>(now - lastTick);
+		lastTick = now;
 
-		const double fNow = glfwGetTime();
-		const float fDeltaTime = static_cast<float>(fNow - fLastTick);
-		fLastTick = fNow;
-
-		if (fNextSecond < fNow)
+		if (nextSecond < now)
 		{
-			iFps = iFrames;
-			iFrames = 0;
-			fNextSecond = fNow + 1;
+			fps = frames;
+			frames = 0;
+			nextSecond = now + 1;
 		}
 
-		//CShader::ReloadAll();
+        Input::Flush();
+        mPlatformApplication->PollEvents();
 
-		// Events
-		start = clock::now();
-		HandleEvents();
-		duration ChronoEvents = clock::now() - start;
+        if (Input::IsKey(EKey::F5, EKeyEvent::KEY_DOWN))
+            CShader::ReloadAll();
+
+        if (Input::IsKey(EKey::ESCAPE, EKeyEvent::KEY_DOWN))
+            CGameEngine::Instance()->RequestShutdown();
+        
+        GetMainWindow()->MakeContextCurrent();
+        GetMainWindow()->GetViewport()->Use(); // move to renderer draw call
 
 		// Tick
 		start = clock::now();
-		Tick(fDeltaTime);
+        mGameInstance->Tick(deltaTime);
 		duration ChronoTick = clock::now() - start;
-		
-		// Draw
-		start = clock::now();
-		//Draw(GetWindow()->GetViewport(), mGraphicsInstance);
-		duration ChronoDraw = clock::now() - start;
 		
 #if defined(B2D_PLATFORM_WINDOWS) && !defined(B2D_NO_LOGGING)
 		// Debug
@@ -113,45 +108,20 @@ void CGameEngine::GameLoop()
 			SetConsoleCursorPosition(pOutputHandle, { 0, 0 });
 		}
 		
-		printf("Delta: %.2fms | Events: %.2fms | Tick: %.2fms | Draw: %.2fms | Fps: %d               ",
-			    fDeltaTime * 1000, ChronoEvents.count(), ChronoTick.count(), ChronoDraw.count(), iFps);
+		printf("Delta: %.2fms | Fps: %d               ",
+			    deltaTime * 1000, fps);
 		
 		if (pos.X >= 0 && pos.Y >= 0)
 		{
 			SetConsoleCursorPosition(pOutputHandle, pos);
 		}
 #endif
-		iFrames++;
+		frames++;
 	}
-
-	CleanUp();
 }
 
-// TODO: Move to window
-void CGameEngine::HandleEvents()
+void CGameEngine::RequestShutdown()
 {
-	glfwPollEvents();
-}
-
-void CGameEngine::Tick(float deltaTime)
-{
-	mGameInstance->Tick(deltaTime);
-}
-
-void CGameEngine::Draw(CViewport const* const viewport)
-{
-	
-}
-
-void CGameEngine::Shutdown()
-{
-	GetWindow()->SetShouldClose(true);
+	GetMainWindow()->SetShouldClose(true);
 	mPendingShutdown = true;
-}
-
-void CGameEngine::CleanUp()
-{
-	delete mWindow;
-	delete mGameInstance;
-	delete mGraphicsInstance;
 }

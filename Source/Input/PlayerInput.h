@@ -1,21 +1,21 @@
 #pragma once
-
+/*
 #include "Input.h"
 
 DECLARE_DELEGATE(TKeyDelegate);
 DECLARE_DELEGATE(TAxisDelegate, float);
 
-class CPlayerController;
+class LocalPlayer;
 
-class CInputComponent
+class PlayerInput
 {
-	friend CPlayerController;
+	friend LocalPlayer;
 
 public:
-	CInputComponent();
-	virtual ~CInputComponent();
+	PlayerInput();
+	virtual ~PlayerInput();
 
-	void BindController(CPlayerController* const controller);
+	void BindController(LocalPlayer* const controller);
 	void BindKey(EKey key, EKeyEvent keyEvent, TKeyDelegate delegate);
 	void BindAxis(int axis, TAxisDelegate delegate);
 	void ClearAllBindings();
@@ -25,7 +25,7 @@ private:
 	void ProcessInputAxis();
 
 private:
-	CPlayerController* mAssignedController;
+	LocalPlayer* mAssignedController;
 
 	struct SKeyBinding
 	{
@@ -50,3 +50,4 @@ private:
 	std::map<SKeyBinding, TKeyDelegate> mKeyDelegates;
 	std::map<int, TAxisDelegate> mAxisDelegates;
 };
+*/

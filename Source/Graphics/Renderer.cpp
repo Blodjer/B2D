@@ -78,7 +78,7 @@ void CRenderer::PreRender()
 
 void CRenderer::PostRender()
 {
-    CGameEngine::Instance()->GetWindow()->Swap();
+    CGameEngine::Instance()->GetMainWindow()->Swap();
 }
 
 void CRenderer::Clear()

@@ -6,6 +6,7 @@
 #include "ECS/Component/Component.h"
 #include "SystemEntityObject.h"
 
+class CGameInstance;
 class System;
 
 template<typename... C>
@@ -14,7 +15,7 @@ class SystemEntityObject;
 class World
 {
 public:
-    World();
+    World(CGameInstance* const owningGameInstance);
     ~World();
 
     void Update(float deltaTime);
@@ -86,8 +87,14 @@ public:
     }
 
 public:
-    std::unordered_map<EntityID, Entity*, EntityID> mEntities;
+    CGameInstance* GetOwningGameInstance() const { return mOwningGameInstance; }
+
+public:
+    std::unordered_map<EntityID, Entity*> mEntities;
     std::vector<System*> mSystems;
+
+private:
+    CGameInstance* const mOwningGameInstance;
 
 };
 

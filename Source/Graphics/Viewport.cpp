@@ -6,13 +6,11 @@
 
 #include <GL/glew.h>
 
-CViewport* CViewport::Instance = nullptr;
-
 CViewport::CViewport(int32 x, int32 y, uint32 width, uint32 height) :
 	mX(x), mY(y),
 	mWidth(width), mHeight(height)
 {
-    Instance = this;
+    
 }
 
 void CViewport::SetCamera(CameraEntity* camera)

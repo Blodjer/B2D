@@ -18,8 +18,6 @@ struct ApplicationConfig
     }
 };
 
-class CLevel;
-
 namespace B2D
 {
     void Config(ApplicationConfig& config);

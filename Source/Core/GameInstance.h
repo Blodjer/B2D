@@ -2,32 +2,43 @@
 
 #include "Core/Core.h"
 
-class CRenderer;
-class CLevel;
-class CPlayerController;
-class CViewport;
+class LocalPlayer;
+class CWindow;
 class World;
 
 class CGameInstance
 {
 	friend CGameEngine;
 
-	CGameInstance();
+	CGameInstance(CWindow* const owningWindow);
 public:
 	~CGameInstance();
 
     World* GetWorld() { return mWorld; }
+    CWindow* const GetWindow() { return mWindow; }
 
-	static CPlayerController* AddPlayerController(uint32 id);
-	static void RemovePlayerController(uint32 id);
-	static const std::map<uint32, CPlayerController*>* const GetPlayerControllers() { return &CGameInstance::mPlayerControllers; }
+	LocalPlayer* AddLocalPlayer();
+	void RemoveLocalPlayer(uint32 const playerId);
+
+    LocalPlayer* GetLocalPlayer(uint32 const playerId) const;
+    std::vector<LocalPlayer*> const& GetLocalPlayers() const { return mLocalPlayers; }
 
 private:
-	void HandleInput(uint32 event);
 	void Tick(float deltaTime);
 
 private:
     World* mWorld = nullptr;
-	static std::map<uint32, CPlayerController*> mPlayerControllers;
+    CWindow* const mWindow = nullptr;
+
+    std::vector<LocalPlayer*> mLocalPlayers;
+    uint32 mLocalPlayerIdCount = 0;
+
+    //InputDeviceManager
+    //  std::unordered_set<uint32> mAvailableDevices
+    //  OnDeviceConnected()
+    //  OnDeviceDisconnected()
+
+    //PlayerInputManager mPlayerInputManager;
+    //  std::unordered_map<uint32, LocalPlayer*> mInputToPlayerMap;
 };
 

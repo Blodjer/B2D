@@ -57,6 +57,7 @@ end
 		architecture "x64"
 
 	filter "system:Windows"
+		defines "B2D_PLATFORM_DESKTOP"
 		defines "B2D_PLATFORM_WINDOWS"
 	
 

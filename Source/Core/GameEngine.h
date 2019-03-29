@@ -2,6 +2,7 @@
 
 #include "Application.h"
 
+class IPlatformApplicationInterface;
 class CGameInstance;
 class CRenderer;
 class CViewport;
@@ -26,27 +27,22 @@ public:
 	~CGameEngine();
 
 	void Run();
-	void Shutdown();
 
-private:
-	void GameLoop();
-	void HandleEvents();
-	void Tick(float deltaTime);
-	void Draw(CViewport const* const viewport);
-
-	void CleanUp();
+	void RequestShutdown();
 
 public:
 	CGameInstance* const GetGameInstance() const { return mGameInstance; }
 	CRenderer* const GetGraphicsInstance() const { return mGraphicsInstance; }
-	CWindow* const GetWindow() const { return mWindow; }
+	CWindow* const GetMainWindow() const { return mMainWindow; }
 
 private:
 	bool mPendingShutdown = false;
 
 	ApplicationConfig const mConfig;
 
-	CGameInstance* mGameInstance;
-	CRenderer* mGraphicsInstance;
-	CWindow* mWindow;
+    IPlatformApplicationInterface* mPlatformApplication = nullptr;
+	CWindow* mMainWindow = nullptr;
+
+	CGameInstance* mGameInstance = nullptr;
+	CRenderer* mGraphicsInstance = nullptr;
 };

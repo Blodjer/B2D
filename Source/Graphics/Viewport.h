@@ -10,8 +10,6 @@ public:
 	CViewport(int32 x, int32 y, uint32 width, uint32 height);
 	~CViewport() = default;
 
-    static CViewport* Instance; // TODO
-
 public:
 	void SetCamera(CameraEntity* camera);
 	void SetSize(uint32 width, uint32 height);

@@ -1,5 +1,6 @@
 #include "B2D_pch.h"
 #include "CameraEntity.h"
+#include "Input/Input.h"
 
 void CameraEntity::Initialize()
 {
@@ -10,6 +11,13 @@ void CameraEntity::Initialize()
 void CameraEntity::Update(float deltaTime)
 {
     CameraComponent& camera = GetComponent<CameraComponent>();
+
+#if B2D_BUILD_DEBUG
+    if (Input::IsKey(EKey::P, EKeyEvent::KEY_DOWN))
+    {
+        SetProjection(camera.targetProjection == EProjection::Perspective ? EProjection::Orthographic : EProjection::Perspective);
+    }
+#endif
 
     if (camera.projectionLerp < 1.f)
     {
@@ -25,7 +33,7 @@ void CameraEntity::SetProjection(EProjection const projection)
 {
     CameraComponent& camera = GetComponent<CameraComponent>();
 
-    if (camera.projection != projection)
+    if (camera.targetProjection != projection)
     {
         camera.targetProjection = projection;
         camera.projectionLerp = 0.f;

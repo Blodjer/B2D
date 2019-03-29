@@ -4,6 +4,10 @@
 class World;
 class Entity;
 
+#define DECLARE_COMPONENT(name, id) \
+    static constexpr uint16 MASK = UMath::Pow2(id); \
+    virtual uint16 GET_MASK() const override { return MASK; }
+
 struct Component
 {
 public:
@@ -29,7 +33,3 @@ public:
         B2D_TRAP("Sibling component not found. This function must not be called if the component is not the a sibling!");
     }
 };
-
-#define DECLARE_COMPONENT(name, id) \
-    static constexpr uint16 MASK = UMath::Pow2(id); \
-    virtual uint16 GET_MASK() const override { return MASK; }

@@ -15,3 +15,5 @@
 #include "Core/Types/Delegate.h"
 #include "ECS/EntityID.h"
 #include "ECS/Entity.h"
+#include "Input/InputDeviceID.h"
+#include "Input/InputTypes.h"

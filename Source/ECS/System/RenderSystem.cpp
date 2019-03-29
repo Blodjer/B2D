@@ -10,12 +10,12 @@
 #include "Graphics/Renderer.h"
 #include "Graphics/Window.h"
 #include "Graphics/Shader.h"
-#include "ECS/CameraEntity.h"
+#include "Core/GameInstance.h"
 
 void RenderSystem::Update(float deltaTime)
 {
-    CViewport const* const viewport = CViewport::Instance;
-    if (viewport == nullptr)
+    CViewport const* const viewport = mWorld->GetOwningGameInstance()->GetWindow()->GetViewport();
+    if (B2D_CHECKf(viewport == nullptr, "Unable to render because the world has no active viewport"))
     {
         return;
     }

@@ -1,11 +1,10 @@
 #include "B2D_pch.h"
 #include "GameInstance.h"
 
+#include "Core/Core.h"
 #include "GameEngine.h"
 #include "Graphics/Viewport.h"
-#include "Input.h"
-#include "Level.h"
-#include "PlayerController.h"
+#include "LocalPlayer.h"
 #include "ECS/World.h"
 #include "ECS/Component/HoverComponent.h"
 #include "ECS/Component/SpriteComponent.h"
@@ -16,11 +15,10 @@
 #include "ECS/System/RenderSystem.h"
 #include "Graphics/Shader.h"
 
-std::map<uint32, CPlayerController*> CGameInstance::mPlayerControllers;
-
-CGameInstance::CGameInstance()
+CGameInstance::CGameInstance(CWindow* const owningWindow)
+    : mWindow(owningWindow)
 {
-    mWorld = new World();
+    mWorld = new World(this);
 
     mWorld->AddSystem<InputSystem>();
     mWorld->AddSystem<HoverSystem>();
@@ -32,40 +30,52 @@ CGameInstance::~CGameInstance()
 {
     delete mWorld;
 
-	for (const auto& pPlayerController : mPlayerControllers)
+	for (auto p : mLocalPlayers)
 	{
-		delete pPlayerController.second;
+		delete p;
 	}
-	mPlayerControllers.clear();
-}
-
-void CGameInstance::HandleInput(uint32 pEvent)
-{
-	
 }
 
 void CGameInstance::Tick(float deltaTime)
 {
-    if (mWorld == nullptr)
+    if (B2D_CHECKf(mWorld == nullptr, "No world loaded!"))
     {
-        B2D_CORE_ERROR("No world loaded");
         return;
     }
 
     mWorld->Update(deltaTime);
 }
 
-CPlayerController* CGameInstance::AddPlayerController(uint32 id)
+LocalPlayer* CGameInstance::AddLocalPlayer()
 {
-	if (mPlayerControllers.find(id) == mPlayerControllers.end())
-	{
-		mPlayerControllers[id] = new CPlayerController(id);
-	}
+    mLocalPlayerIdCount++;
+	LocalPlayer* newLocalPlayer = mLocalPlayers.emplace_back(new LocalPlayer(mLocalPlayerIdCount));
 
-	return mPlayerControllers[id];
+	return newLocalPlayer;
 }
 
-void CGameInstance::RemovePlayerController(uint32 id)
+void CGameInstance::RemoveLocalPlayer(uint32 const playerId)
 {
-	mPlayerControllers.erase(id);
+    for (std::vector<LocalPlayer*>::iterator it; it < mLocalPlayers.end(); ++it)
+    {
+        if ((*it)->GetId() == playerId)
+        {
+            std::iter_swap(it, mLocalPlayers.end());
+            mLocalPlayers.pop_back();
+        }
+    }
+}
+
+LocalPlayer* CGameInstance::GetLocalPlayer(uint32 const playerId) const
+{
+    auto it = std::find_if(mLocalPlayers.begin(), mLocalPlayers.end(), [&playerId](LocalPlayer* player) {
+        return player->GetId() == playerId;
+    });
+
+    if (it != mLocalPlayers.end())
+    {
+        return nullptr;
+    }
+
+    return *it;
 }

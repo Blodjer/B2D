@@ -2,13 +2,11 @@
 #include "InputSystem.h"
 
 #include "ECS/Component/InputComponent.h"
-#include "ECS/Component/PawnComponent.h"
 
 void InputSystem::Update(float deltaTime)
 {
-    for (InputComponent& input : ComponentItr<InputComponent, PawnComponent>(mWorld))
+    for (InputComponent& input : ComponentItr<InputComponent>(mWorld))
     {
-        PawnComponent const& pawn = input.Sibling<PawnComponent>();
         /*
 
         level persistent data can be saved in a playerstate
@@ -16,33 +14,95 @@ void InputSystem::Update(float deltaTime)
         controller is controlling ui
         controller only exists in a loaded level
 
-
         PlayerController/AiController system dispatches event to its entity
-            OnMove(controlinput)
-                Get<CharacterMovement>()->Move(controlinput)
+
+        Window->GameInstance->LocalPlayer->PlayerController?
+
+        Player
+            PlayerState playerState
+                name
+                score
+
+        LocalPlayer
+            InputMapping inputMapping
+            OnInput()
+
+        System::Update()
+            for (PlayerControllerItr)
+                mWorld->GetOwningGameInstance()->GetLocalPlayer(playerControllerId)
+                
+        PlayerEntity::OnUpdate()
+            InputComponent i = Get<InputComponent>()
+            CharacterMovement cm = Get<CharacterMovement>()
+            if (i.Get("Jump", EKeyEvent::Press))
+                cm.jump = true;
+            if (i.Get("Jump", EKeyEvent::Release))
+                cm.jump = false;
+            if (i.Get("Move") != 0)
+                cm.addInputVector(i.Get("Move"))
 
 -----------
+        EditoEngine 
+            vector<Window> windows
 
-        Window
+        GameEngine
+            Window window
+
+        Window (Transform determined by Window/EditorWindow)
+            vector<Viewport> viewports [min 1]
             OnInput()
-                GetMyGameInstance()->OnInput()
+                Input::OnInput()
+                GetOwningGameInstance()::OnInput(inputId)
+                    GetTargetPlayer(inputId)->OnInput()
             
-        GameInstance
+        Viewport (Splitscreen)
+            Origin
+            Size
+            Camera* currentCamera
+
+        GameInstance (ClientGame) only one per game or pie
+            GameWorld world
+            Tick()
+                world->Tick()
             OnInput()
-                EvaluteWhereToDispatchInput
-                LocalPlayer
-           
-        Viewport
+                InputToPlayer()
+            GameWorld* world
+            AddLocalPlayer()
+                AddPlayerEntity()
             vector<LocalPlayer> players
+
+        GameWorld (ECS)(EntityAdmin)(representation of the world)
+            Copy(world&)
+            GameInstance* owningGameInstance
+            Entities
+            Components
+            Systems
+
+        EditorInstance
+            Tick()
+                RenderWorldInViewport(world, viewport)
+            GameWorld world
+            PIE(world)
+                new GameInstance(world)
+                    world = world
+           
+        RenderSystem
+            Update()
+                mWorld.gameInstance.window.Draw(mWorld)
+
+----------- InGame Input
+        Input
+            ControllerId [Keyboard&Mouse, Gamepad1, Gamepad2]
+            GetInputFor(ControllerId id)
 
         Player
             int inputId
             Viewport* viewport
-            PlayerController* controller
 
-        PossesableComponent : Component
-            Controller* possesedBy
-            vector<commands> c
+        PossesableComponent
+            ControllerID possesedBy
+            EntityID possesedBy
+            vector<commands> commands
 
         ControllerComponent
             PossesableComponent* possesses
@@ -54,17 +114,16 @@ void InputSystem::Update(float deltaTime)
             BT* bt
 
         InputComponent : Component
-            
+            ButtonStates
+            AxisStates
+            bool anyButtonPressed
+            float lastInput
 
         InputSystem : System<InputComponent>
-            inputstream = playercontroller.player.GetInputStream()
-            inputComponent.stream = inputstream
-            inputComponent.anyButtonPressed = inputstream.isEmpty()
-            inputComponent.lastInput = Time.now()
-
-        CommandSystem : System<PossesableComponent>
-            cmc = GetWeakSibling<CharacterMovementComponent>()
-            if (cmc.move
+            for (i = InputComponent)
+                i.Flush()
+                GETBUTTONSTATEFROMSOMEWHERE
+                i.playerController
 
         AiSystem : System<AiController>
             doBT()
