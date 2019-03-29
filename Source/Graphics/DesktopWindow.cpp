@@ -1,6 +1,7 @@
 #include "B2D_pch.h"
-#include "Window.h"
+#include "DesktopWindow.h"
 
+#include "Core/DesktopPlatformApplication.h"
 #include "Graphics/Viewport.h"
 #include "Input/Input.h"
 
@@ -8,7 +9,8 @@
 
 #define CURRENT_CONTEXT_CHECK() B2D_ASSERTf(IsCurrentContext(), "Window is not current context")
 
-CWindow::CWindow(GLFWwindow* context, uint32 width, uint32 height)
+DesktopWindow::DesktopWindow(GLFWwindow* context, uint32 width, uint32 height)
+    : GenericWindow(width, height)
 {
 	mContext = context;
     mWidth = width;
@@ -19,34 +21,25 @@ CWindow::CWindow(GLFWwindow* context, uint32 width, uint32 height)
     MakeContextCurrent();
 	SetVsync(false);
 
-	mViewports.emplace_back(new CViewport(0, 0, width, height));
 
 	glfwSetFramebufferSizeCallback(GetContext(), [](GLFWwindow* window, int width, int height) {
-		CWindow* const userPointer = static_cast<CWindow*>(glfwGetWindowUserPointer(window));
-		userPointer->OnFramebufferSizeCallback(width, height);
+		DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
+		userPointer->OnGlfwFramebufferSizeCallback(width, height);
 	});
 }
 
-CWindow::~CWindow()
+DesktopWindow::~DesktopWindow()
 {
-    for (CViewport* viewport : mViewports)
-    {
-        delete viewport;
-    }
+
 }
 
-bool CWindow::IsCurrentContext() const
+bool DesktopWindow::IsCurrentContext() const
 {
     return glfwGetCurrentContext() == mContext;
 }
 
-void CWindow::AssignGameInstance(CGameInstance* gameInstance)
-{
-    B2D_CHECKf(mAssignedGameInstance != nullptr, "Window already has a assigned game instance");
-    mAssignedGameInstance = gameInstance;
-}
 
-void CWindow::SetSize(uint32 width, uint32 height)
+void DesktopWindow::SetSize(uint32 width, uint32 height)
 {
 	glfwSetWindowSize(mContext, width, height);
 
@@ -55,7 +48,7 @@ void CWindow::SetSize(uint32 width, uint32 height)
 	GetViewport()->SetSize(width, height);
 }
 
-void CWindow::SetVsync(bool enable)
+void DesktopWindow::SetVsync(bool enable)
 {
 	CURRENT_CONTEXT_CHECK();
 
@@ -69,17 +62,17 @@ void CWindow::SetVsync(bool enable)
 	}
 }
 
-bool CWindow::IsFocused() const
+bool DesktopWindow::IsFocused() const
 {
     return glfwGetWindowAttrib(mContext, GLFW_FOCUSED);
 }
 
-void CWindow::Focus()
+void DesktopWindow::Focus()
 {
     glfwFocusWindow(mContext);
 }
 
-void CWindow::MakeContextCurrent()
+void DesktopWindow::MakeContextCurrent()
 {
     if (IsCurrentContext())
     {
@@ -89,22 +82,22 @@ void CWindow::MakeContextCurrent()
 	glfwMakeContextCurrent(mContext);
 }
 
-void CWindow::Swap()
+void DesktopWindow::Swap()
 {
 	glfwSwapBuffers(mContext);
 }
 
-void CWindow::SetShouldClose(bool close)
+void DesktopWindow::SetShouldClose(bool close)
 {
 	glfwSetWindowShouldClose(mContext, close);
 }
 
-bool CWindow::ShouldClose() const
+bool DesktopWindow::ShouldClose() const
 {
 	return glfwWindowShouldClose(mContext);
 }
 
-void CWindow::OnFramebufferSizeCallback(int width, int height)
+void DesktopWindow::OnGlfwFramebufferSizeCallback(int width, int height)
 {
 	mWidth = width;
 	mHeight = height;

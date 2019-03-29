@@ -103,4 +103,5 @@ project "B2D"
 	}
 
 	filter "system:windows"
+		defines "WIN32_LEAN_AND_MEAN"
 		buildoptions ("/sdl")

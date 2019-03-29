@@ -21,6 +21,11 @@ EKeyEvent const& InputState::GetKeyState(EKey key)
     return mKeyMap.at(static_cast<size_t>(key));
 }
 
+void InputState::SetKeyState(EKey key, EKeyEvent event)
+{
+    mKeyMap.at(static_cast<size_t>(key)) = event;
+}
+
 void InputState::Flush()
 {
     for (EKeyEvent& keyEvent : mKeyMap)

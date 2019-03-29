@@ -8,7 +8,7 @@
 #include "Core/Types/Matrix.h"
 #include "Core/GameEngine.h"
 #include "Graphics/Renderer.h"
-#include "Graphics/Window.h"
+#include "Graphics/GenericWindow.h"
 #include "Graphics/Shader.h"
 #include "Core/GameInstance.h"
 

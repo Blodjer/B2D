@@ -7,7 +7,7 @@
 #include "Graphics/Renderer.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Viewport.h"
-#include "Graphics/Window.h"
+#include "Graphics/GenericWindow.h"
 #include "Input/Input.h"
 #include "PlatformInterface.h"
 
@@ -15,33 +15,10 @@
 
 CGameEngine* CGameEngine::sInstance = nullptr;
 
-CGameEngine::CGameEngine(ApplicationConfig const config)
-	: mConfig(config)
+CGameEngine::CGameEngine(ApplicationConfig const& config)
+    : mConfig(config)
 {
-	if (sInstance != nullptr)
-	{
-		B2D_CORE_ERROR("Engine already initialized");
-		return;
-	}
 
-	sInstance = this;
-
-	B2D_CORE_INFO("Initialize engine");
-
-    mPlatformApplication = new PlatformApplication();
-    mPlatformApplication->Init();
-
-	ApplicationConfig::Dump(config);
-
-	UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
-    
-    mPlatformApplication->MakeWindow(config.windowWidth, 100, "sgopfksg");
-	mMainWindow = mPlatformApplication->MakeWindow(config.windowWidth, config.windowHeight, config.name);
-
-	mGraphicsInstance = new CRenderer();
-	mGameInstance = new CGameInstance(mMainWindow);
-
-	B2D_CORE_INFO("Engine initilized");
 }
 
 CGameEngine::~CGameEngine()
@@ -52,6 +29,41 @@ CGameEngine::~CGameEngine()
     // TODO: replace by smart pointer
     mPlatformApplication->Shutdown();
     delete mPlatformApplication;
+}
+
+void CGameEngine::Create(ApplicationConfig const& config)
+{
+    if (B2D_CHECK(sInstance != nullptr))
+    {
+        return;
+    }
+
+    sInstance = new CGameEngine(config);
+    sInstance->Init();
+}
+
+void CGameEngine::Shutdown()
+{
+    delete sInstance;
+}
+
+void CGameEngine::Init()
+{
+    B2D_CORE_INFO("Initialize engine...");
+
+    ApplicationConfig::Dump(mConfig);
+    UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
+
+    mPlatformApplication = new PlatformApplication();
+    B2D_ASSERT(mPlatformApplication->Init());
+    mPlatformApplication->AddMessageHandler(this);
+
+    mMainWindow = mPlatformApplication->MakeWindow(mConfig.windowWidth, mConfig.windowHeight, mConfig.name);
+
+    mGraphicsInstance = new CRenderer();
+    mGameInstance = new CGameInstance(mMainWindow);
+
+    B2D_CORE_INFO("Engine initilized!\n");
 }
 
 void CGameEngine::Run()
@@ -84,10 +96,10 @@ void CGameEngine::Run()
         Input::Flush();
         mPlatformApplication->PollEvents();
 
-        if (Input::IsKey(EKey::F5, EKeyEvent::KEY_DOWN))
+        if (Input::IsKey(EKey::F5, EKeyEvent::PRESS))
             CShader::ReloadAll();
 
-        if (Input::IsKey(EKey::ESCAPE, EKeyEvent::KEY_DOWN))
+        if (Input::IsKey(EKey::ESCAPE, EKeyEvent::PRESS))
             CGameEngine::Instance()->RequestShutdown();
         
         GetMainWindow()->MakeContextCurrent();

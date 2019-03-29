@@ -3,19 +3,19 @@
 #include "Core/Core.h"
 
 class LocalPlayer;
-class CWindow;
+class GenericWindow;
 class World;
 
 class CGameInstance
 {
 	friend CGameEngine;
 
-	CGameInstance(CWindow* const owningWindow);
+	CGameInstance(GenericWindow* const owningWindow);
 public:
 	~CGameInstance();
 
     World* GetWorld() { return mWorld; }
-    CWindow* const GetWindow() { return mWindow; }
+    GenericWindow* const GetWindow() { return mWindow; }
 
 	LocalPlayer* AddLocalPlayer();
 	void RemoveLocalPlayer(uint32 const playerId);
@@ -28,7 +28,7 @@ private:
 
 private:
     World* mWorld = nullptr;
-    CWindow* const mWindow = nullptr;
+    GenericWindow* const mWindow = nullptr;
 
     std::vector<LocalPlayer*> mLocalPlayers;
     uint32 mLocalPlayerIdCount = 0;

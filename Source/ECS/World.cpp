@@ -3,7 +3,7 @@
 #include "ECS/System/System.h"
 #include "CameraEntity.h"
 #include "Core/GameEngine.h"
-#include "Graphics/Window.h"
+#include "Graphics/GenericWindow.h"
 #include "Graphics/Viewport.h"
 
 World::World(CGameInstance* const owningGameInstance)

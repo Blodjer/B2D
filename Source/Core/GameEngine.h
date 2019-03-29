@@ -1,39 +1,46 @@
 #pragma once
 
+#include "PlatformMessageHandlerInterface.h"
 #include "Application.h"
 
-class IPlatformApplicationInterface;
 class CGameInstance;
 class CRenderer;
 class CViewport;
-class CWindow;
+class GenericWindow;
+class IPlatformApplicationInterface;
 
-class CGameEngine
+class CGameEngine final : private IPlatformMessageHandlerInterface
 {
+private:
+	CGameEngine(ApplicationConfig const& config);
+    ~CGameEngine();
+
+    CGameEngine(const CGameEngine&) = delete;
+    void operator=(const CGameEngine&) = delete;
+
+    static CGameEngine* sInstance;
+
 public:
-	CGameEngine(ApplicationConfig const config);
+    static void Create(ApplicationConfig const& config);
+    static void Shutdown();
 
 	static CGameEngine* const Instance() {
+        B2D_ASSERT(sInstance != nullptr);
 		return sInstance;
 	}
 
-	static CGameEngine* sInstance;
-
-private:
-	CGameEngine(const CGameEngine&) = delete;
-	void operator=(const CGameEngine&) = delete;
-
 public:
-	~CGameEngine();
+    void Init();
 
 	void Run();
 
 	void RequestShutdown();
 
 public:
-	CGameInstance* const GetGameInstance() const { return mGameInstance; }
-	CRenderer* const GetGraphicsInstance() const { return mGraphicsInstance; }
-	CWindow* const GetMainWindow() const { return mMainWindow; }
+    IPlatformApplicationInterface* GetPlatformApplication() const { return mPlatformApplication; }
+	CGameInstance* GetGameInstance() const { return mGameInstance; }
+	CRenderer* GetGraphicsInstance() const { return mGraphicsInstance; }
+    GenericWindow* GetMainWindow() const { return mMainWindow; }
 
 private:
 	bool mPendingShutdown = false;
@@ -41,7 +48,7 @@ private:
 	ApplicationConfig const mConfig;
 
     IPlatformApplicationInterface* mPlatformApplication = nullptr;
-	CWindow* mMainWindow = nullptr;
+    GenericWindow* mMainWindow = nullptr;
 
 	CGameInstance* mGameInstance = nullptr;
 	CRenderer* mGraphicsInstance = nullptr;

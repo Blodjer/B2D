@@ -15,7 +15,7 @@
 #include "ECS/System/RenderSystem.h"
 #include "Graphics/Shader.h"
 
-CGameInstance::CGameInstance(CWindow* const owningWindow)
+CGameInstance::CGameInstance(GenericWindow* const owningWindow)
     : mWindow(owningWindow)
 {
     mWorld = new World(this);

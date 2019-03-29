@@ -3,7 +3,7 @@
 
 #include "Viewport.h"
 #include "Core/GameEngine.h"
-#include "Graphics/Window.h"
+#include "Graphics/GenericWindow.h"
 
 #include <GL/glew.h>
 #include <iostream>
@@ -36,10 +36,11 @@ CRenderer::CRenderer()
 			break;
 		}
 	}, nullptr);
-
-	B2D_CORE_INFO("Version:  {0}", glGetString(GL_VERSION));
-	B2D_CORE_INFO("Vendor:   {0}", glGetString(GL_VENDOR));
-	B2D_CORE_INFO("Renderer: {0}\n", glGetString(GL_RENDERER));
+    
+    B2D_CORE_INFO("Initialize OpenGL...");
+    B2D_CORE_INFO("GL Version      {}", glGetString(GL_VERSION));
+    B2D_CORE_INFO("GL Vendor       {}", glGetString(GL_VENDOR));
+    B2D_CORE_INFO("GL Renderer     {}\n", glGetString(GL_RENDERER));
 
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);

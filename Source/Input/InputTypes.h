@@ -5,8 +5,9 @@
 enum class EKeyEvent : int8
 {
     NONE = -1,
-    KEY_UP,
-    KEY_DOWN
+    PRESS,
+    RELEASE,
+    REPEAT,
 };
 
 enum class EKey : int16
