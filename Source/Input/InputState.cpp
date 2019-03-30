@@ -30,6 +30,6 @@ void InputState::Flush()
 {
     for (EKeyEvent& keyEvent : mKeyMap)
     {
-        keyEvent = EKeyEvent::NONE;
+        keyEvent = EKeyEvent::None;
     }
 }

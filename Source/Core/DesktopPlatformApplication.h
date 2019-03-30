@@ -25,10 +25,11 @@ private:
     static void OnGlfwErrorCallback(int error, const char* description);
 
     static void OnGlfwKeyCallback(GLFWwindow* window, int glfwKey, int scancode, int glfwAction, int glfwMods);
+    static void OnGlfwCharCallback(GLFWwindow* window, unsigned int codepoint);
 
     static void OnGlfwCursorPosCallback(GLFWwindow* window, double xpos, double ypos);
     static void OnGlfwCursorEnterCallback(GLFWwindow* window, int entered);
-    static void OnGlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+    static void OnGlfwMouseButtonCallback(GLFWwindow* window, int button, int glfwAction, int glfwMods);
 
     static void OnGlfwJoystickCallback(int glfwJoystickId, int event);
 

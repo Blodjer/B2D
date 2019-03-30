@@ -2,12 +2,29 @@
 
 #include "Core/Types/BasicTypes.h"
 
+enum class EMouseButton : int8
+{
+    Left,
+    Middle,
+    Right,
+
+    Thumb1,
+    Thumb2,
+};
+
+enum class EMouseButtonEvent : int8
+{
+    None = -1,
+    Press,
+    Release
+};
+
 enum class EKeyEvent : int8
 {
-    NONE = -1,
-    PRESS,
-    RELEASE,
-    REPEAT,
+    None = -1,
+    Press,
+    Release,
+    Repeat,
 };
 
 enum class EKey : int16

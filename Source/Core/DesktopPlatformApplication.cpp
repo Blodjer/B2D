@@ -64,11 +64,12 @@ GenericWindow* DesktopPlatformApplication::MakeWindow(uint32 width, uint32 heigh
     mWindows.emplace_back(window);
 
     glfwSetKeyCallback(windowContext, OnGlfwKeyCallback);
+    glfwSetCharCallback(windowContext, OnGlfwCharCallback);
     glfwSetCursorPosCallback(windowContext, OnGlfwCursorPosCallback);
     glfwSetCursorEnterCallback(windowContext, OnGlfwCursorEnterCallback);
     glfwSetMouseButtonCallback(windowContext, OnGlfwMouseButtonCallback);
     glfwSetDropCallback(windowContext, OnGlfwDropCallback);
-
+    
     return window;
 }
 
@@ -133,36 +134,72 @@ void DesktopPlatformApplication::OnGlfwKeyCallback(GLFWwindow* window, int glfwK
     //TODO: Translate to B2D in a safer way
     EKey key = static_cast<EKey>(glfwKey);
 
-    EKeyEvent keyEvent = EKeyEvent::NONE;
+    EKeyEvent keyEvent = EKeyEvent::None;
     switch (glfwAction)
     {
         case GLFW_PRESS:
-            keyEvent = EKeyEvent::PRESS; break;
+            keyEvent = EKeyEvent::Press; break;
         case GLFW_RELEASE:
-            keyEvent = EKeyEvent::RELEASE; break;
+            keyEvent = EKeyEvent::Release; break;
+        case GLFW_REPEAT:
+            keyEvent = EKeyEvent::Repeat; break;
         default:
             B2D_CORE_WARNING("Unhandled key callback (action: {})", glfwAction);
             return;
     }
 
-    DISPATCH_PLATFORM_MESSAGE(OnKeyEvent, key, keyEvent);
+    DISPATCH_PLATFORM_MESSAGE(OnKeyEvent, userPointer, scancode, key, keyEvent);
 }
 
+
+void DesktopPlatformApplication::OnGlfwCharCallback(GLFWwindow* window, unsigned int codepoint)
+{
+    DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
+
+    DISPATCH_PLATFORM_MESSAGE(OnKeyChar, userPointer, static_cast<uint32>(codepoint));
+}
 
 void DesktopPlatformApplication::OnGlfwCursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 {
     DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
-}
 
+    TVec2 pos(xpos, ypos);
+    DISPATCH_PLATFORM_MESSAGE(OnMouseMove, userPointer, pos);
+}
 
 void DesktopPlatformApplication::OnGlfwCursorEnterCallback(GLFWwindow* window, int entered)
 {
     DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
+    
+    if (entered == GLFW_TRUE)
+    {
+        DISPATCH_PLATFORM_MESSAGE(OnMouseEnter, userPointer);
+    }
+    else
+    {
+        DISPATCH_PLATFORM_MESSAGE(OnMouseLeave, userPointer);
+    }
 }
 
-void DesktopPlatformApplication::OnGlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+void DesktopPlatformApplication::OnGlfwMouseButtonCallback(GLFWwindow* window, int button, int glfwAction, int glfwMods)
 {
     DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
+    
+    EMouseButton mouseButton = static_cast<EMouseButton>(button);
+
+    EMouseButtonEvent mouseButtonEvent;
+    switch (glfwAction)
+    {
+        case GLFW_PRESS:
+            mouseButtonEvent = EMouseButtonEvent::Press; break;
+        case GLFW_RELEASE:
+            mouseButtonEvent = EMouseButtonEvent::Release; break;
+        default:
+            B2D_CORE_WARNING("Unhandled mouse button callback (action: {})", glfwAction);
+            return;
+    }
+
+    DISPATCH_PLATFORM_MESSAGE(OnMouseButton, userPointer, mouseButton, mouseButtonEvent);
 }
 
 void DesktopPlatformApplication::OnGlfwJoystickCallback(int glfwJoystickId, int event)
@@ -182,9 +219,13 @@ void DesktopPlatformApplication::OnGlfwJoystickCallback(int glfwJoystickId, int 
     uint8 const* const axes = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count);
     //     glfwGetGamepadName();
     //     glfwGetJoystickName();
+
+    B2D_WARNING("OnGlfwJoystickCallback is not implemented");
 }
 
 void DesktopPlatformApplication::OnGlfwDropCallback(GLFWwindow* window, int count, const char** paths)
 {
     DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
+
+    B2D_WARNING("OnGlfwDropCallback is not implemented");
 }

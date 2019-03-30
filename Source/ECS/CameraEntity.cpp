@@ -13,7 +13,7 @@ void CameraEntity::Update(float deltaTime)
     CameraComponent& camera = GetComponent<CameraComponent>();
 
 #if B2D_BUILD_DEBUG
-    if (Input::IsKey(EKey::P, EKeyEvent::PRESS))
+    if (Input::IsKey(EKey::P, EKeyEvent::Press))
     {
         SetProjection(camera.targetProjection == EProjection::Perspective ? EProjection::Orthographic : EProjection::Perspective);
     }

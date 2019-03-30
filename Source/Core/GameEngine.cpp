@@ -96,10 +96,10 @@ void CGameEngine::Run()
         Input::Flush();
         mPlatformApplication->PollEvents();
 
-        if (Input::IsKey(EKey::F5, EKeyEvent::PRESS))
+        if (Input::IsKey(EKey::F5, EKeyEvent::Press))
             CShader::ReloadAll();
 
-        if (Input::IsKey(EKey::ESCAPE, EKeyEvent::PRESS))
+        if (Input::IsKey(EKey::ESCAPE, EKeyEvent::Press))
             CGameEngine::Instance()->RequestShutdown();
         
         GetMainWindow()->MakeContextCurrent();
