@@ -64,6 +64,7 @@ end
 group "Libraries"
 	include "Libraries/glew"
 	include "Libraries/GLFW"
+	include "Libraries/imgui"
 group ""
 
 
@@ -87,6 +88,7 @@ project "B2D"
 		"%{prj.location}/Libraries/glew/include/",
 		"%{prj.location}/Libraries/GLFW/include/",
 		"%{prj.location}/Libraries/glm/",
+		"%{prj.location}/Libraries/imgui/",
 		"%{prj.location}/Libraries/spdlog/include/"
 	}
 
@@ -97,8 +99,9 @@ project "B2D"
 
 	links
 	{
-		"GLFW",
 		"glew",
+		"GLFW",
+		"imgui",
 		"opengl32.lib"
 	}
 
