@@ -2,8 +2,8 @@
 #include "Renderer.h"
 
 #include "Viewport.h"
-#include "Core/GameEngine.h"
-#include "Graphics/GenericWindow.h"
+#include "GameEngine.h"
+#include "Platform/GenericWindow.h"
 
 #include <GL/glew.h>
 #include <iostream>

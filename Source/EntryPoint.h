@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Application.h"
-#include "Core/GameEngine.h"
-#include "Core/GameInstance.h"
+#include "GameEngine.h"
+#include "Game/GameInstance.h"
 
 extern void B2D::Config(ApplicationConfig& config);
 extern void B2D::PopulateWorld(World* const world);

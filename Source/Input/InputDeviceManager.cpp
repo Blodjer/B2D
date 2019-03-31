@@ -1,8 +1,8 @@
 #include "B2D_pch.h"
 #include "InputDeviceManager.h"
 
-#include "LocalPlayer.h"
-#include "Core/GameInstance.h"
+#include "Game/GameInstance.h"
+#include "Game/LocalPlayer.h"
 
 InputDeviceManager::InputDeviceManager(CGameInstance const* const owningGameInstance)
     : mOwningGameInstance(owningGameInstance)

@@ -1,7 +1,7 @@
 #include "B2D_pch.h"
 #include "Input.h"
 
-#include "Core/GameEngine.h"
+#include "GameEngine.h"
 
 InputState Input::sInputState;
 

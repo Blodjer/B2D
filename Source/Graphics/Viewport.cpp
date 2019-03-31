@@ -2,7 +2,7 @@
 #include "Viewport.h"
 
 #include "Core/Core.h"
-#include "ECS/CameraEntity.h"
+#include "Game/CameraEntity.h"
 
 #include <GL/glew.h>
 

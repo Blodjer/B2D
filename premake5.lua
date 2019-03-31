@@ -88,7 +88,6 @@ project "B2D"
 		"%{prj.location}/Libraries/glew/include/",
 		"%{prj.location}/Libraries/GLFW/include/",
 		"%{prj.location}/Libraries/glm/",
-		"%{prj.location}/Libraries/imgui/",
 		"%{prj.location}/Libraries/spdlog/include/"
 	}
 
