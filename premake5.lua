@@ -57,12 +57,14 @@ end
 		architecture "x64"
 
 	filter "system:Windows"
+		defines "B2D_PLATFORM_DESKTOP"
 		defines "B2D_PLATFORM_WINDOWS"
 	
 
 group "Libraries"
 	include "Libraries/glew"
 	include "Libraries/GLFW"
+	include "Libraries/imgui"
 group ""
 
 
@@ -96,10 +98,12 @@ project "B2D"
 
 	links
 	{
-		"GLFW",
 		"glew",
+		"GLFW",
+		"imgui",
 		"opengl32.lib"
 	}
 
 	filter "system:windows"
+		defines "WIN32_LEAN_AND_MEAN"
 		buildoptions ("/sdl")

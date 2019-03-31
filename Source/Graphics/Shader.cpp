@@ -183,7 +183,7 @@ void CShader::SetFloat(const char* name, float value) const
 
 void CShader::SetMatrix(const char* name, const float* value) const
 {
-	GLuint ul = glGetUniformLocation(mID, name);
+    GLuint ul = glGetUniformLocation(mID, name);
 	if (ul == -1)
 	{
 		B2D_CORE_WARNING("Cannot find shader uniform location: {0}", name);

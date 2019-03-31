@@ -10,18 +10,16 @@ struct ApplicationConfig
 
     static void Dump(ApplicationConfig const& config)
     {
-        B2D_CORE_INFO("-----------------------------------------------");
-        B2D_CORE_INFO("name             {0}", config.name);
-        B2D_CORE_INFO("windowWidth      {0}", config.windowWidth);
-        B2D_CORE_INFO("windowHeight     {0}", config.windowHeight);
-        B2D_CORE_INFO("-----------------------------------------------\n");
+        B2D_CORE_INFO("--- ApplicationConfig -------------------");
+        B2D_CORE_INFO("name            {}", config.name);
+        B2D_CORE_INFO("windowWidth     {}", config.windowWidth);
+        B2D_CORE_INFO("windowHeight    {}", config.windowHeight);
+        B2D_CORE_INFO("-----------------------------------------\n");
     }
 };
-
-class CLevel;
 
 namespace B2D
 {
     void Config(ApplicationConfig& config);
-    void PopulateLevel(CLevel* const level);
+    void PopulateWorld(World* const world);
 }

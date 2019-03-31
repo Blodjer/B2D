@@ -13,3 +13,7 @@
 #include "Core/Types/Vector3.h"
 #include "Core/Types/Matrix.h"
 #include "Core/Types/Delegate.h"
+#include "Game/Core/EntityID.h"
+#include "Game/Core/Entity.h"
+#include "Input/InputDeviceID.h"
+#include "Input/InputTypes.h"
