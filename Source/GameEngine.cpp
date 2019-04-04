@@ -73,7 +73,6 @@ void CGameEngine::Run()
 #endif
 	using duration = std::chrono::duration<double, std::milli>;
 	using clock = std::chrono::high_resolution_clock;
-	std::chrono::time_point<clock> start;
 
 	uint32 frames = 0;
 	uint32 fps = 0;
@@ -102,11 +101,11 @@ void CGameEngine::Run()
         if (Input::IsKey(EKey::ESCAPE, EKeyEvent::Press))
             CGameEngine::Instance()->RequestShutdown();
         
-        GetMainWindow()->MakeContextCurrent();
-        GetMainWindow()->GetViewport()->Use(); // move to renderer draw call
+        //GetMainWindow()->MakeContextCurrent();
+        //GetMainWindow()->GetViewport()->Use(); // move to renderer draw call
 
 		// Tick
-		start = clock::now();
+        std::chrono::time_point<clock> start = clock::now();
         mGameInstance->Tick(deltaTime);
 		duration ChronoTick = clock::now() - start;
 		

@@ -7,69 +7,88 @@
 #include "Game/Component/SpriteComponent.h"
 #include "Game/Component/TransformComponent.h"
 #include "Graphics/Renderer.h"
+#include "Graphics/RenderObject.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Viewport.h"
 #include "Platform/GenericWindow.h"
+#include <thread>
+#include "Platform/Desktop/DesktopWindow.h"
 
-#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
+static std::vector<RenderObject> rob2;
+static std::vector<RenderObject> rob3;
+
+static CViewport const* v2;
+static CameraEntity const* c2;
+
+bool sw = true;
+bool finished = true;
+
+void RENDER()
+{
+    CGameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
+
+    bool mysw = true;
+    while (true)
+    {
+        while (mysw == sw)
+        {
+            Sleep(0);
+        }
+
+        finished = false;
+
+        std::vector<RenderObject> const& robb = sw ? rob2 : rob3;
+
+        CGameEngine::Instance()->GetGraphicsInstance()->PreRender();
+        CGameEngine::Instance()->GetGraphicsInstance()->Draw(robb, v2, c2);
+
+        mysw = sw;
+        finished = true;
+    }
+}
 
 void RenderSystem::Update(float deltaTime)
 {
-    CViewport const* const viewport = mWorld->GetOwningGameInstance()->GetWindow()->GetViewport();
-    if (B2D_CHECKf(viewport == nullptr, "Unable to render because the world has no active viewport"))
+    if (!finished)
     {
         return;
     }
 
-    CGameEngine::Instance()->GetGraphicsInstance()->PreRender();
-
-    TMatrix viewProjectionMatrix;
-    if (!viewport->GetViewProjectionMatrix(viewProjectionMatrix))
+    v2 = mWorld->GetOwningGameInstance()->GetWindow()->GetViewport();
+    if (B2D_CHECKf(v2 == nullptr, "Unable to render because the world has no active viewport"))
     {
-        CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
         return;
     }
 
+    c2 = v2->GetCamera();
+
+    std::vector<RenderObject>& robb = !sw ? rob2 : rob3;
+
+    robb.clear();
+    robb.reserve(mWorld->GetComponents<SpriteComponent>().size());
+        
     for (SpriteComponent const& spriteComponent : ComponentItr<SpriteComponent, TransformComponent>(mWorld))
     {
-        CMaterial const& material = spriteComponent.material;
-        CShader* const currentShader = material.mShader;
-        currentShader->Use();
-
-        for (uint32 i = 0; i < material.mTextures.size(); ++i)
-        {
-            if (material.mTextures[i] == nullptr)
-            {
-                glActiveTexture(GL_TEXTURE0 + i);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                continue;
-            }
-
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, material.mTextures[i]->mHandle);
-
-            switch (i)
-            {
-                case 0: currentShader->SetInt("texture0", i); break;
-                case 1: currentShader->SetInt("texture1", i); break;
-                case 2: currentShader->SetInt("texture2", i); break;
-                case 3: currentShader->SetInt("texture3", i); break;
-                default: B2D_TRAP("Not enough texture slots ({})!", i); break;
-            }
-        }
-
         TMatrix const& model = spriteComponent.Sibling<TransformComponent>().matrix;
+        CMaterial const& material = spriteComponent.material;
 
-        currentShader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());
-        currentShader->SetMatrix("model", model.GetPtr());
-
-        // 		static float f = 0.0f;
-        // 		f += 0.016f;
-        // 		currentShader->SetFloat("rotation", f);
-
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        robb.emplace_back(model, material);
     }
 
-    CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
+    if (finished)
+    {
+        CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
+        sw = !sw;
+    }
+
+    static bool bb = true;
+    if (bb)
+    {
+        glfwMakeContextCurrent(nullptr);
+        bb = false;
+        std::thread ren(RENDER);
+        ren.detach();
+    }
 }

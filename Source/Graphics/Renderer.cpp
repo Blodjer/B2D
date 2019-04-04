@@ -4,6 +4,10 @@
 #include "Viewport.h"
 #include "GameEngine.h"
 #include "Platform/GenericWindow.h"
+#include "Shader.h"
+#include "RenderObject.h"
+#include "Material.h"
+#include "Texture.h"
 
 #include <GL/glew.h>
 #include <iostream>
@@ -75,6 +79,55 @@ CRenderer::~CRenderer()
 void CRenderer::PreRender()
 {
     Clear();
+}
+
+void CRenderer::Draw(std::vector<RenderObject> const& scene, CViewport const* const viewport, CameraEntity const* const camera) // Camera/viewProjectionMatrix, Viewport, list of stuff to Render
+{
+    // flag: solid, unlit, wireframe,...
+
+    TMatrix viewProjectionMatrix;
+    if (!viewport->GetViewProjectionMatrix(viewProjectionMatrix))
+    {
+        return;
+    }
+
+    for (RenderObject const& ro : scene)
+    {
+        CShader const* const shader = ro.mMaterial.mShader;
+        shader->Use();
+
+        for (uint32 i = 0; i < ro.mMaterial.mTextures.size(); ++i)
+        {
+            if (ro.mMaterial.mTextures[i] == nullptr)
+            {
+                glActiveTexture(GL_TEXTURE0 + i);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                continue;
+            }
+
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, ro.mMaterial.mTextures[i]->mHandle);
+
+            switch (i)
+            {
+                case 0: shader->SetInt("texture0", i); break;
+                case 1: shader->SetInt("texture1", i); break;
+                case 2: shader->SetInt("texture2", i); break;
+                case 3: shader->SetInt("texture3", i); break;
+                default: B2D_TRAP("Not enough texture slots ({})!", i); break;
+            }
+        }
+
+        shader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());
+        shader->SetMatrix("model", ro.mMatrix.GetPtr());
+
+        // 		static float f = 0.0f;
+        // 		f += 0.016f;
+        // 		currentShader->SetFloat("rotation", f);
+
+        glPolygonMode(GL_FRONT, GL_FILL);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    }
 }
 
 void CRenderer::PostRender()

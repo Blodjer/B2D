@@ -21,7 +21,6 @@ DesktopWindow::DesktopWindow(GLFWwindow* context, uint32 width, uint32 height)
     MakeContextCurrent();
 	SetVsync(false);
 
-
 	glfwSetFramebufferSizeCallback(GetContext(), [](GLFWwindow* window, int width, int height) {
 		DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
 		userPointer->OnGlfwFramebufferSizeCallback(width, height);
