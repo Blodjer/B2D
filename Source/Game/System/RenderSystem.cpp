@@ -17,42 +17,50 @@
 #include <GLFW/glfw3.h>
 
 static std::vector<RenderObject> rob2;
-static std::vector<RenderObject> rob3;
 
 static CViewport const* v2;
 static CameraEntity const* c2;
 
-bool sw = true;
+int copiedFrame = 0;
+int preparedFrame = -1;
+int renderedFrame = -1;
 bool finished = true;
+
+std::mutex mtx;
 
 void RENDER()
 {
     CGameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
 
-    bool mysw = true;
     while (true)
     {
-        while (mysw == sw)
+        while (preparedFrame == renderedFrame)
         {
             Sleep(0);
         }
 
-        finished = false;
+        mtx.lock();
 
-        std::vector<RenderObject> const& robb = sw ? rob2 : rob3;
+        std::vector<RenderObject> const& robb = rob2;
 
         CGameEngine::Instance()->GetGraphicsInstance()->PreRender();
         CGameEngine::Instance()->GetGraphicsInstance()->Draw(robb, v2, c2);
+        CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
 
-        mysw = sw;
-        finished = true;
+        renderedFrame = preparedFrame;
+        mtx.unlock();
+        Sleep(16);
     }
 }
 
 void RenderSystem::Update(float deltaTime)
 {
-    if (!finished)
+    bool l = mtx.try_lock();
+    if (!l || preparedFrame != renderedFrame)
     {
+        if (l)
+            mtx.unlock();
+
         return;
     }
 
@@ -64,11 +72,12 @@ void RenderSystem::Update(float deltaTime)
 
     c2 = v2->GetCamera();
 
-    std::vector<RenderObject>& robb = !sw ? rob2 : rob3;
-
+    std::vector<RenderObject>& robb = rob2;
+    
     robb.clear();
     robb.reserve(mWorld->GetComponents<SpriteComponent>().size());
-        
+
+    int i = 0;
     for (SpriteComponent const& spriteComponent : ComponentItr<SpriteComponent, TransformComponent>(mWorld))
     {
         TMatrix const& model = spriteComponent.Sibling<TransformComponent>().matrix;
@@ -76,12 +85,11 @@ void RenderSystem::Update(float deltaTime)
 
         robb.emplace_back(model, material);
     }
+    copiedFrame++;
 
-    if (finished)
-    {
-        CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
-        sw = !sw;
-    }
+    preparedFrame = copiedFrame;
+    
+    mtx.unlock();
 
     static bool bb = true;
     if (bb)
