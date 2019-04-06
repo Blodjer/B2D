@@ -81,7 +81,7 @@ void CRenderer::PreRender()
     Clear();
 }
 
-void CRenderer::Draw(std::vector<RenderObject> const& scene, CViewport const* const viewport, CameraEntity const* const camera) // Camera/viewProjectionMatrix, Viewport, list of stuff to Render
+void CRenderer::Draw(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera) // Camera/viewProjectionMatrix, Viewport, list of stuff to Render
 {
     // flag: solid, unlit, wireframe,...
 
@@ -91,14 +91,15 @@ void CRenderer::Draw(std::vector<RenderObject> const& scene, CViewport const* co
         return;
     }
 
-    for (RenderObject const& ro : scene)
+    for (uint32 i = 0; i < buffer.Size() * 0.01f; ++i)
     {
-        CShader const* const shader = ro.mMaterial.mShader;
+        RenderObject const& ro = buffer[i];
+        CShader const* const shader = ro.mMaterial->mShader;
         shader->Use();
 
-        for (uint32 i = 0; i < ro.mMaterial.mTextures.size(); ++i)
+        for (uint32 i = 0; i < ro.mMaterial->mTextures.size(); ++i)
         {
-            if (ro.mMaterial.mTextures[i] == nullptr)
+            if (ro.mMaterial->mTextures[i] == nullptr)
             {
                 glActiveTexture(GL_TEXTURE0 + i);
                 glBindTexture(GL_TEXTURE_2D, 0);
@@ -106,7 +107,7 @@ void CRenderer::Draw(std::vector<RenderObject> const& scene, CViewport const* co
             }
 
             glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, ro.mMaterial.mTextures[i]->mHandle);
+            glBindTexture(GL_TEXTURE_2D, ro.mMaterial->mTextures[i]->mHandle);
 
             switch (i)
             {

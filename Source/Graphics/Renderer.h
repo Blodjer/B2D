@@ -3,6 +3,7 @@
 class CameraEntity;
 class CViewport;
 class RenderObject;
+class RenderObjectBuffer;
 
 class CRenderer
 {
@@ -11,7 +12,7 @@ public:
 	~CRenderer();
 	
     void PreRender();
-    void Draw(std::vector<RenderObject> const& scene, CViewport const* const viewport, CameraEntity const* const camera);
+    void Draw(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera);
     void PostRender();
 
 private:

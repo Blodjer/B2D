@@ -16,17 +16,15 @@
 
 #include <GLFW/glfw3.h>
 
-static std::vector<RenderObject> rob2;
+static CViewport const* viewport;
+static CameraEntity const* camera;
 
-static CViewport const* v2;
-static CameraEntity const* c2;
+static uint32 preparedFrame = -1;
+static uint32 renderedFrame = -1;
 
-int copiedFrame = 0;
-int preparedFrame = -1;
-int renderedFrame = -1;
-bool finished = true;
+static RenderObjectBuffer buffer(100000);
 
-std::mutex mtx;
+static std::mutex mtx;
 
 void RENDER()
 {
@@ -41,53 +39,45 @@ void RENDER()
 
         mtx.lock();
 
-        std::vector<RenderObject> const& robb = rob2;
-
         CGameEngine::Instance()->GetGraphicsInstance()->PreRender();
-        CGameEngine::Instance()->GetGraphicsInstance()->Draw(robb, v2, c2);
+        CGameEngine::Instance()->GetGraphicsInstance()->Draw(buffer, viewport, camera);
         CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
 
         renderedFrame = preparedFrame;
         mtx.unlock();
-        Sleep(16);
     }
 }
 
 void RenderSystem::Update(float deltaTime)
 {
-    bool l = mtx.try_lock();
-    if (!l || preparedFrame != renderedFrame)
-    {
-        if (l)
-            mtx.unlock();
-
-        return;
-    }
-
-    v2 = mWorld->GetOwningGameInstance()->GetWindow()->GetViewport();
-    if (B2D_CHECKf(v2 == nullptr, "Unable to render because the world has no active viewport"))
+    if (preparedFrame != renderedFrame)
     {
         return;
     }
 
-    c2 = v2->GetCamera();
+    if (!mtx.try_lock())
+    {
+        return;
+    }
 
-    std::vector<RenderObject>& robb = rob2;
-    
-    robb.clear();
-    robb.reserve(mWorld->GetComponents<SpriteComponent>().size());
+    viewport = mWorld->GetOwningGameInstance()->GetWindow()->GetViewport();
+    if (B2D_CHECKf(viewport == nullptr, "Unable to render because the world has no active viewport"))
+    {
+        return;
+    }
 
-    int i = 0;
+    camera = viewport->GetCamera();
+
+    uint32 i = 0;
     for (SpriteComponent const& spriteComponent : ComponentItr<SpriteComponent, TransformComponent>(mWorld))
     {
-        TMatrix const& model = spriteComponent.Sibling<TransformComponent>().matrix;
-        CMaterial const& material = spriteComponent.material;
-
-        robb.emplace_back(model, material);
+        buffer[i].mMatrix = spriteComponent.Sibling<TransformComponent>().matrix;
+        buffer[i].mMaterial = &spriteComponent.material;
+        i++;
     }
-    copiedFrame++;
+    buffer.Size() = i;
 
-    preparedFrame = copiedFrame;
+    preparedFrame++;
     
     mtx.unlock();
 
