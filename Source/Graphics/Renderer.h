@@ -2,20 +2,20 @@
 
 class CameraEntity;
 class CViewport;
+class IGraphicsHardwareInterface;
 class RenderObject;
 class RenderObjectBuffer;
 
 class CRenderer
 {
 public:
-	CRenderer();
+	CRenderer(IGraphicsHardwareInterface* ghi);
 	~CRenderer();
 	
-    void PreRender();
+    void BeginRender();
     void Draw(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera);
-    void PostRender();
+    void EndRender();
 
 private:
-	void Clear();
-
+    IGraphicsHardwareInterface* mGHI = nullptr;
 };

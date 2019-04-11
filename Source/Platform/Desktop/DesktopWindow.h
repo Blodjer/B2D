@@ -25,6 +25,7 @@ public:
 	virtual void SetShouldClose(bool close) override;
 	virtual bool ShouldClose() const override;
 
+    virtual void* GetGenericContext() const override { return mContext; }
     GLFWwindow* GetContext() const { return mContext; }
 
 public:

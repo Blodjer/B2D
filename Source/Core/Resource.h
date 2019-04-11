@@ -22,7 +22,12 @@ class IResource
 	friend IResourceManager;
 
 public:
+    IResource() = default;
 	virtual ~IResource() = default;
+
+private:
+    IResource(IResource const&) = delete;
+    IResource& operator=(IResource const&) = delete;
 
 public:
 	virtual bool Load(ResourcePath const& filePath) = 0;

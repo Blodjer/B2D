@@ -26,6 +26,7 @@ static RenderObjectBuffer buffer(100000);
 
 static std::mutex mtx;
 
+// Render Game
 void RENDER()
 {
     CGameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
@@ -39,9 +40,48 @@ void RENDER()
 
         mtx.lock();
 
-        CGameEngine::Instance()->GetGraphicsInstance()->PreRender();
-        CGameEngine::Instance()->GetGraphicsInstance()->Draw(buffer, viewport, camera);
-        CGameEngine::Instance()->GetGraphicsInstance()->PostRender();
+        CRenderer* r = CGameEngine::Instance()->GetRenderer();
+
+        // Each World has it's own world renderer
+        // The world renderer render to a game viewport client (which is a rendertarget and a collection viewports base on the splitscreen configration)
+        // 
+        // The RenderSystem updates the RBO of the world renderer
+
+        // WorldRenderer
+        //      RBO
+        //
+        // ResourceViewRenderer (Renderer to render as specific visual resource)
+        //  virtual Draw(IResource, RT) = 0
+        //      TextureRenderer
+        //      ShaderRenderer
+
+        // DrawGameViewportToRenderTarget(GameViewportClient* c)
+            // SetRenderTarget()
+                /// glBindFramebuffer()
+            // Clear()
+                /// glClear()
+            // foreach c->Viewport
+                // DrawSceneFromViewport (ROB, viewport)
+                    // SetViewport()
+                        /// glUseViewport
+                    // foreach RO in ROB
+                        // DrawRO
+                            /// glActivateTexture
+                            /// glUseProgram
+                            /// glDrawArray
+        // Draw GameViewport
+            // SetRenderTarget()
+                /// glBindFramebuffer()
+            // DrawRenderTarget()
+        // Swap
+
+        // GameViewport
+        //      Viewports[]
+        //      RenderTarget* (optional)
+
+        r->BeginRender();
+        r->Draw(buffer, viewport, camera);
+        r->EndRender();
 
         renderedFrame = preparedFrame;
         mtx.unlock();

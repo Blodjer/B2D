@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Core/Core.h"
 #include "Core/Resource.h"
+
+class GHITexture;
 
 class CTexture : public IResource
 {
@@ -11,10 +12,12 @@ public:
 	virtual bool Load(ResourcePath const& filePath) override;
     static constexpr auto GetFallbackResourcePath() { return "Content/Sprites/MissingTexture.png"; }
 
-public:
+    GHITexture const* GetGHITexture() const { return mGHITexture; }
+
+private:
 	int32 mWidth;
 	int32 mHeight;
 	int32 mComponents;
 
-	uint32 mHandle;
+	GHITexture* mGHITexture;
 };

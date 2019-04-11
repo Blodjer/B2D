@@ -6,6 +6,7 @@
 #include "Graphics/Renderer.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Viewport.h"
+#include "Graphics/GraphicsHardwareInterface.h"
 #include "Input/Input.h"
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformApplication.h"
@@ -18,17 +19,19 @@ CGameEngine* CGameEngine::sInstance = nullptr;
 CGameEngine::CGameEngine(ApplicationConfig const& config)
     : mConfig(config)
 {
-
 }
 
 CGameEngine::~CGameEngine()
 {
     delete mGameInstance;
-    delete mGraphicsInstance;
+    delete mRenderer;
 
     // TODO: replace by smart pointer
-    mPlatformApplication->Shutdown();
-    delete mPlatformApplication;
+    mPA->Shutdown();
+    delete mPA;
+
+    mGHI->Shutdown();
+    delete mGHI;
 }
 
 void CGameEngine::Create(ApplicationConfig const& config)
@@ -42,11 +45,6 @@ void CGameEngine::Create(ApplicationConfig const& config)
     sInstance->Init();
 }
 
-void CGameEngine::Shutdown()
-{
-    delete sInstance;
-}
-
 void CGameEngine::Init()
 {
     B2D_CORE_INFO("Initialize engine...");
@@ -54,16 +52,29 @@ void CGameEngine::Init()
     ApplicationConfig::Dump(mConfig);
     UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
 
-    mPlatformApplication = new PlatformApplication();
-    B2D_ASSERT(mPlatformApplication->Init());
-    mPlatformApplication->AddMessageHandler(this);
+    // Platform Initialization
+    mPA = new PlatformApplication();
+    B2D_ASSERT(mPA->Init());
+    mPA->AddMessageHandler(this);
 
-    mMainWindow = mPlatformApplication->MakeWindow(mConfig.windowWidth, mConfig.windowHeight, mConfig.name);
+    // Create Main Window
+    mMainWindow = mPA->MakeWindow(mConfig.windowWidth, mConfig.windowHeight, mConfig.name);
 
-    mGraphicsInstance = new CRenderer();
+    // Load Graphics Hardware Interface
+    mGHI = mPA->CreateGHI();
+    B2D_ASSERT(mGHI->Init());
+
+    mRenderer = new CRenderer(mGHI);
+
+    // TODO: GameInstance should only be valid while the game is running. Should be null in editor mode.
     mGameInstance = new CGameInstance(mMainWindow);
 
     B2D_CORE_INFO("Engine initilized!\n");
+}
+
+void CGameEngine::Shutdown()
+{
+    delete sInstance;
 }
 
 void CGameEngine::Run()
@@ -93,7 +104,7 @@ void CGameEngine::Run()
 		}
 
         Input::Flush();
-        mPlatformApplication->PollEvents();
+        mPA->PollEvents();
 
         if (Input::IsKey(EKey::F5, EKeyEvent::Press))
             CShader::ReloadAll();

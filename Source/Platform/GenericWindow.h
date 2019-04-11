@@ -24,6 +24,7 @@ public:
     virtual void SetShouldClose(bool close) = 0;
     virtual bool ShouldClose() const = 0;
 
+    virtual void* GetGenericContext() const = 0;
     virtual void MakeContextCurrent() = 0;
     virtual void Swap() = 0;
 

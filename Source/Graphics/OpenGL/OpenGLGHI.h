@@ -1,5 +1,5 @@
 #pragma once
-#include "Graphics/GraphicsHardwareInterface.h"
+#include "Graphics/GHI/GraphicsHardwareInterface.h"
 
 class OpenGLGHI : public IGraphicsHardwareInterface
 {
@@ -7,8 +7,13 @@ public:
     OpenGLGHI();
     ~OpenGLGHI();
 
+    virtual bool Init() override;
+    virtual void Shutdown() override;
+
     virtual void Clear() override;
-    virtual void Swap() override;
+
+    virtual GHITexture* CreateTexture(void* data, uint32 width, uint32 height) override;
+    virtual void FreeTexture(GHITexture* texture) override;
 
 };
 

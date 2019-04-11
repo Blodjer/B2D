@@ -8,51 +8,20 @@
 #include "RenderObject.h"
 #include "Material.h"
 #include "Texture.h"
+#include "OpenGL/OpenGLTexture.h"
+#include "GHI/GraphicsHardwareInterface.h"
 
 #include <GL/glew.h>
 #include <iostream>
 
-CRenderer::CRenderer()
+GLuint fb = 0;
+GLuint renderedTexture;
+GLuint VAO;
+GLuint VBO;
+
+CRenderer::CRenderer(IGraphicsHardwareInterface* ghi)
+    : mGHI(ghi)
 {
-	glewInit();
-
-	glEnable(GL_DEBUG_OUTPUT);
-	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-	glDebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
-	{
-		switch (severity)
-		{
-		case GL_DEBUG_SEVERITY_NOTIFICATION:
-			B2D_CORE_INFO(message);
-			break;
-		case GL_DEBUG_SEVERITY_LOW:
-			B2D_CORE_INFO(message);
-			break;
-		case GL_DEBUG_SEVERITY_MEDIUM:
-			B2D_CORE_WARNING(message);
-			break;
-		case GL_DEBUG_SEVERITY_HIGH:
-			B2D_CORE_ERROR(message);
-			break;
-		default:
-			B2D_CORE_WARNING(message);
-			break;
-		}
-	}, nullptr);
-    
-    B2D_CORE_INFO("Initialize OpenGL...");
-    B2D_CORE_INFO("GL Version      {}", glGetString(GL_VERSION));
-    B2D_CORE_INFO("GL Vendor       {}", glGetString(GL_VENDOR));
-    B2D_CORE_INFO("GL Renderer     {}\n", glGetString(GL_RENDERER));
-
-	glEnable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_ALPHA_TEST);
-	glAlphaFunc(GL_GREATER, 0.4f);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 	const float vertices[] = {
 		-0.5f, -0.5f,	0.0f, 0.0f,
 		 0.5f, -0.5f,	1.0f, 0.0f,
@@ -62,13 +31,34 @@ CRenderer::CRenderer()
 
 	GLuint VBO;
 	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+
+    //
+
+    glGenFramebuffers(1, &fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
+    glGenTextures(1, &renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1920, 1080, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    // Set "renderedTexture" as our colour attachement #0
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+
+    // Set the list of draw buffers.
+    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+    B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 }
 
 CRenderer::~CRenderer()
@@ -76,9 +66,9 @@ CRenderer::~CRenderer()
 	
 }
 
-void CRenderer::PreRender()
+void CRenderer::BeginRender()
 {
-    Clear();
+    mGHI->Clear();
 }
 
 void CRenderer::Draw(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera) // Camera/viewProjectionMatrix, Viewport, list of stuff to Render
@@ -90,6 +80,12 @@ void CRenderer::Draw(RenderObjectBuffer const& buffer, CViewport const* const vi
     {
         return;
     }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
+    glEnable(GL_DEPTH_TEST);
+    glViewport(0, 0, 1920, 1080);
 
     for (uint32 i = 0; i < buffer.Size() * 0.01f; ++i)
     {
@@ -107,7 +103,8 @@ void CRenderer::Draw(RenderObjectBuffer const& buffer, CViewport const* const vi
             }
 
             glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, ro.mMaterial->mTextures[i]->mHandle);
+            OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(ro.mMaterial->mTextures[i]->GetGHITexture());
+            glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
 
             switch (i)
             {
@@ -129,15 +126,25 @@ void CRenderer::Draw(RenderObjectBuffer const& buffer, CViewport const* const vi
         glPolygonMode(GL_FRONT, GL_FILL);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
+
+    CShader* sss = CShader::Load("Content/Shader/RenderTargetVS.glsl", "Content/Shader/PostProcessPS.glsl");
+    sss->Use();
+    sss->SetInt("texture0", renderedTexture);
+      
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+     
+    glBindVertexArray(VAO);
+    glActiveTexture(GL_TEXTURE0 + 1);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glViewport(0, 0, 1920, 1080);
+// 
+    //glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
-void CRenderer::PostRender()
+void CRenderer::EndRender()
 {
     CGameEngine::Instance()->GetMainWindow()->Swap();
-}
-
-void CRenderer::Clear()
-{
-	glClearColor(0.7f, 0, 0.7f, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

@@ -7,6 +7,7 @@ class CGameInstance;
 class CRenderer;
 class CViewport;
 class GenericWindow;
+class IGraphicsHardwareInterface;
 class IPlatformApplicationInterface;
 
 class CGameEngine final : private IPlatformMessageHandlerInterface
@@ -22,6 +23,7 @@ private:
 
 public:
     static void Create(ApplicationConfig const& config);
+    void Init();
     static void Shutdown();
 
 	static CGameEngine* const Instance() {
@@ -30,16 +32,17 @@ public:
 	}
 
 public:
-    void Init();
-
 	void Run();
 
 	void RequestShutdown();
 
 public:
-    IPlatformApplicationInterface* GetPlatformApplication() const { return mPlatformApplication; }
+    IPlatformApplicationInterface* GetPA() const { return mPA; }
+
+    IGraphicsHardwareInterface* GetGHI() const { return mGHI; }
+	CRenderer* GetRenderer() const { return mRenderer; }
+
 	CGameInstance* GetGameInstance() const { return mGameInstance; }
-	CRenderer* GetGraphicsInstance() const { return mGraphicsInstance; }
     GenericWindow* GetMainWindow() const { return mMainWindow; }
 
 private:
@@ -52,9 +55,11 @@ private:
 
 	ApplicationConfig const mConfig;
 
-    IPlatformApplicationInterface* mPlatformApplication = nullptr;
+    IPlatformApplicationInterface* mPA = nullptr;
+    IGraphicsHardwareInterface* mGHI = nullptr;
+
     GenericWindow* mMainWindow = nullptr;
 
 	CGameInstance* mGameInstance = nullptr;
-	CRenderer* mGraphicsInstance = nullptr;
+	CRenderer* mRenderer = nullptr;
 };

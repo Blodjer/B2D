@@ -13,6 +13,8 @@ public:
     virtual void PollEvents() override;
     virtual void Shutdown() override;
 
+    virtual IGraphicsHardwareInterface* CreateGHI() const override;
+
     virtual GenericWindow* MakeWindow(uint32 width, uint32 height, std::string const& title) override;
     virtual void DestroyWindow(GenericWindow* window) override;
 

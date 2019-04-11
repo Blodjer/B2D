@@ -20,5 +20,5 @@ int main(int argc, const char*[])
     B2D::PopulateWorld(world);
 
     CGameEngine::Instance()->Run();
-    CGameEngine::Instance()->Shutdown();
+    CGameEngine::Shutdown();
 }

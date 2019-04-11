@@ -2,6 +2,7 @@
 #include "DesktopPlatformApplication.h"
 
 #include "GameEngine.h"
+#include "Graphics/OpenGL/OpenGLGHI.h"
 #include "Platform/Desktop/DesktopWindow.h"
 
 #include <GLFW/glfw3.h>
@@ -28,10 +29,7 @@ bool DesktopPlatformApplication::Init()
 
     B2D_CORE_INFO("Initialize GLFW...");
     
-    if (glfwInit() == GLFW_FALSE)
-    {
-        return false;
-    }
+    B2D_ASSERT(glfwInit() == GLFW_TRUE)
 
     B2D_CORE_INFO("GLFW version    {}.{}.{}\n", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
 
@@ -54,6 +52,11 @@ void DesktopPlatformApplication::Shutdown()
     }
 
     glfwTerminate();
+}
+
+IGraphicsHardwareInterface* DesktopPlatformApplication::CreateGHI() const
+{
+    return new OpenGLGHI();
 }
 
 GenericWindow* DesktopPlatformApplication::MakeWindow(uint32 width, uint32 height, std::string const& title)
@@ -120,7 +123,6 @@ void DesktopPlatformApplication::RemoveMessageHandler(IPlatformMessageHandlerInt
 
     mMessageHandler.erase(it);
 }
-
 
 void DesktopPlatformApplication::OnGlfwErrorCallback(int error, const char* description)
 {
