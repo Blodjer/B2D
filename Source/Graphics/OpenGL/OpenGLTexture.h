@@ -7,7 +7,6 @@ class OpenGLTexture : public GHITexture
 {
 public:
     OpenGLTexture() = default;
-    ~OpenGLTexture() = default;
 
     virtual void Create(void* data, uint32 width, uint32 height) override;
     virtual void Free() override;
@@ -15,6 +14,6 @@ public:
     GLuint GetHandle() const { return mHandle; }
 
 private:
-    GLuint mHandle;
+    GLuint mHandle = 0;
 };
 

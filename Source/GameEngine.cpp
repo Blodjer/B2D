@@ -6,7 +6,7 @@
 #include "Graphics/Renderer.h"
 #include "Graphics/Shader.h"
 #include "Graphics/Viewport.h"
-#include "Graphics/GraphicsHardwareInterface.h"
+#include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Input/Input.h"
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformApplication.h"

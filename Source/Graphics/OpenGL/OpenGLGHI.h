@@ -15,5 +15,7 @@ public:
     virtual GHITexture* CreateTexture(void* data, uint32 width, uint32 height) override;
     virtual void FreeTexture(GHITexture* texture) override;
 
+    virtual GHIShader* CreateVertexShader(char* code) override;
+    virtual GHIShader* CreatePixelShader(char* code) override;
 };
 

@@ -1,6 +1,7 @@
 #include "B2D_pch.h"
 #include "OpenGLGHI.h"
 #include "OpenGLTexture.h"
+#include "OpenGLShader.h"
 
 #include <GL/glew.h>
 
@@ -81,4 +82,20 @@ void OpenGLGHI::FreeTexture(GHITexture* texture)
 {
     texture->Free();
     delete texture;
+}
+
+GHIShader* OpenGLGHI::CreatePixelShader(char* code)
+{
+    OpenGLShader* shader = new OpenGLShader();
+    shader->Create(code, GL_FRAGMENT_SHADER);
+
+    return shader;
+}
+
+GHIShader* OpenGLGHI::CreateVertexShader(char* code)
+{
+    OpenGLShader* shader = new OpenGLShader();
+    shader->Create(code, GL_VERTEX_SHADER);
+
+    return shader;
 }
