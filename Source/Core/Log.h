@@ -51,6 +51,13 @@ public:
         Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
     }
 
+    template<typename... Args>
+    INLINE static void Break(CALLSTACK_SIGNATURE, const char* message, Args const&... args)
+    {
+        mLoggerCore->warn(message, args...);
+        Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
+    }
+
     INLINE static void Assert(CALLSTACK_SIGNATURE, const char* expr)
     {
         mLoggerCore->critical("Assertion failed: ({})", expr);

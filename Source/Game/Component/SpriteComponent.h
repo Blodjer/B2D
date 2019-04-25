@@ -11,8 +11,8 @@ struct SpriteComponent : public Component
     DECLARE_COMPONENT(SpriteComponent, 1);
 
     SpriteComponent() {};
-    SpriteComponent(CShader* const shader) : material(shader) {};
+    SpriteComponent(Material* const m) : material(m) {};
 
-    CMaterial material;
+    Material* material;
 };
 

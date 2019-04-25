@@ -2,26 +2,34 @@
 
 #include "Core/Core.h"
 #include "Core/Resource.h"
+#include "Graphics/Shader.h"
+#include "Graphics/Texture.h"
 
-class CRenderer;
-class CShader;
-class CTexture;
-class RenderSystem;
+class GHIMaterial;
 
-class CMaterial
+class Material
 {
-    friend CRenderer;
-    friend RenderSystem;
-
 public:
-    CMaterial();
-    CMaterial(CShader* const shader);
-	~CMaterial() = default;
+    Material(VertexShaderRef vertexShader, PixelShaderRef pixelShader);
 
-	void SetTexture(uint32 index, ResourcePtr<CTexture> texture);
-	ResourcePtr<CTexture> GetTexture(uint32 index) const;
+    void SetBool(char const* name, bool value);
+    void SetInt(char const* name, int32 value);
+    void SetFloat(char const* name, float value);
+    void SetVector(char const* name, float const* value);
+    void SetTexture(uint32 index, TextureRef const& texture);
+
+    std::vector<TextureRef> const& GetTextures() const { return mTextures; }
+
+    GHIMaterial* GetGHIMaterial() const { return mGHIMaterial; }
 
 private:
-	CShader* const mShader;
-	std::vector<ResourcePtr<CTexture>> mTextures;
+    void OnShaderChanged();
+
+private:
+    VertexShaderRef mVertexShader;
+    PixelShaderRef mPixelShader;
+
+    std::vector<TextureRef> mTextures;
+
+    GHIMaterial* mGHIMaterial;
 };

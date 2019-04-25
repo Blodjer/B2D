@@ -9,13 +9,15 @@
 #include "Material.h"
 #include "Texture.h"
 #include "OpenGL/OpenGLTexture.h"
-#include "GHI/GraphicsHardwareInterface.h"
+#include "Graphics/GHI/GraphicsHardwareInterface.h"
+#include "Graphics/GHI/GHIRenderTarget.h"
+#include "Graphics/OpenGL/OpenGLMaterial.h"
 
 #include <GL/glew.h>
 #include <iostream>
+#include "Input/Input.h"
 
-GLuint fb = 0;
-GLuint renderedTexture;
+GHIRenderTarget* renderTarget = nullptr;
 GLuint VAO;
 GLuint VBO;
 
@@ -23,10 +25,10 @@ CRenderer::CRenderer(IGraphicsHardwareInterface* ghi)
     : mGHI(ghi)
 {
 	const float vertices[] = {
-		-0.5f, -0.5f,	0.0f, 0.0f,
-		 0.5f, -0.5f,	1.0f, 0.0f,
-		-0.5f,  0.5f,	0.0f, 1.0f,
-		 0.5f,  0.5f,	1.0f, 1.0f,
+        -1.0f, -1.0f,	0.0f, 0.0f,
+         1.0f, -1.0f,	1.0f, 0.0f,
+        -1.0f,  1.0f,	0.0f, 1.0f,
+         1.0f,  1.0f,	1.0f, 1.0f,
 	};
 
 	GLuint VBO;
@@ -42,23 +44,7 @@ CRenderer::CRenderer(IGraphicsHardwareInterface* ghi)
 
     //
 
-    glGenFramebuffers(1, &fb);
-    glBindFramebuffer(GL_FRAMEBUFFER, fb);
-
-    glGenTextures(1, &renderedTexture);
-    glBindTexture(GL_TEXTURE_2D, renderedTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1920, 1080, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    // Set "renderedTexture" as our colour attachement #0
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
-
-    // Set the list of draw buffers.
-    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
-
-    B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    renderTarget = mGHI->CreateRenderTarget();
 }
 
 CRenderer::~CRenderer()
@@ -68,10 +54,10 @@ CRenderer::~CRenderer()
 
 void CRenderer::BeginRender()
 {
-    mGHI->Clear();
+    mGHI->Clear(true, true, true);
 }
 
-void CRenderer::Draw(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera) // Camera/viewProjectionMatrix, Viewport, list of stuff to Render
+void CRenderer::DrawSceneToRenderTarget(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera)
 {
     // flag: solid, unlit, wireframe,...
 
@@ -81,66 +67,76 @@ void CRenderer::Draw(RenderObjectBuffer const& buffer, CViewport const* const vi
         return;
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, fb);
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-    glEnable(GL_DEPTH_TEST);
-    glViewport(0, 0, 1920, 1080);
+    mGHI->BindRenderTargetAndClear(renderTarget);
 
-    for (uint32 i = 0; i < buffer.Size() * 0.01f; ++i)
+    for (uint32 i = 0; i < buffer.Size(); ++i)
     {
         RenderObject const& ro = buffer[i];
-        CShader const* const shader = ro.mMaterial->mShader;
-        shader->Use();
 
-        for (uint32 i = 0; i < ro.mMaterial->mTextures.size(); ++i)
+        Material const* const material = ro.mMaterial;
+        mGHI->BindMaterial(material->GetGHIMaterial());
+
+        for (uint32 i = 0; i < ro.mMaterial->GetTextures().size(); ++i)
         {
-            if (ro.mMaterial->mTextures[i] == nullptr)
+            glActiveTexture(GL_TEXTURE0 + i);
+
+            if (!ro.mMaterial->GetTextures()[i].IsValid())
             {
-                glActiveTexture(GL_TEXTURE0 + i);
                 glBindTexture(GL_TEXTURE_2D, 0);
                 continue;
             }
 
-            glActiveTexture(GL_TEXTURE0 + i);
-            OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(ro.mMaterial->mTextures[i]->GetGHITexture());
+            OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(ro.mMaterial->GetTextures()[i]->GetGHITexture());
             glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
-
-            switch (i)
-            {
-                case 0: shader->SetInt("texture0", i); break;
-                case 1: shader->SetInt("texture1", i); break;
-                case 2: shader->SetInt("texture2", i); break;
-                case 3: shader->SetInt("texture3", i); break;
-                default: B2D_TRAP("Not enough texture slots ({})!", i); break;
-            }
         }
 
-        shader->SetMatrix("viewprojection", viewProjectionMatrix.GetPtr());
-        shader->SetMatrix("model", ro.mMatrix.GetPtr());
+        OpenGLMaterial* mat = static_cast<OpenGLMaterial*>(material->GetGHIMaterial());
 
-        // 		static float f = 0.0f;
-        // 		f += 0.016f;
-        // 		currentShader->SetFloat("rotation", f);
+        GLuint ul1 = glGetUniformLocation(mat->GetHandle(), "viewprojection");
+        glUniformMatrix4fv(ul1, 1, GL_FALSE, viewProjectionMatrix.GetPtr());
+
+        GLuint ul2 = glGetUniformLocation(mat->GetHandle(), "model");
+        glUniformMatrix4fv(ul2, 1, GL_FALSE, ro.mMatrix.GetPtr());
 
         glPolygonMode(GL_FRONT, GL_FILL);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 
-    CShader* sss = CShader::Load("Content/Shader/RenderTargetVS.glsl", "Content/Shader/PostProcessPS.glsl");
-    sss->Use();
-    sss->SetInt("texture0", renderedTexture);
-      
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(0.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-     
-    glBindVertexArray(VAO);
+    static VertexShaderRef rtVS = IResourceManager::Get<VertexShader>("Content/Shader/RenderTargetVS.glsl");
+    static PixelShaderRef ppPS = IResourceManager::Get<PixelShader>("Content/Shader/PostProcessPS.glsl");
+    static Material* rtMat = new Material(rtVS, ppPS);
+
+    mGHI->BindMaterial(rtMat->GetGHIMaterial());
+    
     glActiveTexture(GL_TEXTURE0 + 1);
-    glBindTexture(GL_TEXTURE_2D, renderedTexture);
-    glViewport(0, 0, 1920, 1080);
-// 
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
+    OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(renderTarget->GetTexture());
+    glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
+
+    GLuint ul3 = glGetUniformLocation(static_cast<OpenGLMaterial*>(rtMat->GetGHIMaterial())->GetHandle(), "texture0");
+    glUniform1i(ul3, tex->GetHandle());
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glEnable(GL_DEPTH_TEST);
+    //mGHI->Clear(true, false, false);
+
+    glBindVertexArray(VAO);
+
+//     glViewport(0, 0, viewport->GetWidth(), viewport->GetHeight());
+//     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    uint32 w = viewport->GetWidth() * 0.5f;
+    uint32 h = viewport->GetHeight() * 0.5f;
+
+    glViewport(0, 0, w, h);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glViewport(w, 0, w, h);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glViewport(0, h, w, h);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    glViewport(w, h, w, h);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 

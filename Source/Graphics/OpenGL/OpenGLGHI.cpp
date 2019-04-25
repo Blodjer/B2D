@@ -1,19 +1,11 @@
 #include "B2D_pch.h"
 #include "OpenGLGHI.h"
-#include "OpenGLTexture.h"
+#include "OpenGLMaterial.h"
+#include "OpenGLRenderTarget.h"
 #include "OpenGLShader.h"
+#include "OpenGLTexture.h"
 
 #include <GL/glew.h>
-
-OpenGLGHI::OpenGLGHI()
-{
-
-}
-
-OpenGLGHI::~OpenGLGHI()
-{
-
-}
 
 bool OpenGLGHI::Init()
 {
@@ -64,18 +56,87 @@ void OpenGLGHI::Shutdown()
 
 }
 
-void OpenGLGHI::Clear()
+void OpenGLGHI::Clear(bool color, bool depth, bool stencil)
 {
-    glClearColor(0.7f, 0, 0.7f, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    GLbitfield clearFlags = 0;
+    if (color)
+    {
+        glClearColor(0.7f, 0, 0.7f, 1);
+        clearFlags |= GL_COLOR_BUFFER_BIT;
+    }
+    if (depth)
+    {
+        clearFlags |= GL_DEPTH_BUFFER_BIT;
+    }
+    if (stencil)
+    {
+        clearFlags |= GL_STENCIL_BUFFER_BIT;
+    }
+
+    glClear(clearFlags);
 }
 
-GHITexture* OpenGLGHI::CreateTexture(void* data, uint32 width, uint32 height)
+GHIRenderTarget* OpenGLGHI::CreateRenderTarget()
+{
+    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(CreateTexture(nullptr, 1920, 1080, 3));
+
+    GLuint fb;
+    glGenFramebuffers(1, &fb);
+    OpenGLRenderTarget* renderTarget = new OpenGLRenderTarget(fb, renderTexture);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTexture->GetHandle(), 0);
+
+    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, DrawBuffers);
+
+    B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+    return renderTarget;
+}
+
+void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget* renderTarget)
+{
+    OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
+    GLuint handle = rt->GetHandle();
+
+    glDeleteFramebuffers(1, &handle);
+
+    delete rt;
+}
+
+void OpenGLGHI::BindRenderTarget(GHIRenderTarget* renderTarget)
+{
+    OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, rt->GetHandle());
+
+    glEnable(GL_DEPTH_TEST);
+    glViewport(0, 0, 1920, 1080);
+}
+
+void OpenGLGHI::BindRenderTargetAndClear(GHIRenderTarget* renderTarget)
+{
+    BindRenderTarget(renderTarget);
+
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+}
+
+GHITexture* OpenGLGHI::CreateTexture(void* data, uint32 width, uint32 height, uint8 components)
 {
     OpenGLTexture* texture = new OpenGLTexture();
-    texture->Create(data, width, height);
+    texture->Create(data, width, height, components);
 
     return texture;
+}
+
+void OpenGLGHI::BindTexture(GHITexture* texture)
+{
+    OpenGLTexture* tex = static_cast<OpenGLTexture*>(texture);
+    glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
 }
 
 void OpenGLGHI::FreeTexture(GHITexture* texture)
@@ -92,10 +153,29 @@ GHIShader* OpenGLGHI::CreatePixelShader(char* code)
     return shader;
 }
 
+void OpenGLGHI::DeleteShader(GHIShader* shader)
+{
+    OpenGLShader* sh = static_cast<OpenGLShader*>(shader);
+    sh->Delete();
+    delete sh;
+}
+
 GHIShader* OpenGLGHI::CreateVertexShader(char* code)
 {
     OpenGLShader* shader = new OpenGLShader();
     shader->Create(code, GL_VERTEX_SHADER);
 
     return shader;
+}
+
+GHIMaterial* OpenGLGHI::CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader)
+{
+    return new OpenGLMaterial(static_cast<OpenGLShader*>(vertexShader), static_cast<OpenGLShader*>(pixelShader));
+}
+
+void OpenGLGHI::BindMaterial(GHIMaterial* material)
+{
+    OpenGLMaterial* openglMaterial = static_cast<OpenGLMaterial*>(material);
+
+    glUseProgram(openglMaterial->GetHandle());
 }

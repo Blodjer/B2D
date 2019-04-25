@@ -13,6 +13,6 @@ private:
     GHITexture& operator=(GHITexture const&) = delete;
 
 public:
-    virtual void Create(void* data, uint32 width, uint32 height) = 0;
+    virtual void Create(void* data, uint32 width, uint32 height, uint8 components) = 0;
     virtual void Free() = 0;
 };

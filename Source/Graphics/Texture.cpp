@@ -5,15 +5,8 @@
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Graphics/GHI/GHITexture.h"
 
-#include <GL/glew.h>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
-
-CTexture::~CTexture()
-{
-    mGHITexture->Free();
-}
 
 bool CTexture::Load(ResourcePath const& path)
 {
@@ -24,19 +17,26 @@ bool CTexture::Load(ResourcePath const& path)
 		return false;
 	}
 
-	void* imgPtr = stbi_load(path.c_str(), &mWidth, &mHeight, &mComponents, STBI_rgb_alpha);
+	void* imgPtr = stbi_load(path.c_str(), &mWidth, &mHeight, &mComponents, STBI_default);
 	if (imgPtr == nullptr)
 	{
 		return false;
 	}
 
-    mGHITexture = CGameEngine::Instance()->GetGHI()->CreateTexture(imgPtr, mWidth, mHeight);
+    mGHITexture = CGameEngine::Instance()->GetGHI()->CreateTexture(imgPtr, mWidth, mHeight, mComponents);
+    
+    stbi_image_free(imgPtr);
+
     if (mGHITexture == nullptr)
     {
         return false;
     }
 
-	stbi_image_free(imgPtr);
-
     return true;
+}
+
+void CTexture::Free()
+{
+    mGHITexture->Free();
+    delete mGHITexture;
 }

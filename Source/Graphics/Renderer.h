@@ -13,7 +13,7 @@ public:
 	~CRenderer();
 	
     void BeginRender();
-    void Draw(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera);
+    void DrawSceneToRenderTarget(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera);
     void EndRender();
 
 private:

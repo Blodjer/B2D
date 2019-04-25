@@ -1,39 +1,60 @@
 #include "B2D_pch.h"
 #include "Material.h"
 
+#include "GameEngine.h"
+#include "Graphics/GHI/GHIMaterial.h"
+#include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Shader.h"
 #include "Texture.h"
 
-CMaterial::CMaterial(CShader* const shader)
-	: mShader(shader)
+Material::Material(VertexShaderRef vertexShader, PixelShaderRef pixelShader)
+    : mVertexShader(vertexShader)
+    , mPixelShader(pixelShader)
 {
+    if (vertexShader.IsValid() && pixelShader.IsValid())
+    {
+        mGHIMaterial = CGameEngine::Instance()->GetGHI()->CreateMaterial(vertexShader->GetGHIShader(), pixelShader->GetGHIShader());
+    }
 
+    vertexShader->RegisterChangeCallback(TResourceChangedDelegate::CREATE(this, &Material::OnShaderChanged));
+    pixelShader->RegisterChangeCallback(TResourceChangedDelegate::CREATE(this, &Material::OnShaderChanged));
 }
 
-CMaterial::CMaterial()
-    : mShader(CShader::Load("Content/Shader/DefaultVS.glsl", "Content/Shader/SimpleSpritePS.glsl"))
+void Material::SetBool(char const* name, bool value)
 {
-
+    SetInt(name, static_cast<int32>(value));
 }
 
-void CMaterial::SetTexture(uint32 index, ResourcePtr<CTexture> texture)
+void Material::SetInt(char const* name, int32 value)
 {
-	if (index < mTextures.size())
-	{
-		mTextures[index] = texture;
-	}
-	else
-	{
-		mTextures.push_back(texture);
-	}
+    B2D_CORE_ERROR("Material::SetInt not implemented");
 }
 
-ResourcePtr<CTexture> CMaterial::GetTexture(uint32 index) const
+void Material::SetFloat(char const* name, float value)
 {
-	if (index < mTextures.size())
-	{
-		return mTextures[index];
-	}
-	
-	return ResourcePtr<CTexture>::InvalidPtr;
+    B2D_CORE_ERROR("Material::SetFloat not implemented");
+}
+
+void Material::SetVector(char const* name, const float* value)
+{
+    B2D_CORE_ERROR("Material::SetVector not implemented");
+}
+
+void Material::SetTexture(uint32 index, TextureRef const& texture)
+{
+    B2D_ASSERT(index <= mTextures.size());
+
+    if (index < mTextures.size())
+    {
+        mTextures[index] = texture;
+    }
+    else
+    {
+        mTextures.emplace_back(texture);
+    }
+}
+
+void Material::OnShaderChanged()
+{
+    mGHIMaterial = CGameEngine::Instance()->GetGHI()->CreateMaterial(mVertexShader->GetGHIShader(), mPixelShader->GetGHIShader());
 }

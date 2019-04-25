@@ -7,8 +7,9 @@
 #include "Graphics/Viewport.h"
 #include "Platform/GenericWindow.h"
 
-World::World(CGameInstance* const owningGameInstance)
+World::World(CGameInstance* const owningGameInstance, WorldRenderer* const worldRenderer)
     : mOwningGameInstance(owningGameInstance)
+    , mWorldRenderer(worldRenderer)
 {
     CameraEntity* defaultCamera = AddSystemEntityObject<CameraEntity>();
     CGameEngine::Instance()->GetMainWindow()->GetViewport()->SetCamera(defaultCamera);

@@ -1,5 +1,6 @@
 #pragma once
 #include "Game/Core/System.h"
+#include "Core/Thread.h"
 
 class RenderSystem : public System
 {
@@ -12,3 +13,14 @@ public:
 
 };
 
+class RenderThread : public Thread
+{
+
+public:
+    virtual bool Init() override;
+
+    virtual void Run() override;
+
+    virtual void Stop() override;
+
+};

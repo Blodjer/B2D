@@ -13,6 +13,7 @@
 #include "Platform/PlatformInterface.h"
 
 #include <GLFW/glfw3.h>
+#include "Graphics/Texture.h"
 
 CGameEngine* CGameEngine::sInstance = nullptr;
 
@@ -64,6 +65,7 @@ void CGameEngine::Init()
     mGHI = mPA->CreateGHI();
     B2D_ASSERT(mGHI->Init());
 
+    // TODO: Split renderer between world, editor, preview,...
     mRenderer = new CRenderer(mGHI);
 
     // TODO: GameInstance should only be valid while the game is running. Should be null in editor mode.
@@ -107,13 +109,12 @@ void CGameEngine::Run()
         mPA->PollEvents();
 
         if (Input::IsKey(EKey::F5, EKeyEvent::Press))
-            CShader::ReloadAll();
+        {
+            IResourceManager::GetLoadedResources();
+        }
 
         if (Input::IsKey(EKey::ESCAPE, EKeyEvent::Press))
             CGameEngine::Instance()->RequestShutdown();
-        
-        //GetMainWindow()->MakeContextCurrent();
-        //GetMainWindow()->GetViewport()->Use(); // move to renderer draw call
 
 		// Tick
         std::chrono::time_point<clock> start = clock::now();

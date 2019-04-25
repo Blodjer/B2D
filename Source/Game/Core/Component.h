@@ -30,6 +30,6 @@ public:
             }
         }
 
-        B2D_TRAP("Sibling component not found. This function must not be called if the component is not the a sibling!");
+        B2D_TRAPf("Sibling component not found. This function must not be called if the component is not the a sibling!");
     }
 };

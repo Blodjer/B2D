@@ -6,25 +6,25 @@
 class RenderObject
 {
 public:
-    RenderObject(TMatrix const& matrix, CMaterial const* material)
+    RenderObject(TMatrix const& matrix, Material* material)
         : mMatrix(matrix)
         , mMaterial(material)
     {
     }
 
     TMatrix mMatrix;
-    CMaterial const* mMaterial;
+    Material* mMaterial;
 };
 
 class RenderObjectBuffer
 {
 public:
-    RenderObjectBuffer(uint32 bufferSize)
+    RenderObjectBuffer(uint32 capacity)
     {
-        mBuffer = static_cast<RenderObject*>(std::malloc(sizeof(RenderObject) * bufferSize));
+        mBuffer = static_cast<RenderObject*>(std::malloc(sizeof(RenderObject) * capacity));
         B2D_ASSERT(mBuffer != nullptr);
 
-        mBufferSize = bufferSize;
+        mCapacity = capacity;
     }
 
     ~RenderObjectBuffer()
@@ -35,18 +35,27 @@ public:
     RenderObjectBuffer(RenderObjectBuffer const&) = delete;
     void operator=(RenderObjectBuffer const&) = delete;
 
+public:
     FORCEINLINE RenderObject& operator[](uint32 const i) const
     {
-        B2D_ASSERT(i < mBufferSize);
+        B2D_ASSERT(i < mCapacity);
         return mBuffer[i];
     }
 
-    //FORCEINLINE RenderObject* Buffer() const { return mBuffer; }
-    FORCEINLINE uint32& Size() { return mSize; }
+    template<typename... V>
+    FORCEINLINE void Add(V&... values)
+    {
+        B2D_ASSERT((mSize + 1) < mCapacity);
+
+        mBuffer[mSize] = RenderObject(values...);
+        mSize++;
+    }
+
+    FORCEINLINE void Clear() { mSize = 0; }
     FORCEINLINE uint32 const Size() const { return mSize; }
 
 private:
     RenderObject* mBuffer = nullptr;
-    uint32 mBufferSize = 0;
+    uint32 mCapacity = 0;
     uint32 mSize = 0;
 };

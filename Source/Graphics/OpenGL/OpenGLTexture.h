@@ -8,7 +8,7 @@ class OpenGLTexture : public GHITexture
 public:
     OpenGLTexture() = default;
 
-    virtual void Create(void* data, uint32 width, uint32 height) override;
+    virtual void Create(void* data, uint32 width, uint32 height, uint8 components) override;
     virtual void Free() override;
 
     GLuint GetHandle() const { return mHandle; }

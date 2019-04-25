@@ -13,12 +13,14 @@
 #include "Game/System/HoverSystem.h"
 #include "Game/System/InputSystem.h"
 #include "Game/System/RenderSystem.h"
+#include "Graphics/Renderer/WorldRenderer.h"
 #include "Graphics/Shader.h"
 
 CGameInstance::CGameInstance(GenericWindow* const owningWindow)
     : mWindow(owningWindow)
 {
-    mWorld = new World(this);
+    WorldRenderer* w = new WorldRenderer();
+    mWorld = new World(this, w);
 
     mWorld->AddSystem<InputSystem>();
     mWorld->AddSystem<HoverSystem>();

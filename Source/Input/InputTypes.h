@@ -27,9 +27,9 @@ enum class EKeyEvent : int8
     Repeat,
 };
 
-enum class EKey : int16
+enum class EKey : uint16
 {
-    UNKNOWN = -1,
+    UNKNOWN = 0,
 
     // Keyboard
 

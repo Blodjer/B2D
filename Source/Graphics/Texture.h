@@ -6,10 +6,11 @@ class GHITexture;
 
 class CTexture : public IResource
 {
-public:
-	~CTexture();
+protected:
+    virtual bool Load(ResourcePath const& filePath) override;
+    virtual void Free() override;
 
-	virtual bool Load(ResourcePath const& filePath) override;
+public:
     static constexpr auto GetFallbackResourcePath() { return "Content/Sprites/MissingTexture.png"; }
 
     GHITexture const* GetGHITexture() const { return mGHITexture; }
@@ -21,3 +22,5 @@ private:
 
 	GHITexture* mGHITexture;
 };
+
+using TextureRef = ResourcePtr<CTexture>;

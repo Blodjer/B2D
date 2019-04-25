@@ -4,10 +4,10 @@
 
 #include "Game/Core/Entity.h"
 #include "Game/Core/Component.h"
-#include "Game/Core/SystemEntityObject.h"
 
 class CGameInstance;
 class System;
+class WorldRenderer;
 
 template<typename... C>
 class SystemEntityObject;
@@ -15,7 +15,7 @@ class SystemEntityObject;
 class World
 {
 public:
-    World(CGameInstance* const owningGameInstance);
+    World(CGameInstance* const owningGameInstance, WorldRenderer* const worldRenderer);
     ~World();
 
     void Update(float deltaTime);
@@ -88,6 +88,7 @@ public:
 
 public:
     CGameInstance* GetOwningGameInstance() const { return mOwningGameInstance; }
+    WorldRenderer* GetRenderer() const { return mWorldRenderer; }
 
 public:
     std::unordered_map<EntityID, Entity*> mEntities;
@@ -95,6 +96,8 @@ public:
 
 private:
     CGameInstance* const mOwningGameInstance;
+
+    WorldRenderer* const mWorldRenderer;
 
 };
 

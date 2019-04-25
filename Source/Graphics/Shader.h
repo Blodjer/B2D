@@ -1,46 +1,47 @@
 #pragma once
 
-typedef unsigned int GLuint;
+#include "Core/Resource.h"
+#include "GHI/GHIShader.h"
 
-class CShader
+enum class ShaderType
 {
-public:
-	CShader(const std::string& vertexShader, const std::string& fragmentShader);
-	CShader(GLuint vs, GLuint fs);
-
-public:
-	~CShader();
-
-	static CShader* Load(const std::string& VSFile, const std::string& FSFile);
-	static void ReloadAll();
-	static void UnloadAll();
-
-	void Use() const;
-
-	void SetBool(const char* name, bool value) const;
-    void SetInt(const char* name, int value) const;
-	void SetFloat(const char* name, float value) const;
-	void SetMatrix(const char* name, const float* value) const;
-
-	bool const operator==(const CShader& otherShader) const
-	{
-		return mID == otherShader.mID;
-	}
-
-public:
-	const GLuint GetID() const { return mID; };
-
-private:
-	static bool CompileShader(GLuint type, const std::string& shader, GLuint* outID);
-	static const std::string ReadShader(const std::string& file);
-
-private:
-	static std::map<const std::string, GLuint> msLoadedShaders;
-	static std::vector<CShader> msShaders;
-
-	GLuint mID;
-	std::string mVSFile;
-	std::string mFSFile;
-	
+    Vertex,
+    Pixel,
+    Compute,
+    Geometry
 };
 
+class Shader : public IResource
+{
+protected:
+    bool Load(ResourcePath const& path, ShaderType type);
+    virtual void Free() override;
+
+public:
+    GHIShader* GetGHIShader() const { return mGHIShader; }
+
+private:
+    bool ReadShaderFromFile(ResourcePath const& path, std::string& outCode);
+
+private:
+    GHIShader* mGHIShader = nullptr;
+};
+
+class VertexShader : public Shader
+{
+protected:
+    virtual bool Load(ResourcePath const& path) override { return Shader::Load(path, ShaderType::Vertex); }
+public:
+    static constexpr auto GetFallbackResourcePath() { return "Content/Shader/DefaultVS.glsl"; }
+};
+
+class PixelShader : public Shader
+{
+protected:
+    virtual bool Load(ResourcePath const& path) override { return Shader::Load(path, ShaderType::Pixel); }
+public:
+    static constexpr auto GetFallbackResourcePath() { return "Content/Shader/DefaultPS.glsl"; }
+};
+
+using VertexShaderRef = ResourcePtr<VertexShader>;
+using PixelShaderRef = ResourcePtr<PixelShader>;
