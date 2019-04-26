@@ -3,9 +3,11 @@
 
 #include "GameEngine.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
+#include "../Renderer.h"
+#include "../Viewport.h"
 
 WorldRenderer::WorldRenderer()
-    : mROBuffer(100000)
+    : mRenderObjectBuffer(100000)
     , mPreparedFrame(0)
     , mRenderedFrame(0)
 {
@@ -16,5 +18,25 @@ WorldRenderer::WorldRenderer()
 WorldRenderer::~WorldRenderer()
 {
     IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
-    ghi->CreateRenderTarget();
+    ghi->DeleteRenderTarget(mRenderTarget);
+}
+
+void WorldRenderer::Render()
+{
+    if (!PendingRendering())
+    {
+        return;
+    }
+
+    Lock();
+
+    CRenderer* r = CGameEngine::Instance()->GetRenderer();
+
+    r->BeginRender();
+    r->DrawSceneToRenderTarget(mRenderTarget, mRenderObjectBuffer, mViewport, mViewport->GetCamera());
+    r->EndRender();
+
+    mRenderedFrame.store(mPreparedFrame);
+
+    Unlock();
 }

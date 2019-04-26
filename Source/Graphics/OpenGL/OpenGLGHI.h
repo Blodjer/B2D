@@ -10,7 +10,7 @@ public:
     virtual void Clear(bool color, bool depth, bool stencil) override;
 
     virtual GHITexture* CreateTexture(void* data, uint32 width, uint32 height, uint8 components) override;
-    virtual void BindTexture(GHITexture* texture) override;
+    virtual void BindTexture(GHITexture const* texture) override;
     virtual void FreeTexture(GHITexture* texture) override;
 
     virtual GHIShader* CreateVertexShader(char* code) override;

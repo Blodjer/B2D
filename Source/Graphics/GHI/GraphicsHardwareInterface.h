@@ -22,7 +22,7 @@ public:
     virtual void Clear(bool color, bool depth, bool stencil) = 0;
 
     virtual GHITexture* CreateTexture(void* data, uint32 width, uint32 height, uint8 components) = 0;
-    virtual void BindTexture(GHITexture* texture) = 0;
+    virtual void BindTexture(GHITexture const* texture) = 0;
     virtual void FreeTexture(GHITexture* texture) = 0;
 
     virtual GHIShader* CreateVertexShader(char* code) = 0;

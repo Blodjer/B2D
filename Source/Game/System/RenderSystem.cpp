@@ -30,11 +30,25 @@
 // Generalization: If the IRenderManger only contains a IGameRenderer then the SC can be owned by the IGameRenderer and therefore the GPU.
 //                 Else the IRenderManger would own the SC itself.
 
+// Who owns the RenderTargets?
+
+// IRenderer
+//      void Render()
+//      void Render(FB* target)
+
+// GameInstance
+//      GamerRenderManger()
+
 // RenderManger
 //      InGameEditor : EditorRenderer (SC)
 //
-//      GameRenderManager (Thread)
+//      GameRenderManager (Thread) : IRenderer
+//           Render()
+//              foreach (IGameRender r : mGameRenderers)
+//                  r->Render()
+//              GetFramebuffersAndRenderTo mGameRenderTarget
 //           FB mGameRenderTarget
+//           Mutex mMutex
 //           vector<IGameRenderer> mGameRenderers
 //               WorldRenderer : IGameRenderer RBO->FB
 ///              UiRenderer : IGameRenderer ?->FB
@@ -97,9 +111,6 @@
 //      Viewports[]
 //      RenderTarget* (optional)
 
-static CViewport const* viewport;
-static CameraEntity const* camera;
-
 static WorldRenderer* wr = nullptr;
 
 // Render Game
@@ -109,59 +120,28 @@ void RENDER()
 
     while (true)
     {
-        while (wr->PendingRendering())
-        {
-            Sleep(0);
-        }
-
-        wr->Lock();
-
-        CRenderer* r = CGameEngine::Instance()->GetRenderer();
-
-        r->BeginRender();
-        r->DrawSceneToRenderTarget(wr->GetRenderObjectBuffer(), viewport, camera);
-        r->EndRender();
-
-        renderedFrame = preparedFrame;
-        wr->Unlock();
+        wr->Render();
     }
 }
 
 void RenderSystem::Update(float deltaTime)
 {
     WorldRenderer* renderer = mWorld->GetRenderer();
+    B2D_ASSERT(renderer != nullptr);
+    
+    CViewport const* viewport = mWorld->GetOwningGameInstance()->GetWindow()->GetViewport();
 
-    if (!renderer->IsWaitingForNewData())
-    {
-        return;
-    }
+    renderer->ClearAndSetRenderData(viewport, [&](RenderObjectBuffer& buffer) {
 
-    if (!renderer->TryLock())
-    {
-        return;
-    }
+        for (SpriteComponent const& spriteComponent : ComponentItr<SpriteComponent, TransformComponent>(mWorld))
+        {
+            buffer.Add(
+                spriteComponent.Sibling<TransformComponent>().matrix,
+                spriteComponent.material
+            );
+        }
 
-    RenderObjectBuffer& buffer = renderer->GetRenderObjectBuffer();
-
-    viewport = mWorld->GetOwningGameInstance()->GetWindow()->GetViewport();
-    if (B2D_CHECKf(viewport == nullptr, "Unable to render because the world has no active viewport"))
-    {
-        return;
-    }
-
-    camera = viewport->GetCamera();
-
-    buffer.Clear();
-    for (SpriteComponent const& spriteComponent : ComponentItr<SpriteComponent, TransformComponent>(mWorld))
-    {
-        buffer.Add(
-            spriteComponent.Sibling<TransformComponent>().matrix,
-            spriteComponent.material
-        );
-    }
-
-    preparedFrame++;
-    renderer->Unlock();
+    });
 
     static bool bb = true;
     if (bb)

@@ -4,6 +4,7 @@
 
 #include <atomic>
 
+class CViewport;
 class GHIRenderTarget;
 class IGraphicsHardwareInterface;
 
@@ -13,20 +14,45 @@ public:
     WorldRenderer();
     ~WorldRenderer();
 
-    bool IsWaitingForNewData() const { return mPreparedFrame == mRenderedFrame; }
     bool PendingRendering() const { return mPreparedFrame != mRenderedFrame; }
 
-    FORCEINLINE bool TryLock() { return mMutex.try_lock(); };
+    template<typename F>
+    bool ClearAndSetRenderData(CViewport const* viewport, F fillRenderObjectBufferFunction)
+    {
+        if (PendingRendering())
+        {
+            return false;
+        }
+
+        Lock();
+
+        mViewport = viewport;
+
+        mRenderObjectBuffer.Clear();
+        fillRenderObjectBufferFunction(mRenderObjectBuffer);
+
+        mPreparedFrame++;
+
+        Unlock();
+
+        return true;
+    }
+
+    void Render();
+
+    RenderObjectBuffer const& GetRenderObjectBuffer() { return mRenderObjectBuffer; }
+
+private:
     FORCEINLINE void Lock() { mMutex.lock(); }
     FORCEINLINE void Unlock() { mMutex.unlock(); }
-
-    RenderObjectBuffer& GetRenderObjectBuffer() { return mROBuffer; }
 
 private:
     std::mutex mMutex;
 
     GHIRenderTarget* mRenderTarget = nullptr;
-    RenderObjectBuffer mROBuffer;
+    RenderObjectBuffer mRenderObjectBuffer;
+
+    CViewport const* mViewport;
 
     std::atomic<uint32> mPreparedFrame;
     std::atomic<uint32> mRenderedFrame;

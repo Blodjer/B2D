@@ -133,9 +133,9 @@ GHITexture* OpenGLGHI::CreateTexture(void* data, uint32 width, uint32 height, ui
     return texture;
 }
 
-void OpenGLGHI::BindTexture(GHITexture* texture)
+void OpenGLGHI::BindTexture(GHITexture const* texture)
 {
-    OpenGLTexture* tex = static_cast<OpenGLTexture*>(texture);
+    OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(texture);
     glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
 }
 

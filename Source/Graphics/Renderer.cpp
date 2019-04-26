@@ -17,7 +17,6 @@
 #include <iostream>
 #include "Input/Input.h"
 
-GHIRenderTarget* renderTarget = nullptr;
 GLuint VAO;
 GLuint VBO;
 
@@ -41,10 +40,6 @@ CRenderer::CRenderer(IGraphicsHardwareInterface* ghi)
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-
-    //
-
-    renderTarget = mGHI->CreateRenderTarget();
 }
 
 CRenderer::~CRenderer()
@@ -57,9 +52,14 @@ void CRenderer::BeginRender()
     mGHI->Clear(true, true, true);
 }
 
-void CRenderer::DrawSceneToRenderTarget(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera)
+void CRenderer::DrawSceneToRenderTarget(GHIRenderTarget* renderTarget, RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera)
 {
     // flag: solid, unlit, wireframe,...
+
+    if (B2D_CHECKf(viewport == nullptr, "Unable to render because the world has no active viewport"))
+    {
+        return;
+    }
 
     TMatrix viewProjectionMatrix;
     if (!viewport->GetViewProjectionMatrix(viewProjectionMatrix))
@@ -78,16 +78,17 @@ void CRenderer::DrawSceneToRenderTarget(RenderObjectBuffer const& buffer, CViewp
 
         for (uint32 i = 0; i < ro.mMaterial->GetTextures().size(); ++i)
         {
+            TextureRef const textureResource = ro.mMaterial->GetTextures()[i];
+
             glActiveTexture(GL_TEXTURE0 + i);
 
-            if (!ro.mMaterial->GetTextures()[i].IsValid())
+            if (!textureResource.IsValid())
             {
                 glBindTexture(GL_TEXTURE_2D, 0);
                 continue;
             }
 
-            OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(ro.mMaterial->GetTextures()[i]->GetGHITexture());
-            glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
+            mGHI->BindTexture(textureResource->GetGHITexture());
         }
 
         OpenGLMaterial* mat = static_cast<OpenGLMaterial*>(material->GetGHIMaterial());
@@ -109,6 +110,7 @@ void CRenderer::DrawSceneToRenderTarget(RenderObjectBuffer const& buffer, CViewp
     mGHI->BindMaterial(rtMat->GetGHIMaterial());
     
     glActiveTexture(GL_TEXTURE0 + 1);
+    //mGHI->BindTexture(renderTarget->GetTexture());
     OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(renderTarget->GetTexture());
     glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
 
@@ -121,23 +123,23 @@ void CRenderer::DrawSceneToRenderTarget(RenderObjectBuffer const& buffer, CViewp
 
     glBindVertexArray(VAO);
 
-//     glViewport(0, 0, viewport->GetWidth(), viewport->GetHeight());
+    glViewport(0, 0, viewport->GetWidth(), viewport->GetHeight());
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+//     uint32 w = viewport->GetWidth() * 0.5f;
+//     uint32 h = viewport->GetHeight() * 0.5f;
+// 
+//     glViewport(0, 0, w, h);
 //     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    uint32 w = viewport->GetWidth() * 0.5f;
-    uint32 h = viewport->GetHeight() * 0.5f;
-
-    glViewport(0, 0, w, h);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glViewport(w, 0, w, h);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glViewport(0, h, w, h);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    glViewport(w, h, w, h);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+// 
+//     glViewport(w, 0, w, h);
+//     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+// 
+//     glViewport(0, h, w, h);
+//     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+// 
+//     glViewport(w, h, w, h);
+//     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
 void CRenderer::EndRender()

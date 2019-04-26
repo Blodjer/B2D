@@ -2,6 +2,7 @@
 
 class CameraEntity;
 class CViewport;
+class GHIRenderTarget;
 class IGraphicsHardwareInterface;
 class RenderObject;
 class RenderObjectBuffer;
@@ -13,7 +14,7 @@ public:
 	~CRenderer();
 	
     void BeginRender();
-    void DrawSceneToRenderTarget(RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera);
+    void DrawSceneToRenderTarget(GHIRenderTarget* renderTarget, RenderObjectBuffer const& buffer, CViewport const* const viewport, CameraEntity const* const camera);
     void EndRender();
 
 private:
