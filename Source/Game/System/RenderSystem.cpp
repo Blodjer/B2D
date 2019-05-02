@@ -7,20 +7,78 @@
 #include "Game/Component/TransformComponent.h"
 #include "Game/Core/World.h"
 #include "Game/GameInstance.h"
-#include "Graphics/Renderer.h"
 #include "Graphics/RenderObject.h"
-#include "Graphics/Renderer/WorldRenderer.h"
 #include "Graphics/Viewport.h"
 #include "Platform/GenericWindow.h"
-#include <thread>
-
-#include <GLFW/glfw3.h>
 
 // Each World has it's own world renderer
 // The world renderer render to a game viewport client (which is a rendertarget and a collection viewports base on the splitscreen configration)
 // 
 // The RenderSystem updates the RBO of the world renderer
 // OR GAME RENDERER
+
+// Should be able to switch from Editor to InGameEditor to Game (?)
+
+    // Editor
+        // Init
+            /// AddView<>()
+            /// AddView<>()
+
+    // Game
+
+    // IRenderManger
+        // case Editor: non threaded world renderer
+        // case InGameEditor: threaded game renderer
+        // case Game: threaded game renderer
+
+// EditorInstance
+
+// WorldEditorView
+    // RenderTarget*[] mRenderTarget;
+    // World* world;
+    // Tick()
+        /// world->Render(mRenderTarget)
+
+// World
+    // Init(GameRenderer* const) [Player]
+    // Init(nullptr) [Server]
+
+// EditorRenderManager (nothing should be rendered outside of an EditorView)
+    // vector<EditorView>
+    // Render()
+        /// RenderAllEditorViews()
+            /// view->Render()
+                /// ImGui::BeginWindow()
+                /// ImGui::EndWindow()
+
+// EditorRenderer : IRenderer
+    // vector<IRenderManager>
+    // Window? ownedWindow
+    // Init(bool asThread, Window? window)
+    // Render()
+        /// if (asThread) return
+    // RenderInternal()
+        /// foreach (IRenderManager)
+            /// IRenderManager->Render()
+            /// DrawFPToFP(IRenderManager->renderTarget, mGameRenderTarget)
+        /// ImGUI::DrawTexture(mGameRenderTarget)
+        /// ImgUI::Render()
+        /// ImgUI::NewFrame()
+
+// GameRenderer : IRenderer (one per World)
+    // WorldRenderer
+    // UIRenderer
+    // Window? ownedWindow
+    //
+    // Init(bool asThread, Window? window)
+    // Render()
+        /// if (asThread) return
+    // RenderInternal()
+        /// worldRenderer->Render()
+        /// uiRenderer->Render()
+        /// DrawFPToFP(wr, renderTarget)
+        /// DrawFPToFP(ui, renderTarget)
+        /// if (window) window->Swap()
 
 // RENDERER AND THREAD?
 
@@ -32,16 +90,41 @@
 
 // Who owns the RenderTargets?
 
+// WorldRenderer
+    // RenderObjectBuffer
+        // uint32 mPreparedFrame
+    
+    // uint32 mRenderedFrame
+    // Render()
+        //
+
 // IRenderer
-//      void Render()
 //      void Render(FB* target)
 
-// GameInstance
-//      GamerRenderManger()
+// MainThread
+    // Editor
+        // vector<IEditorView>
+        // Tick()
+            /// 
+
+// RenderManager
+    // vector<IRenderer>
+    // T CreateRenderer<T>()
+    // DeleteRenderer(IRenderer)
+    
+
+// IRenderer
+    // FP renderTarget
+    // mutex renderTargetMutex
+
+
+// RenderThread
+    // RenderManager
+        // vector<IRenderer>
+        // Render()
+            /// 
 
 // RenderManger
-//      InGameEditor : EditorRenderer (SC)
-//
 //      GameRenderManager (Thread) : IRenderer
 //           Render()
 //              foreach (IGameRender r : mGameRenderers)
@@ -68,22 +151,13 @@
 //          for (IRenderer renderer : mRenderers)
 //              renderer->Draw()
 
-// RendererManager
-//      vector<IRenderer> mRenderers
-//      
-
-// IRenderer
-//      virtual Draw(RT* rt) = 0;
-//      RenderTarget/Texture
-//      GetTexture()
-
 // WorldRenderer
 //      RBO
 //      Flags (wireframe, solid,...)
 //      virtual Draw(RT* rt) override
 
-// ResourceViewRenderer (Renderer to render as specific visual resource)
-//  virtual Draw(IResource, RT) = 0
+// ResourceEditorView (Renderer to render as specific visual resource)
+//  virtual Draw() = 0
 //      TextureRenderer
 //      ShaderRenderer
 
@@ -111,27 +185,25 @@
 //      Viewports[]
 //      RenderTarget* (optional)
 
-static WorldRenderer* wr = nullptr;
+/*
+IViewport
+    Tick(float deltaTime)
 
-// Render Game
-void RENDER()
-{
-    CGameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
+GameViewport : IViewport
 
-    while (true)
-    {
-        wr->Render();
-    }
-}
 
+EditorViewport : IViewport
+
+*/
 void RenderSystem::Update(float deltaTime)
 {
-    WorldRenderer* renderer = mWorld->GetRenderer();
-    B2D_ASSERT(renderer != nullptr);
-    
-    CViewport const* viewport = mWorld->GetOwningGameInstance()->GetWindow()->GetViewport();
+    WorldRenderDataInterface* wrdi = mWorld->GetWorldRenderDataInterface();
+    if (wrdi == nullptr)
+    {
+        return;
+    }
 
-    renderer->ClearAndSetRenderData(viewport, [&](RenderObjectBuffer& buffer) {
+    wrdi->ClearAndSetRenderData([&](RenderObjectBuffer<QuadRenderObject>& buffer) {
 
         for (SpriteComponent const& spriteComponent : ComponentItr<SpriteComponent, TransformComponent>(mWorld))
         {
@@ -142,48 +214,4 @@ void RenderSystem::Update(float deltaTime)
         }
 
     });
-
-    static bool bb = true;
-    if (bb)
-    {
-        wr = renderer;
-        glfwMakeContextCurrent(nullptr);
-        bb = false;
-        std::thread ren(RENDER);
-        ren.detach();
-    }
-}
-
-bool RenderThread::Init()
-{
-    return true;
-}
-
-void RenderThread::Run()
-{
-//     CGameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
-// 
-//     while (true)
-//     {
-//         while (preparedFrame == renderedFrame)
-//         {
-//             Sleep(0);
-//         }
-// 
-//         mtx.lock();
-// 
-//         CRenderer* r = CGameEngine::Instance()->GetRenderer();
-// 
-//         r->BeginRender();
-//         r->DrawSceneToRenderTarget(buffer, viewport, camera);
-//         r->EndRender();
-// 
-//         renderedFrame = preparedFrame;
-//         mtx.unlock();
-//     }
-}
-
-void RenderThread::Stop()
-{
-    
 }

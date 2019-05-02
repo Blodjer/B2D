@@ -18,6 +18,8 @@ public:
     virtual GenericWindow* MakeWindow(uint32 width, uint32 height, std::string const& title) override;
     virtual void DestroyWindow(GenericWindow* window) override;
 
+    virtual GenericWindow* CreateOffscreenRenderContext() override;
+
     virtual void AddMessageHandler(IPlatformMessageHandlerInterface* messageHandler) override;
     virtual void RemoveMessageHandler(IPlatformMessageHandlerInterface* messageHandler) override;
 

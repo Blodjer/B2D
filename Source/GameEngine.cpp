@@ -2,18 +2,17 @@
 #include "GameEngine.h"
 
 #include "Core/Core.h"
+#include "Editor/EditorModule.h"
 #include "Game/GameInstance.h"
-#include "Graphics/Renderer.h"
-#include "Graphics/Shader.h"
-#include "Graphics/Viewport.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
+#include "Graphics/RenderManger.h"
 #include "Input/Input.h"
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformApplication.h"
 #include "Platform/PlatformInterface.h"
 
 #include <GLFW/glfw3.h>
-#include "Graphics/Texture.h"
+#include <imgui/imgui.h>
 
 CGameEngine* CGameEngine::sInstance = nullptr;
 
@@ -25,9 +24,10 @@ CGameEngine::CGameEngine(ApplicationConfig const& config)
 CGameEngine::~CGameEngine()
 {
     delete mGameInstance;
-    delete mRenderer;
 
     // TODO: replace by smart pointer
+    // TODO: replace by base (init, shutdown,...)
+
     mPA->Shutdown();
     delete mPA;
 
@@ -65,8 +65,13 @@ void CGameEngine::Init()
     mGHI = mPA->CreateGHI();
     B2D_ASSERT(mGHI->Init());
 
-    // TODO: Split renderer between world, editor, preview,...
-    mRenderer = new CRenderer(mGHI);
+    mRenderManager = new RenderManger();
+    mRenderManager->Init(false);
+
+#if 1 // Load Editor
+    mModuleManager.Load<EditorModule>();
+    //mPA->AddMessageHandler(mEditor);
+#endif
 
     // TODO: GameInstance should only be valid while the game is running. Should be null in editor mode.
     mGameInstance = new CGameInstance(mMainWindow);
@@ -81,9 +86,6 @@ void CGameEngine::Shutdown()
 
 void CGameEngine::Run()
 {
-#if defined(B2D_PLATFORM_WINDOWS) && !defined(B2D_NO_LOGGING)
-	HANDLE pOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-#endif
 	using duration = std::chrono::duration<double, std::milli>;
 	using clock = std::chrono::high_resolution_clock;
 
@@ -98,7 +100,7 @@ void CGameEngine::Run()
 		const float deltaTime = static_cast<float>(now - lastTick);
 		lastTick = now;
 
-		if (nextSecond < now)
+        if (nextSecond < now)
 		{
 			fps = frames;
 			frames = 0;
@@ -108,10 +110,16 @@ void CGameEngine::Run()
         Input::Flush();
         mPA->PollEvents();
 
-        if (Input::IsKey(EKey::F5, EKeyEvent::Press))
+        mModuleManager.ForwardBeginFrame();
+        
+        static bool p_open = true;
+        ImGui::SetNextWindowBgAlpha(0.35f);
+        if (ImGui::Begin("Example: Simple overlay", &p_open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
         {
-            IResourceManager::GetLoadedResources();
+            ImGui::Text("Fps:   %d", fps);
+            ImGui::Text("Delta: %.2fms", 1000.0f / fps);
         }
+        ImGui::End();
 
         if (Input::IsKey(EKey::ESCAPE, EKeyEvent::Press))
             CGameEngine::Instance()->RequestShutdown();
@@ -120,25 +128,15 @@ void CGameEngine::Run()
         std::chrono::time_point<clock> start = clock::now();
         mGameInstance->Tick(deltaTime);
 		duration ChronoTick = clock::now() - start;
-		
-#if defined(B2D_PLATFORM_WINDOWS) && !defined(B2D_NO_LOGGING)
-		// Debug
-		COORD pos = { -1, -1 };
-		CONSOLE_SCREEN_BUFFER_INFO cbsi;
-		if (GetConsoleScreenBufferInfo(pOutputHandle, &cbsi))
-		{
-			pos = cbsi.dwCursorPosition;
-			SetConsoleCursorPosition(pOutputHandle, { 0, 0 });
-		}
-		
-		printf("Delta: %.2fms | Fps: %d               ",
-			    deltaTime * 1000, fps);
-		
-		if (pos.X >= 0 && pos.Y >= 0)
-		{
-			SetConsoleCursorPosition(pOutputHandle, pos);
-		}
-#endif
+
+        mModuleManager.ForwardTick(deltaTime);
+
+        mRenderManager->Render();
+
+        mModuleManager.ForwardEndFrame();
+        
+        mRenderManager->Draw();
+
 		frames++;
 	}
 }

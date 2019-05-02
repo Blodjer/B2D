@@ -2,41 +2,34 @@
 #include "WorldRenderer.h"
 
 #include "GameEngine.h"
-#include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "../Renderer.h"
 #include "../Viewport.h"
+#include "WorldRenderDataInterface.h"
+#include "Game/GameInstance.h"
+#include "Game/Core/World.h"
+#include "Platform/GenericWindow.h"
 
 WorldRenderer::WorldRenderer()
-    : mRenderObjectBuffer(100000)
-    , mPreparedFrame(0)
-    , mRenderedFrame(0)
+    : mRenderedFrame(0)
 {
-    IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
-    mRenderTarget = ghi->CreateRenderTarget();
 }
 
-WorldRenderer::~WorldRenderer()
+bool WorldRenderer::ShouldRenderNextFrame()
 {
-    IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
-    ghi->DeleteRenderTarget(mRenderTarget);
+    mWRDI = CGameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
+    return mWRDI->GetPreparedFrame() != mRenderedFrame;
 }
 
-void WorldRenderer::Render()
+void WorldRenderer::RenderInternal()
 {
-    if (!PendingRendering())
-    {
-        return;
-    }
+    mWRDI = CGameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
+    mViewport = CGameEngine::Instance()->GetMainWindow()->GetViewport();
 
-    Lock();
+    mWRDI->StartRead();
 
-    CRenderer* r = CGameEngine::Instance()->GetRenderer();
+    CRenderer::DrawWorldFromViewport(mWRDI, mViewport, mViewport->GetCamera());
 
-    r->BeginRender();
-    r->DrawSceneToRenderTarget(mRenderTarget, mRenderObjectBuffer, mViewport, mViewport->GetCamera());
-    r->EndRender();
+    mRenderedFrame.store(mWRDI->GetPreparedFrame());
 
-    mRenderedFrame.store(mPreparedFrame);
-
-    Unlock();
+    mWRDI->StopRead();
 }

@@ -37,7 +37,6 @@ bool DesktopWindow::IsCurrentContext() const
     return glfwGetCurrentContext() == mContext;
 }
 
-
 void DesktopWindow::SetSize(uint32 width, uint32 height)
 {
 	glfwSetWindowSize(mContext, width, height);

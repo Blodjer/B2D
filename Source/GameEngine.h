@@ -2,13 +2,15 @@
 
 #include "Platform/PlatformMessageHandlerInterface.h"
 #include "Application.h"
+#include "Engine/ModuleManager.h"
 
 class CGameInstance;
-class CRenderer;
 class CViewport;
+class Editor;
 class GenericWindow;
 class IGraphicsHardwareInterface;
 class IPlatformApplicationInterface;
+class RenderManger;
 
 class CGameEngine final : private IPlatformMessageHandlerInterface
 {
@@ -40,7 +42,9 @@ public:
     IPlatformApplicationInterface* GetPA() const { return mPA; }
 
     IGraphicsHardwareInterface* GetGHI() const { return mGHI; }
-	CRenderer* GetRenderer() const { return mRenderer; }
+
+    ModuleManager* const GetModuleManager() { return &mModuleManager; }
+    RenderManger* GetRenderManager() const { return mRenderManager; }
 
 	CGameInstance* GetGameInstance() const { return mGameInstance; }
     GenericWindow* GetMainWindow() const { return mMainWindow; }
@@ -58,8 +62,10 @@ private:
     IPlatformApplicationInterface* mPA = nullptr;
     IGraphicsHardwareInterface* mGHI = nullptr;
 
-    GenericWindow* mMainWindow = nullptr;
+    ModuleManager mModuleManager;
+    RenderManger* mRenderManager = nullptr;
 
+    GenericWindow* mMainWindow = nullptr;
 	CGameInstance* mGameInstance = nullptr;
-	CRenderer* mRenderer = nullptr;
+
 };

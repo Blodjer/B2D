@@ -4,6 +4,8 @@
 
 #include "Game/Core/Entity.h"
 #include "Game/Core/Component.h"
+#include "Graphics/RenderObject.h"
+#include "Graphics/Renderer/WorldRenderDataInterface.h"
 
 class CGameInstance;
 class System;
@@ -15,7 +17,7 @@ class SystemEntityObject;
 class World
 {
 public:
-    World(CGameInstance* const owningGameInstance, WorldRenderer* const worldRenderer);
+    World(CGameInstance* const owningGameInstance);
     ~World();
 
     void Update(float deltaTime);
@@ -88,7 +90,9 @@ public:
 
 public:
     CGameInstance* GetOwningGameInstance() const { return mOwningGameInstance; }
-    WorldRenderer* GetRenderer() const { return mWorldRenderer; }
+
+    WorldRenderDataInterface* GetWorldRenderDataInterface() { return mWorldRenderDataInterface; }
+    WorldRenderDataInterface const* GetWorldRenderDataInterface() const { return mWorldRenderDataInterface; }
 
 public:
     std::unordered_map<EntityID, Entity*> mEntities;
@@ -96,8 +100,7 @@ public:
 
 private:
     CGameInstance* const mOwningGameInstance;
-
-    WorldRenderer* const mWorldRenderer;
+    WorldRenderDataInterface* mWorldRenderDataInterface;
 
 };
 

@@ -12,15 +12,3 @@ public:
     virtual void Update(float deltaTime) override;
 
 };
-
-class RenderThread : public Thread
-{
-
-public:
-    virtual bool Init() override;
-
-    virtual void Run() override;
-
-    virtual void Stop() override;
-
-};

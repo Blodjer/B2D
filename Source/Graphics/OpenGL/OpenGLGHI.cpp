@@ -19,7 +19,7 @@ bool OpenGLGHI::Init()
         switch (severity)
         {
             case GL_DEBUG_SEVERITY_NOTIFICATION:
-                B2D_CORE_INFO(message);
+                //B2D_CORE_INFO(message);
                 break;
             case GL_DEBUG_SEVERITY_LOW:
                 B2D_CORE_INFO(message);
@@ -44,7 +44,7 @@ bool OpenGLGHI::Init()
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.4f);
+    glAlphaFunc(GL_GREATER, 0.001f);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -61,7 +61,7 @@ void OpenGLGHI::Clear(bool color, bool depth, bool stencil)
     GLbitfield clearFlags = 0;
     if (color)
     {
-        glClearColor(0.7f, 0, 0.7f, 1);
+        glClearColor(0.7f, 0.5, 0.7f, 1);
         clearFlags |= GL_COLOR_BUFFER_BIT;
     }
     if (depth)
@@ -78,7 +78,8 @@ void OpenGLGHI::Clear(bool color, bool depth, bool stencil)
 
 GHIRenderTarget* OpenGLGHI::CreateRenderTarget()
 {
-    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(CreateTexture(nullptr, 1920, 1080, 3));
+    GHITexture* ghiTexture = CreateTexture(nullptr, 1920, 1080, 3);
+    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(ghiTexture);
 
     GLuint fb;
     glGenFramebuffers(1, &fb);
@@ -96,14 +97,38 @@ GHIRenderTarget* OpenGLGHI::CreateRenderTarget()
     return renderTarget;
 }
 
-void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget* renderTarget)
+GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
+{
+    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(texture);
+
+    GLuint fb;
+    glGenFramebuffers(1, &fb);
+    OpenGLRenderTarget* renderTarget = new OpenGLRenderTarget(fb, renderTexture);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTexture->GetHandle(), 0);
+
+    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, DrawBuffers);
+
+    B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+    return renderTarget;
+}
+
+void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget*& renderTarget)
 {
     OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
     GLuint handle = rt->GetHandle();
 
     glDeleteFramebuffers(1, &handle);
 
+    GHITexture* texture = const_cast<GHITexture*>(renderTarget->GetTexture());
+    FreeTexture(texture);
+
     delete rt;
+    renderTarget = nullptr;
 }
 
 void OpenGLGHI::BindRenderTarget(GHIRenderTarget* renderTarget)
@@ -120,7 +145,7 @@ void OpenGLGHI::BindRenderTargetAndClear(GHIRenderTarget* renderTarget)
 {
     BindRenderTarget(renderTarget);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 }
@@ -139,10 +164,11 @@ void OpenGLGHI::BindTexture(GHITexture const* texture)
     glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
 }
 
-void OpenGLGHI::FreeTexture(GHITexture* texture)
+void OpenGLGHI::FreeTexture(GHITexture*& texture)
 {
     texture->Free();
     delete texture;
+    texture = nullptr;
 }
 
 GHIShader* OpenGLGHI::CreatePixelShader(char* code)
@@ -153,11 +179,12 @@ GHIShader* OpenGLGHI::CreatePixelShader(char* code)
     return shader;
 }
 
-void OpenGLGHI::DeleteShader(GHIShader* shader)
+void OpenGLGHI::DeleteShader(GHIShader*& shader)
 {
     OpenGLShader* sh = static_cast<OpenGLShader*>(shader);
     sh->Delete();
-    delete sh;
+    delete shader;
+    shader = nullptr;
 }
 
 GHIShader* OpenGLGHI::CreateVertexShader(char* code)

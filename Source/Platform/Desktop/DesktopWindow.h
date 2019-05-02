@@ -2,11 +2,7 @@
 
 #include "Platform/GenericWindow.h"
 
-class CGameInstance;
-class CViewport;
-class DesktopPlatformApplication;
 struct GLFWwindow;
-class IPlatformApplicationInterface;
 
 class DesktopWindow : public GenericWindow
 {

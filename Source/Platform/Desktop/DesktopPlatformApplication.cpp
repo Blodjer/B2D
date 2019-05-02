@@ -96,6 +96,20 @@ void DesktopPlatformApplication::DestroyWindow(GenericWindow* window)
     delete window;
 }
 
+GenericWindow* DesktopPlatformApplication::CreateOffscreenRenderContext()
+{
+    GLFWwindow* main = static_cast<GLFWwindow*>(CGameEngine::Instance()->GetMainWindow()->GetGenericContext());
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    GLFWwindow* offscreenContext = glfwCreateWindow(100, 100, "", nullptr, main);
+    DesktopWindow* const window = new DesktopWindow(offscreenContext, 100, 100);
+    mWindows.emplace_back(window);
+
+    CGameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
+
+    return window;
+}
+
 void DesktopPlatformApplication::AddMessageHandler(IPlatformMessageHandlerInterface* messageHandler)
 {
     auto const it = std::find_if(mMessageHandler.begin(), mMessageHandler.end(), [messageHandler](IPlatformMessageHandlerInterface* handler) {
@@ -133,6 +147,12 @@ void DesktopPlatformApplication::OnGlfwKeyCallback(GLFWwindow* window, int glfwK
 {
     DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
     
+    if (glfwKey < 0)
+    {
+        B2D_CORE_WARNING("Unhandled key type (scancode: {})", scancode);
+        return;
+    }
+
     //TODO: Translate to B2D in a safer way
     EKey key = static_cast<EKey>(glfwKey);
 
@@ -222,12 +242,12 @@ void DesktopPlatformApplication::OnGlfwJoystickCallback(int glfwJoystickId, int 
     //     glfwGetGamepadName();
     //     glfwGetJoystickName();
 
-    B2D_WARNING("OnGlfwJoystickCallback is not implemented");
+    B2D_CORE_WARNING("OnGlfwJoystickCallback is not implemented");
 }
 
 void DesktopPlatformApplication::OnGlfwDropCallback(GLFWwindow* window, int count, const char** paths)
 {
     DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
 
-    B2D_WARNING("OnGlfwDropCallback is not implemented");
+    B2D_CORE_WARNING("OnGlfwDropCallback is not implemented");
 }
