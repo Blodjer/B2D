@@ -46,15 +46,25 @@ void IRenderer::Render()
 
     if (ShouldRenderNextFrame())
     {
+        using duration = std::chrono::duration<float, std::milli>;
+        using clock = std::chrono::high_resolution_clock;
+
+        std::chrono::time_point<clock> start = clock::now();
+
+        GHIRenderTarget* const target = mRenderToSwtich ? mRenderTarget1 : mRenderTarget2;
+
         PreRender();
-        RenderInternal();
+        RenderInternal(target);
         PostRender();
+
+        duration ChronoTick = clock::now() - start;
+        mRenderTime = ChronoTick.count();
     }
 }
 
 void IRenderer::PreRender()
 {
-    CGameEngine::Instance()->GetGHI()->BindRenderTargetAndClear(mRenderToSwtich ? mRenderTarget1 : mRenderTarget2);
+
 }
 
 void IRenderer::PostRender()

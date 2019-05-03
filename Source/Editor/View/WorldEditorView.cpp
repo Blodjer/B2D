@@ -22,6 +22,7 @@ void WorldEditorView::Tick(float deltaTime)
 {
     ImGui::SetNextWindowSizeConstraints(ImVec2(200, 120), ImVec2(9999, 9999));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
     if (ImGui::Begin("Viewport", &mOpen, ImGuiWindowFlags_NoCollapse))
     {
@@ -29,10 +30,11 @@ void WorldEditorView::Tick(float deltaTime)
 
         worldRenderer->mMutex.lock();
         OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(worldRenderer->GetRenderOutput());
-        ImGui::Image((void*)(tex->GetHandle()), ImVec2(contentSize.x, contentSize.y - 18), ImVec2(1, 1), ImVec2(0, 0));
+        ImGui::Image((void*)(tex->GetHandle()), ImVec2(contentSize.x, contentSize.y - 17), ImVec2(1, 1), ImVec2(0, 0));
         worldRenderer->mMutex.unlock();
 
-        ImGui::Text("Fps: %d | Delta: %.2fm", 2, 1000.0f / 2);
+        float renderTime = worldRenderer->GetRenderTime();
+        ImGui::Text(" Fps: %d | Delta: %.2fms", static_cast<uint32>(1000 / renderTime), renderTime);
     }
     else
     {
@@ -41,5 +43,6 @@ void WorldEditorView::Tick(float deltaTime)
 
     ImGui::End();
 
+    ImGui::PopStyleVar();
     ImGui::PopStyleVar();
 }

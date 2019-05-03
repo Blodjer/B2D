@@ -8,10 +8,12 @@
 #include "Game/GameInstance.h"
 #include "Game/Core/World.h"
 #include "Platform/GenericWindow.h"
+#include "../GHI/GraphicsHardwareInterface.h"
 
 WorldRenderer::WorldRenderer()
     : mRenderedFrame(0)
 {
+
 }
 
 bool WorldRenderer::ShouldRenderNextFrame()
@@ -20,14 +22,18 @@ bool WorldRenderer::ShouldRenderNextFrame()
     return mWRDI->GetPreparedFrame() != mRenderedFrame;
 }
 
-void WorldRenderer::RenderInternal()
+void WorldRenderer::RenderInternal(GHIRenderTarget* const renderTarget)
 {
     mWRDI = CGameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
     mViewport = CGameEngine::Instance()->GetMainWindow()->GetViewport();
 
     mWRDI->StartRead();
 
-    CRenderer::DrawWorldFromViewport(mWRDI, mViewport, mViewport->GetCamera());
+    static GHIRenderTarget* rt = CGameEngine::Instance()->GetGHI()->CreateRenderTarget();
+
+    CRenderer::RenderWorldFromViewportToRenderTarget(rt, mWRDI, mViewport, mViewport->GetCamera());
+
+    CRenderer::PostProcessPass(rt, renderTarget, nullptr);
 
     mRenderedFrame.store(mWRDI->GetPreparedFrame());
 

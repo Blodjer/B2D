@@ -79,42 +79,35 @@ void OpenGLGHI::Clear(bool color, bool depth, bool stencil)
 GHIRenderTarget* OpenGLGHI::CreateRenderTarget()
 {
     GHITexture* ghiTexture = CreateTexture(nullptr, 1920, 1080, 3);
-    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(ghiTexture);
-
-    GLuint fb;
-    glGenFramebuffers(1, &fb);
-    OpenGLRenderTarget* renderTarget = new OpenGLRenderTarget(fb, renderTexture);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, fb);
-
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTexture->GetHandle(), 0);
-
-    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, DrawBuffers);
-
-    B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
-    return renderTarget;
+    return CreateRenderTarget(ghiTexture);
 }
 
 GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
 {
     OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(texture);
 
+    GLuint depthrenderbuffer;
+    glGenTextures(1, &depthrenderbuffer);
+    glBindTexture(GL_TEXTURE_2D, depthrenderbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 1920, 1080, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     GLuint fb;
     glGenFramebuffers(1, &fb);
-    OpenGLRenderTarget* renderTarget = new OpenGLRenderTarget(fb, renderTexture);
 
     glBindFramebuffer(GL_FRAMEBUFFER, fb);
 
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTexture->GetHandle(), 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthrenderbuffer, 0);
 
     GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, DrawBuffers);
 
     B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
-    return renderTarget;
+    return new OpenGLRenderTarget(fb, renderTexture);
 }
 
 void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget*& renderTarget)
@@ -137,8 +130,8 @@ void OpenGLGHI::BindRenderTarget(GHIRenderTarget* renderTarget)
 
     glBindFramebuffer(GL_FRAMEBUFFER, rt->GetHandle());
 
-    glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, 1920, 1080);
+    glClear(GL_DEPTH_BUFFER_BIT);
 }
 
 void OpenGLGHI::BindRenderTargetAndClear(GHIRenderTarget* renderTarget)
@@ -147,7 +140,6 @@ void OpenGLGHI::BindRenderTargetAndClear(GHIRenderTarget* renderTarget)
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
 }
 
 GHITexture* OpenGLGHI::CreateTexture(void* data, uint32 width, uint32 height, uint8 components)

@@ -14,7 +14,7 @@ public:
     virtual ~WorldRenderer() = default;
 
     virtual bool ShouldRenderNextFrame() override;
-    virtual void RenderInternal() override;
+    virtual void RenderInternal(GHIRenderTarget* const renderTarget) override;
 
 private:
     WorldRenderDataInterface* mWRDI = nullptr;

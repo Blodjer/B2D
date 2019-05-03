@@ -16,7 +16,7 @@
 
 #include <GL/glew.h>
 
-void CRenderer::DrawWorldFromViewport(WorldRenderDataInterface* wrdi, CViewport const* const viewport, CameraEntity const* const camera)
+void CRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const target, WorldRenderDataInterface* wrdi, CViewport const* const viewport, CameraEntity const* const camera)
 {
     // flag: solid, unlit, wireframe,...
 
@@ -54,6 +54,8 @@ void CRenderer::DrawWorldFromViewport(WorldRenderDataInterface* wrdi, CViewport 
     }
 
     IGraphicsHardwareInterface* const ghi = CGameEngine::Instance()->GetGHI();
+
+    ghi->BindRenderTargetAndClear(target);
 
     wrdi->StartRead();
 
@@ -94,4 +96,47 @@ void CRenderer::DrawWorldFromViewport(WorldRenderDataInterface* wrdi, CViewport 
     }
 
     wrdi->StopRead();
+}
+
+void CRenderer::PostProcessPass(GHIRenderTarget* source, GHIRenderTarget* target, GHIMaterial* material)
+{
+    static GLuint VAO = 0;
+    static GLuint VBO = 0;
+    if (VBO == 0)
+    {
+        float const vertices[] = {
+            -1.0f, -1.0f,	0.0f, 0.0f,
+             1.0f, -1.0f,	1.0f, 0.0f,
+            -1.0f,  1.0f,	0.0f, 1.0f,
+             1.0f,  1.0f,	1.0f, 1.0f,
+        };
+
+        glGenBuffers(1, &VBO);
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, 0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+    }
+
+    IGraphicsHardwareInterface* const ghi = CGameEngine::Instance()->GetGHI();
+
+    ghi->BindRenderTarget(target);
+
+    static VertexShaderRef ppVS = IResourceManager::Get<VertexShader>("Content/Shader/RenderTargetVS.glsl");
+    static PixelShaderRef ppPS = IResourceManager::Get<PixelShader>("Content/Shader/PostProcessPS.glsl");
+    static GHIMaterial* ppMaterial = ghi->CreateMaterial(ppVS->GetGHIShader(), ppPS->GetGHIShader());
+    ghi->BindMaterial(ppMaterial);
+
+    OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(source->GetTexture());
+    glActiveTexture(GL_TEXTURE0 + 0);
+    glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
+
+    glBindVertexArray(VAO);
+
+    glPolygonMode(GL_FRONT, GL_FILL);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
