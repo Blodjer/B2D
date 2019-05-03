@@ -18,18 +18,18 @@ WorldRenderer::WorldRenderer()
 
 bool WorldRenderer::ShouldRenderNextFrame()
 {
-    mWRDI = CGameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
+    mWRDI = GameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
     return mWRDI->GetPreparedFrame() != mRenderedFrame;
 }
 
 void WorldRenderer::RenderInternal(GHIRenderTarget* const renderTarget)
 {
-    mWRDI = CGameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
-    mViewport = CGameEngine::Instance()->GetMainWindow()->GetViewport();
+    mWRDI = GameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
+    mViewport = GameEngine::Instance()->GetMainWindow()->GetViewport();
 
     mWRDI->StartRead();
 
-    static GHIRenderTarget* rt = CGameEngine::Instance()->GetGHI()->CreateRenderTarget();
+    static GHIRenderTarget* rt = GameEngine::Instance()->GetGHI()->CreateRenderTarget();
 
     CRenderer::RenderWorldFromViewportToRenderTarget(rt, mWRDI, mViewport, mViewport->GetCamera());
 

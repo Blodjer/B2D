@@ -36,7 +36,7 @@ void EditorModule::Init()
     }
 
     // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(CGameEngine::Instance()->GetMainWindow()->GetGenericContext()), true);
+    ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(GameEngine::Instance()->GetMainWindow()->GetGenericContext()), true);
     ImGui_ImplOpenGL3_Init("#version 410 core");
 
     InitDefaultEditorViews();

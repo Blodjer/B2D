@@ -14,11 +14,11 @@ int main(int argc, const char*[])
 
 	Log::Init(config.name);
 
-	CGameEngine::Create(config);
+	GameEngine::Create(config);
 
-	World* const world = CGameEngine::Instance()->GetGameInstance()->GetWorld();
+	World* const world = GameEngine::Instance()->GetGameInstance()->GetWorld();
     B2D::PopulateWorld(world);
 
-    CGameEngine::Instance()->Run();
-    CGameEngine::Shutdown();
+    GameEngine::Instance()->Run();
+    GameEngine::Shutdown();
 }

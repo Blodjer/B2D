@@ -8,7 +8,7 @@ class World;
 
 class CGameInstance
 {
-	friend CGameEngine;
+	friend GameEngine;
 
 	CGameInstance(GenericWindow* const owningWindow);
 public:

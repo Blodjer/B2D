@@ -3,7 +3,7 @@
 
 class ModuleManager final
 {
-    friend class CGameEngine;
+    friend class GameEngine;
 
 private:
     ModuleManager();

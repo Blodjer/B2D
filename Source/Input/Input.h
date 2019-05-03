@@ -5,7 +5,7 @@
 
 class Input
 {
-    friend class CGameEngine;
+    friend class GameEngine;
 
 public:
     Input() = default;

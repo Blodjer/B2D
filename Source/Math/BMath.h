@@ -4,11 +4,11 @@
 
 #include <cmath>
 
-class CGameEngine;
+class GameEngine;
 
 class UMath
 {
-	friend CGameEngine;
+	friend GameEngine;
 
 public:
 	template<typename T>

@@ -23,7 +23,7 @@ bool CTexture::Load(ResourcePath const& path)
 		return false;
 	}
 
-    mGHITexture = CGameEngine::Instance()->GetGHI()->CreateTexture(imgPtr, mWidth, mHeight, mComponents);
+    mGHITexture = GameEngine::Instance()->GetGHI()->CreateTexture(imgPtr, mWidth, mHeight, mComponents);
     
     stbi_image_free(imgPtr);
 

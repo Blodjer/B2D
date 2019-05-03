@@ -13,7 +13,7 @@ Material::Material(VertexShaderRef vertexShader, PixelShaderRef pixelShader)
 {
     if (vertexShader.IsValid() && pixelShader.IsValid())
     {
-        mGHIMaterial = CGameEngine::Instance()->GetGHI()->CreateMaterial(vertexShader->GetGHIShader(), pixelShader->GetGHIShader());
+        mGHIMaterial = GameEngine::Instance()->GetGHI()->CreateMaterial(vertexShader->GetGHIShader(), pixelShader->GetGHIShader());
     }
 
     vertexShader->RegisterChangeCallback(TResourceChangedDelegate::CREATE(this, &Material::OnShaderChanged));
@@ -56,5 +56,5 @@ void Material::SetTexture(uint32 index, TextureRef const& texture)
 
 void Material::OnShaderChanged()
 {
-    mGHIMaterial = CGameEngine::Instance()->GetGHI()->CreateMaterial(mVertexShader->GetGHIShader(), mPixelShader->GetGHIShader());
+    mGHIMaterial = GameEngine::Instance()->GetGHI()->CreateMaterial(mVertexShader->GetGHIShader(), mPixelShader->GetGHIShader());
 }

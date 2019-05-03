@@ -98,14 +98,14 @@ void DesktopPlatformApplication::DestroyWindow(GenericWindow* window)
 
 GenericWindow* DesktopPlatformApplication::CreateOffscreenRenderContext()
 {
-    GLFWwindow* main = static_cast<GLFWwindow*>(CGameEngine::Instance()->GetMainWindow()->GetGenericContext());
+    GLFWwindow* main = static_cast<GLFWwindow*>(GameEngine::Instance()->GetMainWindow()->GetGenericContext());
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     GLFWwindow* offscreenContext = glfwCreateWindow(100, 100, "", nullptr, main);
     DesktopWindow* const window = new DesktopWindow(offscreenContext, 100, 100);
     mWindows.emplace_back(window);
 
-    CGameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
+    GameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
 
     return window;
 }

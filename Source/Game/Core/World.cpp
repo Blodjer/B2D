@@ -13,7 +13,7 @@ World::World(CGameInstance* const owningGameInstance)
     mWorldRenderDataInterface = new WorldRenderDataInterface();
 
     CameraEntity* defaultCamera = AddSystemEntityObject<CameraEntity>();
-    CGameEngine::Instance()->GetMainWindow()->GetViewport()->SetCamera(defaultCamera);
+    GameEngine::Instance()->GetMainWindow()->GetViewport()->SetCamera(defaultCamera);
 }
 
 World::~World()

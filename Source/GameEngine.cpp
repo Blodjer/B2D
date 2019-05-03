@@ -14,14 +14,14 @@
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 
-CGameEngine* CGameEngine::sInstance = nullptr;
+GameEngine* GameEngine::sInstance = nullptr;
 
-CGameEngine::CGameEngine(ApplicationConfig const& config)
+GameEngine::GameEngine(ApplicationConfig const& config)
     : mConfig(config)
 {
 }
 
-CGameEngine::~CGameEngine()
+GameEngine::~GameEngine()
 {
     delete mGameInstance;
 
@@ -35,18 +35,18 @@ CGameEngine::~CGameEngine()
     delete mGHI;
 }
 
-void CGameEngine::Create(ApplicationConfig const& config)
+void GameEngine::Create(ApplicationConfig const& config)
 {
     if (B2D_CHECK(sInstance != nullptr))
     {
         return;
     }
 
-    sInstance = new CGameEngine(config);
+    sInstance = new GameEngine(config);
     sInstance->Init();
 }
 
-void CGameEngine::Init()
+void GameEngine::Init()
 {
     B2D_CORE_INFO("Initialize engine...");
 
@@ -79,12 +79,12 @@ void CGameEngine::Init()
     B2D_CORE_INFO("Engine initilized!\n");
 }
 
-void CGameEngine::Shutdown()
+void GameEngine::Shutdown()
 {
     delete sInstance;
 }
 
-void CGameEngine::Run()
+void GameEngine::Run()
 {
 	using duration = std::chrono::duration<double, std::milli>;
 	using clock = std::chrono::high_resolution_clock;
@@ -122,7 +122,7 @@ void CGameEngine::Run()
         ImGui::End();
 
         if (Input::IsKey(EKey::ESCAPE, EKeyEvent::Press))
-            CGameEngine::Instance()->RequestShutdown();
+            GameEngine::Instance()->RequestShutdown();
 
 		// Tick
         std::chrono::time_point<clock> start = clock::now();
@@ -141,24 +141,24 @@ void CGameEngine::Run()
 	}
 }
 
-void CGameEngine::RequestShutdown()
+void GameEngine::RequestShutdown()
 {
 	GetMainWindow()->SetShouldClose(true);
 	mPendingShutdown = true;
 }
 
-bool CGameEngine::OnKeyEvent(GenericWindow* window, int32 scancode, EKey key, EKeyEvent event)
+bool GameEngine::OnKeyEvent(GenericWindow* window, int32 scancode, EKey key, EKeyEvent event)
 {
     Input::OnKey(key, event);
     return false;
 }
 
-bool CGameEngine::OnMouseMove(GenericWindow* window, TVec2 position)
+bool GameEngine::OnMouseMove(GenericWindow* window, TVec2 position)
 {
     return false;
 }
 
-bool CGameEngine::OnMouseButton(GenericWindow* window, EMouseButton button, EMouseButtonEvent event)
+bool GameEngine::OnMouseButton(GenericWindow* window, EMouseButton button, EMouseButtonEvent event)
 {
     return false;
 }

@@ -53,7 +53,7 @@ void CRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const tar
         return;
     }
 
-    IGraphicsHardwareInterface* const ghi = CGameEngine::Instance()->GetGHI();
+    IGraphicsHardwareInterface* const ghi = GameEngine::Instance()->GetGHI();
 
     ghi->BindRenderTargetAndClear(target);
 
@@ -122,7 +122,7 @@ void CRenderer::PostProcessPass(GHIRenderTarget* source, GHIRenderTarget* target
         glEnableVertexAttribArray(1);
     }
 
-    IGraphicsHardwareInterface* const ghi = CGameEngine::Instance()->GetGHI();
+    IGraphicsHardwareInterface* const ghi = GameEngine::Instance()->GetGHI();
 
     ghi->BindRenderTarget(target);
 

@@ -10,12 +10,12 @@
 WorldEditorView::WorldEditorView()
     : mOpen(true)
 {
-    worldRenderer = CGameEngine::Instance()->GetRenderManager()->CreateRenderer<WorldRenderer>();
+    worldRenderer = GameEngine::Instance()->GetRenderManager()->CreateRenderer<WorldRenderer>();
 }
 
 WorldEditorView::~WorldEditorView()
 {
-    CGameEngine::Instance()->GetRenderManager()->DeleteRenderer(worldRenderer);
+    GameEngine::Instance()->GetRenderManager()->DeleteRenderer(worldRenderer);
 }
 
 void WorldEditorView::Tick(float deltaTime)

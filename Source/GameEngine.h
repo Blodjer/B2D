@@ -12,23 +12,23 @@ class IGraphicsHardwareInterface;
 class IPlatformApplicationInterface;
 class RenderManger;
 
-class CGameEngine final : private IPlatformMessageHandlerInterface
+class GameEngine final : private IPlatformMessageHandlerInterface
 {
 private:
-	CGameEngine(ApplicationConfig const& config);
-    ~CGameEngine();
+	GameEngine(ApplicationConfig const& config);
+    ~GameEngine();
 
-    CGameEngine(const CGameEngine&) = delete;
-    void operator=(const CGameEngine&) = delete;
+    GameEngine(const GameEngine&) = delete;
+    void operator=(const GameEngine&) = delete;
 
-    static CGameEngine* sInstance;
+    static GameEngine* sInstance;
 
 public:
     static void Create(ApplicationConfig const& config);
     void Init();
     static void Shutdown();
 
-	static CGameEngine* const Instance() {
+	static GameEngine* const Instance() {
         B2D_ASSERT(sInstance != nullptr);
 		return sInstance;
 	}

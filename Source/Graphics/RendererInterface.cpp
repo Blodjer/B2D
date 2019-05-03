@@ -11,14 +11,14 @@
 
 IRenderer::IRenderer()
 {
-     IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
+     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
      mRenderTexture1 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
      mRenderTexture2 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
 }
 
 IRenderer::~IRenderer()
 {
-    IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
+    IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
     ghi->FreeTexture(mRenderTexture1);
     ghi->FreeTexture(mRenderTexture2);
 }
@@ -29,7 +29,7 @@ void IRenderer::Render()
     static bool b2 = true;
     if (b)
     {
-        IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
+        IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
         mRenderTarget1 = ghi->CreateRenderTarget(mRenderTexture1);
         mRenderTarget2 = ghi->CreateRenderTarget(mRenderTexture2);
 
@@ -37,7 +37,7 @@ void IRenderer::Render()
     }
     else if (b2)
     {
-        IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
+        IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
         mRenderTarget1 = ghi->CreateRenderTarget(mRenderTexture1);
         mRenderTarget2 = ghi->CreateRenderTarget(mRenderTexture2);
 

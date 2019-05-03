@@ -27,7 +27,7 @@ bool Shader::Load(ResourcePath const& path, ShaderType type)
         return false;
     }
 
-    IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
+    IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
     switch (type)
     {
         case ShaderType::Vertex:
@@ -51,7 +51,7 @@ bool Shader::Load(ResourcePath const& path, ShaderType type)
 
 void Shader::Free()
 {
-    IGraphicsHardwareInterface* ghi = CGameEngine::Instance()->GetGHI();
+    IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
     ghi->DeleteShader(mGHIShader);
     mGHIShader = nullptr;
 }

@@ -48,7 +48,7 @@ void RenderManger::Render()
         return;
     }
 
-    mOffscreenRenderContext = CGameEngine::Instance()->GetPA()->CreateOffscreenRenderContext();
+    mOffscreenRenderContext = GameEngine::Instance()->GetPA()->CreateOffscreenRenderContext();
     mRenderThread = std::thread(&RenderManger::RenderLoop, this);
     mMultithreaded = true;
     return;
@@ -110,15 +110,15 @@ void RenderManger::RenderInternal()
 
 void RenderManger::Draw()
 {
-    IGraphicsHardwareInterface* const ghi = CGameEngine::Instance()->GetGHI();
+    IGraphicsHardwareInterface* const ghi = GameEngine::Instance()->GetGHI();
     ghi->Clear(true, true, true);
     
-    if (EditorModule* const editor = CGameEngine::Instance()->GetModuleManager()->Get<EditorModule>())
+    if (EditorModule* const editor = GameEngine::Instance()->GetModuleManager()->Get<EditorModule>())
     {
         editor->Draw();
     }
 
-    CGameEngine::Instance()->GetMainWindow()->Swap();
+    GameEngine::Instance()->GetMainWindow()->Swap();
 }
 
 //     for (IRenderer* const renderer : mRenderers)
