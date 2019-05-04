@@ -10,7 +10,7 @@
 
 WorldEditorView::WorldEditorView()
 {
-    worldRenderer = GameEngine::Instance()->GetRenderManager()->CreateRenderer<WorldRenderer>();
+    mWorldRenderer = GameEngine::Instance()->GetRenderManager()->CreateRenderer<WorldRenderer>();
 
     mViewportName = "Viewport";
     mViewportName += "##";
@@ -19,7 +19,7 @@ WorldEditorView::WorldEditorView()
 
 WorldEditorView::~WorldEditorView()
 {
-    GameEngine::Instance()->GetRenderManager()->DeleteRenderer(worldRenderer);
+    GameEngine::Instance()->GetRenderManager()->DeleteRenderer(mWorldRenderer);
 }
 
 void WorldEditorView::Tick(float deltaTime)
@@ -34,16 +34,22 @@ void WorldEditorView::Tick(float deltaTime)
     {
         ImVec2 contentSize = ImGui::GetContentRegionAvail();
 
-        worldRenderer->mMutex.lock();
-        OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(worldRenderer->GetRenderOutput());
-        ImGui::Image((void*)(tex->GetHandle()), ImVec2(contentSize.x, contentSize.y - 17), ImVec2(1, 1), ImVec2(0, 0));
-        worldRenderer->mMutex.unlock();
+        mWorldRenderer->mMutex.lock();
 
-        ImGui::Text(" Render: %.2fms", worldRenderer->GetRenderTime());
+        ImTextureID texID = 0;
+        if (GHITexture* texture = mWorldRenderer->GetRenderOutput())
+        {
+            texID = texture->GetNativePtr();
+        }
+
+        ImGui::Image(texID, ImVec2(contentSize.x, contentSize.y - 17), ImVec2(1, 1), ImVec2(0, 0));
+        mWorldRenderer->mMutex.unlock();
+
+        ImGui::Text(" Render: %.2fms", mWorldRenderer->GetRenderTime());
     }
 
     ImGui::End();
-
+    
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
 

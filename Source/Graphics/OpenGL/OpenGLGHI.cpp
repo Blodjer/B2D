@@ -90,6 +90,7 @@ GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 1920, 1080, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
     glBindTexture(GL_TEXTURE_2D, 0);
 
     GLuint fb;
@@ -105,18 +106,23 @@ GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
 
     B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     return new OpenGLRenderTarget(fb, renderTexture);
 }
 
-void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget*& renderTarget)
+void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeTexture)
 {
     OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
     GLuint handle = rt->GetHandle();
 
     glDeleteFramebuffers(1, &handle);
 
-    GHITexture* texture = const_cast<GHITexture*>(renderTarget->GetTexture());
-    FreeTexture(texture);
+    if (freeTexture)
+    {
+        GHITexture* texture = const_cast<GHITexture*>(renderTarget->GetTexture());
+        FreeTexture(texture);
+    }
 
     delete rt;
     renderTarget = nullptr;

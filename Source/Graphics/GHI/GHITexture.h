@@ -3,5 +3,6 @@
 
 class GHITexture : public IGraphicsResource
 {
-
+public:
+    virtual void* GetNativePtr() = 0;
 };

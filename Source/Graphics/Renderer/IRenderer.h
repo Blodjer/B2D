@@ -6,10 +6,12 @@ class GHITexture;
 class IRenderer
 {
 public:
-    IRenderer();
-    virtual ~IRenderer();
+    IRenderer() = default;
+    virtual ~IRenderer() = default;
 
+    virtual void Init();
     void Render();
+    virtual void Shutdown();
 
     GHITexture* GetRenderOutput();
     float GetRenderTime() const { return mRenderTime; }

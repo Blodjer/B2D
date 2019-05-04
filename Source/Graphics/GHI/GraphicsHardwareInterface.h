@@ -35,7 +35,7 @@ public:
 
     virtual GHIRenderTarget* CreateRenderTarget() = 0;
     virtual GHIRenderTarget* CreateRenderTarget(GHITexture* texture) = 0;
-    virtual void DeleteRenderTarget(GHIRenderTarget*& renderTarget) = 0;
+    virtual void DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeTexture) = 0;
     virtual void BindRenderTarget(GHIRenderTarget* renderTarget) = 0;
     virtual void BindRenderTargetAndClear(GHIRenderTarget* renderTarget) = 0;
 

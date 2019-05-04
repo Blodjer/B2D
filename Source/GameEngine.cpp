@@ -30,10 +30,12 @@ GameEngine::~GameEngine()
     // TODO: replace by base (init, shutdown,...)
 
     mPA->Shutdown();
-    delete mPA;
-
     mGHI->Shutdown();
+    mRenderManager->Shutdown();
+
+    delete mPA;
     delete mGHI;
+    delete mRenderManager;
 }
 
 void GameEngine::Create(ApplicationConfig const& config)
@@ -67,7 +69,7 @@ void GameEngine::Init()
     B2D_ASSERT(mGHI->Init());
 
     mRenderManager = new RenderManger();
-    mRenderManager->Init(false);
+    mRenderManager->Init(true);
 
 #if 1 // Load Editor
     mModuleManager.Load<EditorModule>();
@@ -133,9 +135,9 @@ void GameEngine::Run()
         mGameInstance->Tick(deltaTime);
 		duration ChronoTick = clock::now() - start;
 
-        mModuleManager.ForwardTick(deltaTime);
+        mRenderManager->Tick(deltaTime);
 
-        mRenderManager->Render();
+        mModuleManager.ForwardTick(deltaTime);
 
         mModuleManager.ForwardEndFrame();
         

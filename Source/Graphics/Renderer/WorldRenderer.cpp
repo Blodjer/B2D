@@ -10,14 +10,23 @@
 #include "Platform/GenericWindow.h"
 #include "../GHI/GraphicsHardwareInterface.h"
 
-WorldRenderer::WorldRenderer()
-    : mRenderedFrame(0)
+void WorldRenderer::Init()
 {
+    IRenderer::Init();
+}
 
+void WorldRenderer::Shutdown()
+{
+    IRenderer::Shutdown();
 }
 
 bool WorldRenderer::ShouldRenderNextFrame()
 {
+    if (!GameEngine::Instance()->GetGameInstance() || !GameEngine::Instance()->GetGameInstance()->GetWorld())
+    {
+        return false;
+    }
+
     mWRDI = GameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
     return mWRDI->GetPreparedFrame() != mRenderedFrame;
 }

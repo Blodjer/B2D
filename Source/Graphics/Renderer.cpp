@@ -61,32 +61,39 @@ void CRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const tar
 
     RenderObjectBuffer<QuadRenderObject> const& quadRenderObjectBuffer = wrdi->GetQuadBuffer();
 
+    Material const* lastMaterial = nullptr;
     for (uint32 i = 0; i < quadRenderObjectBuffer.Size(); ++i)
     {
         QuadRenderObject const& ro = quadRenderObjectBuffer[i];
 
         Material const* const material = ro.mMaterial;
-        ghi->BindMaterial(material->GetGHIMaterial());
+        OpenGLMaterial const* mat = static_cast<OpenGLMaterial*>(material->GetGHIMaterial());
 
-        for (uint32 i = 0; i < ro.mMaterial->GetTextures().size(); ++i)
+        if (lastMaterial != material)
         {
-            TextureRef const textureResource = ro.mMaterial->GetTextures()[i];
+            ghi->BindMaterial(material->GetGHIMaterial());
 
-            glActiveTexture(GL_TEXTURE0 + i);
-
-            if (!textureResource.IsValid())
+            for (uint32 i = 0; i < material->GetTextures().size(); ++i)
             {
-                glBindTexture(GL_TEXTURE_2D, 0);
-                continue;
+                TextureRef const textureResource = material->GetTextures()[i];
+
+                glActiveTexture(GL_TEXTURE0 + i);
+
+                if (!textureResource.IsValid())
+                {
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                    continue;
+                }
+
+                ghi->BindTexture(textureResource->GetGHITexture());
             }
 
-            ghi->BindTexture(textureResource->GetGHITexture());
+
+            GLuint ul1 = glGetUniformLocation(mat->GetHandle(), "viewprojection");
+            glUniformMatrix4fv(ul1, 1, GL_FALSE, viewProjectionMatrix.GetPtr());
+
+            lastMaterial = material;
         }
-
-        OpenGLMaterial* mat = static_cast<OpenGLMaterial*>(material->GetGHIMaterial());
-
-        GLuint ul1 = glGetUniformLocation(mat->GetHandle(), "viewprojection");
-        glUniformMatrix4fv(ul1, 1, GL_FALSE, viewProjectionMatrix.GetPtr());
 
         GLuint ul2 = glGetUniformLocation(mat->GetHandle(), "model");
         glUniformMatrix4fv(ul2, 1, GL_FALSE, ro.mMatrix.GetPtr());

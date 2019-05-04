@@ -62,7 +62,7 @@ void CGameInstance::RemoveLocalPlayer(uint32 const playerId)
     {
         if ((*it)->GetId() == playerId)
         {
-            std::iter_swap(it, mLocalPlayers.end());
+            std::iter_swap(it, mLocalPlayers.end() - 1);
             mLocalPlayers.pop_back();
         }
     }

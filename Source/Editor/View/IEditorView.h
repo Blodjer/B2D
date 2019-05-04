@@ -8,7 +8,7 @@ class IEditorView
 
 protected:
     IEditorView() = default;
-    ~IEditorView() = default;
+    virtual ~IEditorView() = default;
 
     virtual void Tick(float deltaTime) = 0;
 

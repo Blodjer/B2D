@@ -1,6 +1,5 @@
 #pragma once
 #include "Game/Core/System.h"
-#include "Core/Thread.h"
 
 class RenderSystem : public System
 {

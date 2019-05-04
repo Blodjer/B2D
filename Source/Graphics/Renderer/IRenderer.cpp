@@ -9,41 +9,24 @@
 #include "Graphics/OpenGL/OpenGLRenderTarget.h"
 #include "imgui/imgui.h"
 
-IRenderer::IRenderer()
-{
-     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-     mRenderTexture1 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
-     mRenderTexture2 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
-}
-
-IRenderer::~IRenderer()
+void IRenderer::Init()
 {
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-    ghi->FreeTexture(mRenderTexture1);
-    ghi->FreeTexture(mRenderTexture2);
+    mRenderTexture1 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
+    mRenderTexture2 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
+    mRenderTarget1 = ghi->CreateRenderTarget(mRenderTexture1);
+    mRenderTarget2 = ghi->CreateRenderTarget(mRenderTexture2);
+}
+
+void IRenderer::Shutdown()
+{
+    IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
+    ghi->DeleteRenderTarget(mRenderTarget1, true);
+    ghi->DeleteRenderTarget(mRenderTarget2, true);
 }
 
 void IRenderer::Render()
 {
-    static bool b = true;
-    static bool b2 = true;
-    if (b)
-    {
-        IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-        mRenderTarget1 = ghi->CreateRenderTarget(mRenderTexture1);
-        mRenderTarget2 = ghi->CreateRenderTarget(mRenderTexture2);
-
-        b = false;
-    }
-    else if (b2)
-    {
-        IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-        mRenderTarget1 = ghi->CreateRenderTarget(mRenderTexture1);
-        mRenderTarget2 = ghi->CreateRenderTarget(mRenderTexture2);
-
-        b2 = false;
-    }
-
     if (ShouldRenderNextFrame())
     {
         using duration = std::chrono::duration<float, std::milli>;
@@ -70,6 +53,8 @@ void IRenderer::PreRender()
 void IRenderer::PostRender()
 {
     glFinish();
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     mMutex.lock();
     mRenderToSwtich.store(!mRenderToSwtich);
     mMutex.unlock();

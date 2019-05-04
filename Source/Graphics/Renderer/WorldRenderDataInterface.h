@@ -24,6 +24,8 @@ public:
     FORCEINLINE void StartRead() { mMutex.lock_shared(); }
     FORCEINLINE void StopRead() { mMutex.unlock_shared(); }
 
+    // TODO: Add ref count and only write if ref count > 0
+
 private:
     RenderObjectBuffer<QuadRenderObject> mQuadBuffer;
 
