@@ -21,15 +21,16 @@ public:
 
     virtual void Clear(bool color, bool depth, bool stencil) = 0;
 
-    virtual GHITexture* CreateTexture(void* data, uint32 width, uint32 height, uint8 components) = 0;
+    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) = 0;
     virtual void BindTexture(GHITexture const* texture) = 0;
     virtual void FreeTexture(GHITexture*& texture) = 0;
 
-    virtual GHIShader* CreateVertexShader(char* code) = 0;
-    virtual GHIShader* CreatePixelShader(char* code) = 0;
+    virtual GHIShader* CreateVertexShader(char const* code) = 0;
+    virtual GHIShader* CreatePixelShader(char const* code) = 0;
     virtual void DeleteShader(GHIShader*& shader) = 0;
 
     virtual GHIMaterial* CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader) = 0;
+    virtual void FreeMaterial(GHIMaterial*& material) = 0;
     virtual void BindMaterial(GHIMaterial* material) = 0;
 
     virtual GHIRenderTarget* CreateRenderTarget() = 0;

@@ -13,6 +13,7 @@
 
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
+#include "Editor/View/WorldEditorView.h"
 
 GameEngine* GameEngine::sInstance = nullptr;
 
@@ -123,6 +124,9 @@ void GameEngine::Run()
 
         if (Input::IsKey(EKey::ESCAPE, EKeyEvent::Press))
             GameEngine::Instance()->RequestShutdown();
+
+        if (Input::IsKey(EKey::V, EKeyEvent::Press))
+            GetModuleManager()->Get<EditorModule>()->CreateEditorView<WorldEditorView>();
 
 		// Tick
         std::chrono::time_point<clock> start = clock::now();

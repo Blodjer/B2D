@@ -1,7 +1,7 @@
 #include "B2D_pch.h"
 #include "EditorModule.h"
 
-#include "EditorViewInterface.h"
+#include "View/IEditorView.h"
 #include "GameEngine.h"
 #include "Platform/GenericWindow.h"
 #include "View/WorldEditorView.h"
@@ -72,6 +72,8 @@ void EditorModule::Tick(float deltaTime)
     {
         editorView->Tick(deltaTime);
     }
+
+    ClosePendingEditorViews();
 }
 
 void EditorModule::EndFrame()
@@ -93,15 +95,26 @@ void EditorModule::Draw()
     }
 }
 
-void EditorModule::CloseEditorView(IEditorView*& editorView)
+void EditorModule::CloseEditorView(IEditorView* editorView)
 {
-    auto it = std::find(mEditorViews.begin(), mEditorViews.end(), editorView);
-    if (it != mEditorViews.end())
-    {
-        std::iter_swap(it, mEditorViews.end());
-        mEditorViews.pop_back();
-    }
-
-    delete editorView;
+    mEditorToRemove.emplace(editorView);
     editorView = nullptr;
+}
+
+void EditorModule::ClosePendingEditorViews()
+{
+    while (!mEditorToRemove.empty())
+    {
+        IEditorView* editor = mEditorToRemove.front();
+        mEditorToRemove.pop();
+
+        auto it = std::find(mEditorViews.begin(), mEditorViews.end(), editor);
+        if (it != mEditorViews.end())
+        {
+            std::iter_swap(it, mEditorViews.end() - 1);
+            mEditorViews.pop_back();
+        }
+
+        delete editor;
+    }
 }

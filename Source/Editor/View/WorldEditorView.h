@@ -1,5 +1,5 @@
 #pragma once
-#include "Editor/EditorViewInterface.h"
+#include "Editor/View/IEditorView.h"
 
 class WorldRenderer;
 
@@ -13,7 +13,8 @@ protected:
     virtual void Tick(float deltaTime) override;
 
 private:
-    WorldRenderer* worldRenderer;
-    bool mOpen;
+    WorldRenderer* worldRenderer = nullptr;
+    bool mOpen = true;
+    std::string mViewportName;
 };
 

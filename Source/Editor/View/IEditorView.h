@@ -11,5 +11,7 @@ protected:
     ~IEditorView() = default;
 
     virtual void Tick(float deltaTime) = 0;
+
+    void Close();
 };
 

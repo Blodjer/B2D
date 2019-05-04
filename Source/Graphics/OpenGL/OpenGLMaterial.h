@@ -1,14 +1,11 @@
 #pragma once
 #include "Graphics/GHI/GHIMaterial.h"
-#include "GL/glew.h"
-
-class OpenGLShader;
+#include <GL/glew.h>
 
 class OpenGLMaterial : public GHIMaterial
 {
 public:
-    OpenGLMaterial(OpenGLShader* vertextShader, OpenGLShader* pixelShader);
-    ~OpenGLMaterial();
+    OpenGLMaterial(GLuint handle);
 
     GLuint GetHandle() const { return mHandle; }
 

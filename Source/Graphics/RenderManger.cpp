@@ -7,7 +7,7 @@
 #include "GHI/GraphicsHardwareInterface.h"
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformInterface.h"
-#include "RendererInterface.h"
+#include "Graphics/Renderer/IRenderer.h"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -120,38 +120,3 @@ void RenderManger::Draw()
 
     GameEngine::Instance()->GetMainWindow()->Swap();
 }
-
-//     for (IRenderer* const renderer : mRenderers)
-//     {
-//         ghi->BindMaterial(rtMat->GetGHIMaterial());
-//         
-//         //ghi->BindTexture(renderTarget->GetTexture());
-//         renderer->mMutex.lock();
-//         OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(renderer->GetRenderOutput());
-//         glActiveTexture(GL_TEXTURE0 + 0);
-//         glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
-// 
-//         glBindVertexArray(VAO);
-// 
-//         CViewport* viewport = CGameEngine::Instance()->GetMainWindow()->GetViewport();
-// 
-//         glViewport(0, 0, viewport->GetWidth(), viewport->GetHeight());
-// 
-//         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-// 
-// //         uint32 w = viewport->GetWidth() * 0.5f;
-// //         uint32 h = viewport->GetHeight() * 0.5f;
-//         
-// //         glViewport(0, 0, w, h);
-// //         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-// //         
-// //         glViewport(w, 0, w, h);
-// //         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-// //         
-// //         glViewport(0, h, w, h);
-// //         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-// //         
-// //         glViewport(w, h, w, h);
-// //         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-//         renderer->mMutex.unlock();
-//     }

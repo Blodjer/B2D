@@ -6,11 +6,15 @@
 #include "Graphics/OpenGL/OpenGLTexture.h"
 #include "Graphics/Renderer/WorldRenderer.h"
 #include "Graphics/RenderManger.h"
+#include "../EditorModule.h"
 
 WorldEditorView::WorldEditorView()
-    : mOpen(true)
 {
     worldRenderer = GameEngine::Instance()->GetRenderManager()->CreateRenderer<WorldRenderer>();
+
+    mViewportName = "Viewport";
+    mViewportName += "##";
+    mViewportName += std::to_string(reinterpret_cast<uintptr_t>(this));
 }
 
 WorldEditorView::~WorldEditorView()
@@ -20,11 +24,13 @@ WorldEditorView::~WorldEditorView()
 
 void WorldEditorView::Tick(float deltaTime)
 {
-    ImGui::SetNextWindowSizeConstraints(ImVec2(200, 120), ImVec2(9999, 9999));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 
-    if (ImGui::Begin("Viewport", &mOpen, ImGuiWindowFlags_NoCollapse))
+    ImGui::SetNextWindowSizeConstraints(ImVec2(200, 120), ImVec2(9999, 9999));
+    ImGui::SetNextWindowSize(ImVec2(800, 500), ImGuiCond_Once);
+
+    if (ImGui::Begin(mViewportName.c_str(), &mOpen, ImGuiWindowFlags_NoCollapse))
     {
         ImVec2 contentSize = ImGui::GetContentRegionAvail();
 
@@ -33,16 +39,16 @@ void WorldEditorView::Tick(float deltaTime)
         ImGui::Image((void*)(tex->GetHandle()), ImVec2(contentSize.x, contentSize.y - 17), ImVec2(1, 1), ImVec2(0, 0));
         worldRenderer->mMutex.unlock();
 
-        float renderTime = worldRenderer->GetRenderTime();
-        ImGui::Text(" Fps: %d | Delta: %.2fms", static_cast<uint32>(1000 / renderTime), renderTime);
-    }
-    else
-    {
-        // TODO: Destroy this
+        ImGui::Text(" Render: %.2fms", worldRenderer->GetRenderTime());
     }
 
     ImGui::End();
 
     ImGui::PopStyleVar();
     ImGui::PopStyleVar();
+
+    if (!mOpen)
+    {
+        Close();
+    }
 }

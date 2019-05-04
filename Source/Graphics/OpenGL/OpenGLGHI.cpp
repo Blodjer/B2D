@@ -5,8 +5,6 @@
 #include "OpenGLShader.h"
 #include "OpenGLTexture.h"
 
-#include <GL/glew.h>
-
 bool OpenGLGHI::Init()
 {
     glewInit();
@@ -61,7 +59,7 @@ void OpenGLGHI::Clear(bool color, bool depth, bool stencil)
     GLbitfield clearFlags = 0;
     if (color)
     {
-        glClearColor(0.7f, 0.5, 0.7f, 1);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
         clearFlags |= GL_COLOR_BUFFER_BIT;
     }
     if (depth)
@@ -138,16 +136,40 @@ void OpenGLGHI::BindRenderTargetAndClear(GHIRenderTarget* renderTarget)
 {
     BindRenderTarget(renderTarget);
 
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClearColor(0.5f, 0.1f, 0.5f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-GHITexture* OpenGLGHI::CreateTexture(void* data, uint32 width, uint32 height, uint8 components)
+GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 height, uint8 components)
 {
-    OpenGLTexture* texture = new OpenGLTexture();
-    texture->Create(data, width, height, components);
+    GLenum format;
+    switch (components)
+    {
+        case 1:
+            format = GL_RED;
+        case 3:
+            format = GL_RGB;
+            break;
+        case 4:
+            format = GL_RGBA;
+            break;
+        default:
+            B2D_CORE_ERROR("Cannot create texture with {} components", components);
+            return new OpenGLTexture(0);
+    }
 
-    return texture;
+    GLuint handle;
+    glGenTextures(1, &handle);
+    glBindTexture(GL_TEXTURE_2D, handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    B2D_ASSERT(handle != GL_INVALID_VALUE);
+
+    return new OpenGLTexture(handle);
 }
 
 void OpenGLGHI::BindTexture(GHITexture const* texture)
@@ -158,38 +180,94 @@ void OpenGLGHI::BindTexture(GHITexture const* texture)
 
 void OpenGLGHI::FreeTexture(GHITexture*& texture)
 {
-    texture->Free();
+    OpenGLTexture const* tex = static_cast<OpenGLTexture*>(texture);
+    GLuint handle = tex->GetHandle();
+    glDeleteTextures(1, &handle);
+
     delete texture;
     texture = nullptr;
 }
 
-GHIShader* OpenGLGHI::CreatePixelShader(char* code)
+bool OpenGLGHI::CompileShader(char const* code, GLuint type, GLuint& outHandle)
 {
-    OpenGLShader* shader = new OpenGLShader();
-    shader->Create(code, GL_FRAGMENT_SHADER);
+    GLuint handle = glCreateShader(type);
 
-    return shader;
+    glShaderSource(handle, 1, &code, nullptr);
+    glCompileShader(handle);
+
+    int success;
+    glGetShaderiv(handle, GL_COMPILE_STATUS, &success);
+    if (success == GL_FALSE)
+    {
+        int messageLength;
+        glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &messageLength);
+
+        char* message = static_cast<char*>(alloca(messageLength * sizeof(char)));
+        glGetShaderInfoLog(handle, 512, nullptr, message);
+
+        glDeleteShader(handle);
+
+        B2D_CORE_ERROR("Shader Compile Error: {0}", message);
+        return false;
+    }
+
+    outHandle = handle;
+    return true;
+}
+
+GHIShader* OpenGLGHI::CreateShader(char const* code, GLuint type)
+{
+    GLuint handle = 0;
+    CompileShader(code, type, handle);
+    return new OpenGLShader(handle);
+}
+
+GHIShader* OpenGLGHI::CreatePixelShader(char const* code)
+{
+    return CreateShader(code, GL_FRAGMENT_SHADER);
+}
+
+GHIShader* OpenGLGHI::CreateVertexShader(char const* code)
+{
+    return CreateShader(code, GL_VERTEX_SHADER);
 }
 
 void OpenGLGHI::DeleteShader(GHIShader*& shader)
 {
     OpenGLShader* sh = static_cast<OpenGLShader*>(shader);
-    sh->Delete();
+    glDeleteShader(sh->GetHandle());
+
     delete shader;
     shader = nullptr;
 }
 
-GHIShader* OpenGLGHI::CreateVertexShader(char* code)
-{
-    OpenGLShader* shader = new OpenGLShader();
-    shader->Create(code, GL_VERTEX_SHADER);
-
-    return shader;
-}
-
 GHIMaterial* OpenGLGHI::CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader)
 {
-    return new OpenGLMaterial(static_cast<OpenGLShader*>(vertexShader), static_cast<OpenGLShader*>(pixelShader));
+    OpenGLShader* vs = static_cast<OpenGLShader*>(vertexShader);
+    OpenGLShader* ps = static_cast<OpenGLShader*>(pixelShader);
+
+    GLuint handle = glCreateProgram();
+
+    glAttachShader(handle, vs->GetHandle());
+    glAttachShader(handle, ps->GetHandle());
+    glLinkProgram(handle);
+    glValidateProgram(handle);
+
+    glDetachShader(handle, vs->GetHandle());
+    glDetachShader(handle, ps->GetHandle());
+
+    return new OpenGLMaterial(handle); 
+}
+
+
+void OpenGLGHI::FreeMaterial(GHIMaterial*& material)
+{
+    OpenGLMaterial* m = static_cast<OpenGLMaterial*>(material);
+
+    glDeleteProgram(m->GetHandle());
+
+    delete material;
+    material = nullptr;
 }
 
 void OpenGLGHI::BindMaterial(GHIMaterial* material)

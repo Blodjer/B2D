@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Graphics/RendererInterface.h"
+#include "Graphics/Renderer/IRenderer.h"
 
 #include <atomic>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RendererInterface.h"
+#include "Graphics/Renderer/IRenderer.h"
 
 class GenericWindow;
 class GHIRenderTarget;

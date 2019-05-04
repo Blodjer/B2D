@@ -1,6 +1,7 @@
 #pragma once
+#include "IGraphicsResource.h"
 
-class GHIMaterial
+class GHIMaterial : public IGraphicsResource
 {
 
 };

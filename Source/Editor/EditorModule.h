@@ -29,10 +29,14 @@ public:
         return editorView;
     }
 
-    void CloseEditorView(IEditorView*& editorView);
+    void CloseEditorView(IEditorView* editorView);
+
+private:
+    void ClosePendingEditorViews();
 
 private:
     std::vector<IEditorView*> mEditorViews;
+    std::queue<IEditorView*> mEditorToRemove;
 
 };
 

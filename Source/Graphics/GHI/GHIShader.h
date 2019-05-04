@@ -1,14 +1,7 @@
 #pragma once
+#include "IGraphicsResource.h"
 
-class GHIShader
+class GHIShader : public IGraphicsResource
 {
-protected:
-    GHIShader() = default;
 
-public:
-    virtual ~GHIShader() = default;
-
-private:
-    GHIShader(GHIShader const&) = delete;
-    GHIShader& operator=(GHIShader const&) = delete;
 };

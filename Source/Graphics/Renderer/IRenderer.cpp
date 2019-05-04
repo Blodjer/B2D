@@ -1,12 +1,12 @@
 #include "B2D_pch.h"
-#include "RendererInterface.h"
+#include "IRenderer.h"
 
 #include "GameEngine.h"
-#include "GHI/GraphicsHardwareInterface.h"
+#include "Graphics/GHI/GraphicsHardwareInterface.h"
 
 #include <GL/glew.h>
-#include "OpenGL/OpenGLTexture.h"
-#include "OpenGL/OpenGLRenderTarget.h"
+#include "Graphics/OpenGL/OpenGLTexture.h"
+#include "Graphics/OpenGL/OpenGLRenderTarget.h"
 #include "imgui/imgui.h"
 
 IRenderer::IRenderer()

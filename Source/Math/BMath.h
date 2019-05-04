@@ -27,8 +27,10 @@ public:
 	FORCEINLINE static float Cos(float value) { return std::cos(value); }
 	FORCEINLINE static float Tan(float value) { return std::tan(value); }
 
+    FORCEINLINE static float Random() { return static_cast<float>(rand() / static_cast<float>(RAND_MAX)); }
+
 	template<typename T>
-	FORCEINLINE static T RandomRange(T min, T max) { return static_cast<T>(min + (max - min) * (rand() / static_cast<float>(RAND_MAX))); }
+	FORCEINLINE static T RandomRange(T min, T max) { return static_cast<T>(min + (max - min) * Random()); }
 
 	template<typename T>
 	FORCEINLINE static float Lerp(T a, T b, T alpha) { return (static_cast<T>(1) - alpha) * a + alpha * b; }

@@ -1,6 +1,8 @@
 #pragma once
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
 
+#include <GL/glew.h>
+
 class OpenGLGHI : public IGraphicsHardwareInterface
 {
 public:
@@ -9,16 +11,29 @@ public:
 
     virtual void Clear(bool color, bool depth, bool stencil) override;
 
-    virtual GHITexture* CreateTexture(void* data, uint32 width, uint32 height, uint8 components) override;
+    // Texture
+
+    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) override;
     virtual void BindTexture(GHITexture const* texture) override;
     virtual void FreeTexture(GHITexture*& texture) override;
 
-    virtual GHIShader* CreateVertexShader(char* code) override;
-    virtual GHIShader* CreatePixelShader(char* code) override;
+    // Shader
+
+    bool CompileShader(char const* code, GLuint type, GLuint& outHandle);
+    
+    GHIShader* CreateShader(char const* code, GLuint type);
+    virtual GHIShader* CreateVertexShader(char const* code) override;
+    virtual GHIShader* CreatePixelShader(char const* code) override;
+
     virtual void DeleteShader(GHIShader*& shader) override;
 
+    // Material
+
     virtual GHIMaterial* CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader) override;
+    virtual void FreeMaterial(GHIMaterial*& material) override;
     virtual void BindMaterial(GHIMaterial* material) override;
+
+    // RenderTarget
 
     virtual GHIRenderTarget* CreateRenderTarget() override;
     virtual GHIRenderTarget* CreateRenderTarget(GHITexture* texture) override;
