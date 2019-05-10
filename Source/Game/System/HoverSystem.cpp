@@ -4,10 +4,6 @@
 #include "Game/Component/HoverComponent.h"
 #include "Game/Component/TransformComponent.h"
 
-HoverSystem::HoverSystem()
-{
-}
-
 void HoverSystem::Update(float deltaTime)
 {
     static float f = 0;

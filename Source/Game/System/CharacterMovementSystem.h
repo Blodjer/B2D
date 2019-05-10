@@ -1,7 +1,13 @@
 #pragma once
 #include "Game/Core/System.h"
 
-class CharacterMovementSystem : public System
+#include "Game/Component/CharacterMovementComponent.h"
+#include "Game/Component/TransformComponent.h"
+
+class CharacterMovementSystem : public System/*<
+    Write<CharacterMovementComponent>,
+    Write<TransformComponent>
+>*/
 {
     DECLARE_SYSTEM(CharacterMovementSystem);
 

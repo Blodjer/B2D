@@ -10,6 +10,7 @@
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformApplication.h"
 #include "Platform/PlatformInterface.h"
+#include "Core/Profiler.h"
 
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
@@ -89,8 +90,8 @@ void GameEngine::Shutdown()
 
 void GameEngine::Run()
 {
-	using duration = std::chrono::duration<double, std::milli>;
-	using clock = std::chrono::high_resolution_clock;
+	//using duration = std::chrono::duration<double, std::milli>;
+	//using clock = std::chrono::high_resolution_clock;
 
 	uint32 frames = 0;
 	uint32 fps = 0;
@@ -99,7 +100,7 @@ void GameEngine::Run()
 	double nextSecond = glfwGetTime() + 1;
 	while (!GetMainWindow()->ShouldClose())
 	{
-		const double now = glfwGetTime();
+        const double now = glfwGetTime();
 		const float deltaTime = static_cast<float>(now - lastTick);
 		lastTick = now;
 
@@ -114,7 +115,7 @@ void GameEngine::Run()
         mPA->PollEvents();
 
         mModuleManager.ForwardBeginFrame();
-        
+
         static bool p_open = true;
         ImGui::SetNextWindowBgAlpha(0.35f);
         if (ImGui::Begin("Example: Simple overlay", &p_open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
@@ -129,11 +130,16 @@ void GameEngine::Run()
 
         if (Input::IsKey(EKey::V, EKeyEvent::Press))
             GetModuleManager()->Get<EditorModule>()->CreateEditorView<WorldEditorView>();
+        
+        static bool pause = false;
+        if (Input::IsKey(EKey::P, EKeyEvent::Press))
+            pause = !pause;
 
 		// Tick
-        std::chrono::time_point<clock> start = clock::now();
-        mGameInstance->Tick(deltaTime);
-		duration ChronoTick = clock::now() - start;
+        if (!pause || Input::IsKey(EKey::O, EKeyEvent::Press))
+        {
+            mGameInstance->Tick(deltaTime);
+        }
 
         mRenderManager->Tick(deltaTime);
 

@@ -78,29 +78,35 @@ void RenderThread::Run()
     {
         mMutex.lock();
 
-        for (IRenderer* renderer : mRenderersToRemove)
+        if (!mRenderersToRemove.empty())
         {
-            renderer->Shutdown();
-
-            auto it = std::find(mRenderers.begin(), mRenderers.end(), renderer);
-            if (it != mRenderers.end())
+            for (IRenderer* renderer : mRenderersToRemove)
             {
-                std::iter_swap(it, mRenderers.end() - 1);
-                mRenderers.pop_back();
+                renderer->Shutdown();
+
+                auto it = std::find(mRenderers.begin(), mRenderers.end(), renderer);
+                if (it != mRenderers.end())
+                {
+                    std::iter_swap(it, mRenderers.end() - 1);
+                    mRenderers.pop_back();
+                }
+
+                delete renderer;
             }
-
-            delete renderer;
+            mRenderersToRemove.clear();
+            mRenderersToRemove.resize(0);
         }
-        mRenderersToRemove.clear();
-        mRenderersToRemove.resize(0);
 
-        for (IRenderer* const renderer : mRenderersToAdd)
+        if (!mRenderersToAdd.empty())
         {
-            mRenderers.emplace_back(renderer);
-            renderer->Init();
+            for (IRenderer* const renderer : mRenderersToAdd)
+            {
+                mRenderers.emplace_back(renderer);
+                renderer->Init();
+            }
+            mRenderersToAdd.clear();
+            mRenderersToAdd.resize(0);
         }
-        mRenderersToAdd.clear();
-        mRenderersToAdd.resize(0);
 
         mMutex.unlock();
 

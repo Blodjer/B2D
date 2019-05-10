@@ -4,6 +4,7 @@
 #include "View/IEditorView.h"
 #include "GameEngine.h"
 #include "Platform/GenericWindow.h"
+#include "View/GameSystemProfilerView.h"
 #include "View/WorldEditorView.h"
 
 #include <GLFW/glfw3.h>
@@ -45,6 +46,7 @@ void EditorModule::Init()
 void EditorModule::InitDefaultEditorViews()
 {
     CreateEditorView<WorldEditorView>();
+    CreateEditorView<GameSystemProfilerView>();
 }
 
 void EditorModule::Shutdown()

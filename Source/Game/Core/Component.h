@@ -5,8 +5,11 @@ class World;
 class Entity;
 
 #define DECLARE_COMPONENT(name, id) \
+public: \
     static constexpr uint16 MASK = UMath::Pow2(id); \
-    virtual uint16 GET_MASK() const override { return MASK; }
+protected: \
+    virtual uint16 GET_MASK() const override { return MASK; } \
+public:
 
 struct Component
 {
@@ -14,11 +17,12 @@ public:
     Component() = default;
     virtual ~Component() = default;
 
-    Entity const* owner;
-
+protected:
     virtual uint16 GET_MASK() const = 0;
 
 public:
+    Entity const* owner;
+
     template<class C>
     C& Sibling() const
     {

@@ -17,3 +17,5 @@
 #include "Game/Core/Entity.h"
 #include "Input/InputDeviceID.h"
 #include "Input/InputTypes.h"
+
+#include "Core/Profiler.h"

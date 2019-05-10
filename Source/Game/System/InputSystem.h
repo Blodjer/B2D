@@ -1,7 +1,9 @@
 #pragma once
 #include "Game/Core/System.h"
 
-class InputSystem : public System
+class InputSystem : public System/*<
+     Write<InputComponent>
+>*/
 {
     DECLARE_SYSTEM(InputSystem);
 

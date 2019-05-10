@@ -45,7 +45,7 @@ void CGameInstance::Tick(float deltaTime)
         return;
     }
 
-    mWorld->Update(deltaTime);
+    mWorld->Tick(deltaTime);
 }
 
 LocalPlayer* CGameInstance::AddLocalPlayer()

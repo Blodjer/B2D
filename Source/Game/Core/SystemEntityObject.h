@@ -32,10 +32,11 @@ public:
     }
 
     template<typename C>
-    C* AddComponent()
+    C& AddComponent()
     {
-        std::get<C*>(mComponentTuple) = mWorld->AddComponent<C>(GetID());
-        return std::get<C*>(mComponentTuple);
+        C& c = mWorld->AddComponent<C>(GetID());
+        std::get<C*>(mComponentTuple) = &c;
+        return c;
     }
 
     template<typename C>

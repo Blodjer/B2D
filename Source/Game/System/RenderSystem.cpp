@@ -212,6 +212,5 @@ void RenderSystem::Update(float deltaTime)
                 spriteComponent.material
             );
         }
-
     });
 }

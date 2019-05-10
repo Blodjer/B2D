@@ -1,9 +1,6 @@
 #include "B2D_pch.h"
 #include "CharacterMovementSystem.h"
 
-#include "Game/Component/CharacterMovementComponent.h"
-#include "Game/Component/TransformComponent.h"
-
 void CharacterMovementSystem::Update(float deltaTime)
 {
     for (CharacterMovementComponent& movement : ComponentItr<CharacterMovementComponent, TransformComponent>(mWorld))

@@ -9,6 +9,7 @@
 
 World::World(CGameInstance* const owningGameInstance)
     : mOwningGameInstance(owningGameInstance)
+    , mSystemAdmin(this)
 {
     mWorldRenderDataInterface = new WorldRenderDataInterface();
 
@@ -21,10 +22,7 @@ World::~World()
     delete mWorldRenderDataInterface;
 }
 
-void World::Update(float deltaTime)
+void World::Tick(float deltaTime)
 {
-    for (System* const system : mSystems)
-    {
-        system->Update(deltaTime);
-    }
+    mSystemAdmin.Tick(deltaTime);
 }
