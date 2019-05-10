@@ -91,10 +91,19 @@ C& World::AddComponent(EntityID entity, Params... p)
 {
     B2D_STATIC_ASSERT_TYPE(Component, C);
 
+    Entity* realEntity = mEntities[entity];
+    B2D_ASSERT(realEntity);
+
     C& c = GetComponents<C>().emplace_back(C(p...));
-    mEntities[entity]->mComponents.emplace_back(&c);
-    mEntities[entity]->mComponentMask |= C::MASK;
-    c.owner = mEntities[entity];
+    c.owner = realEntity;
+
+    realEntity->mComponents.emplace_back(&c);
+    realEntity->mComponentMask |= C::MASK;
+
+    std::sort(realEntity->mComponents.begin(), realEntity->mComponents.end(), [](Component const* a, Component const* b)
+    {
+        return a->GET_MASK() < b->GET_MASK();
+    });
 
     return c;
 }

@@ -4,14 +4,14 @@
 #include "Game/Component/CharacterMovementComponent.h"
 #include "Game/Component/TransformComponent.h"
 
-class CharacterMovementSystem : public System/*<
+class CharacterMovementSystem : public ISystem<
     Write<CharacterMovementComponent>,
     Write<TransformComponent>
->*/
+>
 {
     DECLARE_SYSTEM(CharacterMovementSystem);
 
-public:
+protected:
     virtual void Update(float deltaTime) override;
 };
 

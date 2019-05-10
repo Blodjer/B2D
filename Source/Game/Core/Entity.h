@@ -13,12 +13,12 @@ public:
 
     bool Has(uint16 const mask) const
     {
-        return (mComponentMask.to_ulong() & mask) == mask;
+        return (mComponentMask & mask) == mask;
     }
 
 public:
     EntityID mID;
     std::vector<Component*> mComponents;
-    std::bitset<16> mComponentMask;
+    uint16 mComponentMask = 0;
 };
 

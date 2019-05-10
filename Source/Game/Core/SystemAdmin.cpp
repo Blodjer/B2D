@@ -79,12 +79,14 @@ struct EC : BASEC
     int electron = 100;
 };
 
-#define FILL(...) \
-    static constexpr uint16 READ_MASK2 = GetAccessMask<__VA_ARGS__>(false); \
-    static constexpr uint16 WRITE_MASK2 = GetAccessMask<__VA_ARGS__>(true);
+class SBaseBase
+{
+    virtual uint16 GetReadMask() const = 0;
+    virtual uint16 GetWriteMask() const = 0;
+};
 
 template<class... D>
-class SBase
+class SBase : public SBaseBase
 {
 protected:
     template<class D>
@@ -115,6 +117,9 @@ public:
 
     TestTuple<D...> currentTupleData;
 
+    virtual uint16 GetReadMask() const override { return READ_MASK; }
+    virtual uint16 GetWriteMask() const override { return WRITE_MASK; }
+
     template<class T>
     T const& GetRead()
     {
@@ -141,67 +146,64 @@ class TestS : public SBase<
     Write<EC>
 >
 {
-    FILL(
-        //Read<TC>,
-        Read<SC>,
-        Write<AC>,
-        Write<EC>
-    )
-
-    bool b;
+    
 };
 
 void SystemAdmin::Tick(float deltaTime)
 {
-     PROFILE_GAME_SYSTEM_NEW_FRAME();
+    PROFILE_GAME_SYSTEM_NEW_FRAME();
 
-     std::bitset<16> read(TestS::READ_MASK);
-     std::bitset<16> write(TestS::WRITE_MASK);
+//      std::bitset<16> read(TestS::READ_MASK);
+//      std::bitset<16> write(TestS::WRITE_MASK);
+// 
+//      std::bitset<16> one(EC::MASK - 1);
+//      one = one & read;
+//      int index = one.count();
+//      
+//      TestS sss;
+//      uint16 ssa = TestS::READ_MASK;
+//      uint16 mm = sss.GetReadMask();
+//      SC const& aas = sss.GetRead<SC>();
+// 
+//      TestTuple<Write<TC>, Read<EC>> testttt;
+// 
+//      std::vector<SBaseBase*> afaof;
+//      afaof.emplace_back(&sss);
+//      for (SBaseBase* s : afaof)
+//      {
+// 
+//      }
 
-     const uint32 nn = std::log(EC::MASK) / std::log(2);
-     std::bitset<16> one(EC::MASK - 1);
-     one = one & read;
+    for (System* const s : mSystems)
+    {
+        PROFILE_GAME_SYSTEM(s->GetName());
+        s->Update(deltaTime);
+    }
 
-     int o = one.to_ulong();
-     int ib = std::log(o) / std::log(2);
-
-     int index = one.count();
-     
-     TestS sss;
-     SC const& aas = sss.GetRead<SC>();
-
-     TestTuple<Write<TC>, Read<EC>> testttt;
-
-//     for (System* const s : mSystems)
+//     static std::vector<std::future<void>> futures;
+//     if (futures.empty())
 //     {
-//         PROFILE_GAME_SYSTEM(s->GetName());
-//         s->Update(deltaTime);
+//         futures.reserve(mSystems.size());
+//         futures.resize(mSystems.size());
 //     }
-
-    static std::vector<std::future<void>> futures;
-    if (futures.empty())
-    {
-        futures.reserve(mSystems.size());
-        futures.resize(mSystems.size());
-    }
-
-    int ii = 0;
-    for (System* s : mSystems)
-    {
-        futures[ii++] = std::async(ii > 3 ? std::launch::async : std::launch::deferred, [s, deltaTime]() {
-            PROFILE_GAME_SYSTEM(s->GetName());
-            s->Update(deltaTime);
-        });
-    }
-
-    int i = 0;
-    for (auto const& f : futures)
-    {
-        f.wait();
-        i++;
-        if (i >= 4)
-            break;
-    }
+// 
+//     int ii = 0;
+//     for (System* s : mSystems)
+//     {
+//         futures[ii++] = std::async(ii > 3 ? std::launch::async : std::launch::deferred, [s, deltaTime]() {
+//             PROFILE_GAME_SYSTEM(s->GetName());
+//             s->Update(deltaTime);
+//         });
+//     }
+// 
+//     int i = 0;
+//     for (auto const& f : futures)
+//     {
+//         f.wait();
+//         i++;
+//         if (i >= 4)
+//             break;
+//     }
 
     PROFILE_GAME_SYSTEM_END_FRAME();
 }

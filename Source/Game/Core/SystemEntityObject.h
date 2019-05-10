@@ -9,7 +9,7 @@ private: \
     DECLARE_SYSTEM(entityname) \
 
 template<typename... Components>
-class SystemEntityObject : public System, public Entity
+class SystemEntityObject : public ISystem<>, public Entity
 {
 public:
     SystemEntityObject(EntityID id) : Entity(id) {};

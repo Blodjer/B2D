@@ -32,78 +32,73 @@ struct Write : AccessSpecefier<T>
     static constexpr bool WRITE = true;
 };
 
-// template<class... TComponents>
-// class System;
-// 
-// template<>
-// class System<>
-// {
-// 
-// };
-
-//template<class T, class... TComponents>
-class System//<T, TComponents...> : System<TComponents...>
+class System
 {
     friend class SystemAdmin;
 
-protected:
-    System() = default;
-
-    virtual void Update(float deltaTime) = 0;
-// 
-// protected:
-//     template<class T>
-//     static constexpr uint16 GetAccessMask(bool forWrite)
-//     {
-//         B2D_STATIC_ASSERT_TYPE(AccessSpecefierBase, T);
-//         B2D_STATIC_ASSERT_TYPE(Component, T::TYPE);
-// 
-//         if (T::WRITE || forWrite == T::WRITE)
-//         {
-//             return T::TYPE::MASK;
-//         }
-// 
-//         return 0;
-//     }
-// 
-//     template<class TComponent1, class TComponent2, class... TComponents>
-//     static constexpr uint16 GetAccessMask(bool forWrite)
-//     {
-//         return GetAccessMask<TComponent1>(forWrite) | GetAccessMask<TComponent2, TComponents...>(forWrite);
-//     }
-// 
-// public:
-//     static constexpr uint16 READ_MASK = GetAccessMask<TComponents...>(false);
-//     static constexpr uint16 WRITE_MASK = GetAccessMask<TComponents...>(true);
-// 
-//     virtual uint16 GetReadMask() const { return READ_MASK; }
-//     virtual uint16 GetWriteMask() const { return WRITE_MASK; }
-
-//     template<class T>
-//     T const& GetRead()
-//     {
-//         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
-//         B2D_STATIC_ASSERT(!(T::MASK & WRITE_MASK), "Type is marked as writable! For optimizations please change the accessor if you only want to read.");
-//         static T af;
-//         return af;
-//     }
-// 
-//     template<class T>
-//     T& GetWrite()
-//     {
-//         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
-//         B2D_STATIC_ASSERT(T::MASK & WRITE_MASK, "Cannot get component as writeable that is marked as read only!");
-//         static T af;
-//         return af;
-//     }
-
 public:
     virtual char const* const GetName() = 0;
+
+    virtual uint16 GetReadMask() const = 0;
+    virtual uint16 GetWriteMask() const = 0;
+
+protected:
+    virtual void Update(float deltaTime) = 0;
 
 protected:
     World* mWorld;
 };
 
+template<class... TComponents>
+class ISystem : public System
+{
+    friend class SystemAdmin;
+
+protected:
+    ISystem() = default;
+
+protected:
+    template<class T = void>
+    static constexpr uint16 GetAccessMask(bool forWrite)
+    {
+        B2D_STATIC_ASSERT_TYPE(AccessSpecefierBase, T);
+        B2D_STATIC_ASSERT_TYPE(Component, T::TYPE);
+
+        if (T::WRITE || forWrite == T::WRITE)
+        {
+            return T::TYPE::MASK;
+        }
+
+        return 0;
+    }
+
+    template<>
+    static constexpr uint16 GetAccessMask<>(bool forWrite) { return 0; }
+
+    template<class T1, class T2, class... TRest>
+    static constexpr uint16 GetAccessMask(bool forWrite)
+    {
+        return GetAccessMask<T1>(forWrite) | GetAccessMask<T2, TRest...>(forWrite);
+    }
+
+public:
+    static constexpr uint16 READ_MASK = GetAccessMask<TComponents...>(false);
+    static constexpr uint16 WRITE_MASK = GetAccessMask<TComponents...>(true);
+
+    virtual uint16 GetReadMask() const override { return READ_MASK; }
+    virtual uint16 GetWriteMask() const override { return WRITE_MASK; }
+};
+
+template<>
+class ISystem<> : public System
+{
+public:
+    static constexpr uint16 READ_MASK = 0;
+    static constexpr uint16 WRITE_MASK = 0;
+
+    virtual uint16 GetReadMask() const override { return 0; }
+    virtual uint16 GetWriteMask() const override { return 0; }
+};
 
 // TODO: Bitwise index calculation
 // vector<Component*> (size 4)

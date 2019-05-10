@@ -8,7 +8,7 @@ void CharacterMovementSystem::Update(float deltaTime)
         TransformComponent& transform = movement.Sibling<TransformComponent>();
 
         if (movement.controlInputVector == TVec3::Zero)
-            return;
+            continue;
 
         transform.position += movement.controlInputVector * deltaTime;
         B2D_CORE_INFO("CharacterMovementSystem {} {}", transform.position.X , transform.position.Z);

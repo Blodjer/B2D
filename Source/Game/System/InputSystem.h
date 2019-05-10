@@ -1,13 +1,14 @@
 #pragma once
 #include "Game/Core/System.h"
+#include "Game/Component/InputComponent.h"
 
-class InputSystem : public System/*<
+class InputSystem : public ISystem<
      Write<InputComponent>
->*/
+>
 {
     DECLARE_SYSTEM(InputSystem);
 
-public:
+protected:
     virtual void Update(float deltaTime) override;
 };
 
