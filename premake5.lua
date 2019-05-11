@@ -32,6 +32,11 @@ end
 		"Win32",
 		"Win64"
 	}
+
+	defines
+	{
+		"_ITERATOR_DEBUG_LEVEL=0"
+	}
 	
 	filter "configurations:Debug"
 		symbols "On"

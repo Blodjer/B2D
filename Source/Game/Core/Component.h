@@ -41,8 +41,8 @@ public:
         return *static_cast<C* const>(c);
     }
 
-    FORCEINLINE static _NODISCARD size_t CountBits(size_t mask) noexcept
-    {	// count number of set bits
+    FORCEINLINE static size_t CountBits(size_t mask) noexcept
+    {
         constexpr char const* const _Bitsperbyte =
             "\0\1\1\2\1\2\2\3\1\2\2\3\2\3\3\4"
             "\1\2\2\3\2\3\3\4\2\3\3\4\3\4\4\5"

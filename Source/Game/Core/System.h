@@ -100,15 +100,6 @@ public:
     virtual uint16 GetWriteMask() const override { return 0; }
 };
 
-// TODO: Bitwise index calculation
-// vector<Component*> (size 4)
-//             
-//      MASK 010111
-//      COMP 000010
-//      Bits before 
-//      e.g. 16 (id: 4) Index in Vector: 0,1, -> 2 <-
-//      log(x) * (1/log(2)) // or just save save the id as index AND pow2
-
 template<typename PrimComp, typename... SecoComps>
 class ComponentItr
 {
@@ -183,6 +174,7 @@ public:
         return mEndIt;
     }
 
+    // Deprecated
     template<typename C>
     C* Sibling()
     {
