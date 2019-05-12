@@ -2,10 +2,20 @@
 #include "Game/Core/Component.h"
 #include "Game/Core/World.h"
 
-#define DECLARE_SYSTEM(systemname) \
+// #define DECLARE_SYSTEM(systemname) DECLARE_SYSTEMM(systemname, false);
+// #define DECLARE_SYSTEMM(systemname, multithread) \
+// public: \
+//     static constexpr char const* const NAME = #systemname; \
+//     virtual char const* const GetName() const override { return NAME; } \
+//     virtual bool IsMultithreaded() const { return multithread; } \
+// private:
+
+#define DECLARE_SYSTEM(systemname, multithread) \
 public: \
     static constexpr char const* const NAME = #systemname; \
-    virtual char const* const GetName() override { return NAME; }; \
+    virtual char const* const GetName() override { return NAME; } \
+    static constexpr bool MULTITHREADED = multithread; \
+    virtual bool IsMultithreaded() const override { return MULTITHREADED; } \
 private:
 
 struct AccessSpecefierBase
@@ -38,6 +48,7 @@ class System
 
 public:
     virtual char const* const GetName() = 0;
+    virtual bool IsMultithreaded() const = 0;
 
     virtual uint16 GetReadMask() const = 0;
     virtual uint16 GetWriteMask() const = 0;
@@ -76,10 +87,7 @@ protected:
     static constexpr uint16 GetAccessMask<>(bool forWrite) { return 0; }
 
     template<class T1, class T2, class... TRest>
-    static constexpr uint16 GetAccessMask(bool forWrite)
-    {
-        return GetAccessMask<T1>(forWrite) | GetAccessMask<T2, TRest...>(forWrite);
-    }
+    static constexpr uint16 GetAccessMask(bool forWrite) { return GetAccessMask<T1>(forWrite) | GetAccessMask<T2, TRest...>(forWrite); }
 
 public:
     static constexpr uint16 READ_MASK = GetAccessMask<TComponents...>(false);
@@ -136,10 +144,7 @@ public:
     }
 
     template<typename Comp1, typename Comp2, typename... Comps>
-    static constexpr uint16 GetBit()
-    {
-        return GetBit<Comp1>() | GetBit<Comp2, Comps...>();
-    }
+    static constexpr uint16 GetBit() { return GetBit<Comp1>() | GetBit<Comp2, Comps...>(); }
 
     static constexpr uint16 MASK = GetBit<PrimComp, SecoComps...>();
 

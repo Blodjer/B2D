@@ -3,10 +3,10 @@
 #include "Game/Component/InputComponent.h"
 
 class InputSystem : public ISystem<
-     Write<InputComponent>
+    Write<InputComponent>
 >
 {
-    DECLARE_SYSTEM(InputSystem);
+    DECLARE_SYSTEM(InputSystem, false);
 
 protected:
     virtual void Update(float deltaTime) override;

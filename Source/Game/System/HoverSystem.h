@@ -4,11 +4,11 @@
 #include "Game/Component/TransformComponent.h"
 
 class HoverSystem : public ISystem<
-    Write<HoverComponent>,
+    Read<HoverComponent>,
     Write<TransformComponent>
 >
 {
-    DECLARE_SYSTEM(HoverSystem);
+    DECLARE_SYSTEM(HoverSystem, true);
 
 protected:
     virtual void Update(float deltaTime) override;

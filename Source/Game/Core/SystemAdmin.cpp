@@ -21,189 +21,186 @@ void SystemAdmin::AddSystem(System* system)
     mSystems.emplace_back(system);
 }
 
-template<class... _Rest>
-class TestTuple;
-
-template<>
-class TestTuple<>
-{
-public:
-    constexpr TestTuple() noexcept
-    {	// default construct
-    }
-
-    constexpr TestTuple(const TestTuple&) noexcept	// TRANSITION, for binary compatibility
-    {	// copy construct
-    }
-};
-
-// TODO: hold references only
-
-template<class _This, class... _Rest>
-class TestTuple<_This, _Rest...> : private TestTuple<_Rest...>
-{
-    typename _This::TYPE thisData;
-};
-
-struct BASEC
-{
-
-};
-
-struct AC : BASEC
-{
-    static constexpr uint16 MASK = 1;
-
-    float aaaData = 0.5f;
-};
-
-struct TC : BASEC
-{
-    static constexpr uint16 MASK = 2;
-
-    float x;
-    float y;
-};
-
-struct SC : BASEC
-{
-    static constexpr uint16 MASK = 4;
-
-    std::string name;
-};
-
-struct EC : BASEC
-{
-    static constexpr uint16 MASK = 8;
-
-    int electron = 100;
-};
-
-class SBaseBase
-{
-    virtual uint16 GetReadMask() const = 0;
-    virtual uint16 GetWriteMask() const = 0;
-};
-
-template<class... D>
-class SBase : public SBaseBase
-{
-protected:
-    template<class D>
-    static constexpr uint16 GetAccessMask(bool forWrite)
-    {
-        B2D_STATIC_ASSERT_TYPE(AccessSpecefierBase, D);
-        B2D_STATIC_ASSERT_TYPE(BASEC, D::TYPE);
-
-        if (D::WRITE || forWrite == D::WRITE)
-        {
-            return D::TYPE::MASK;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
-    template<class D1, class D2, class... D>
-    static constexpr uint16 GetAccessMask(bool forWrite)
-    {
-        return GetAccessMask<D1>(forWrite) | GetAccessMask<D2, D...>(forWrite);
-    }
-
-public:
-    static constexpr uint16 READ_MASK = GetAccessMask<D...>(false);
-    static constexpr uint16 WRITE_MASK = GetAccessMask<D...>(true);
-
-    TestTuple<D...> currentTupleData;
-
-    virtual uint16 GetReadMask() const override { return READ_MASK; }
-    virtual uint16 GetWriteMask() const override { return WRITE_MASK; }
-
-    template<class T>
-    T const& GetRead()
-    {
-        B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
-        B2D_STATIC_ASSERT(!(T::MASK & WRITE_MASK), "Type is marked as writable! For optimizations please change the accessor if you only want to read.");
-        static T af;
-        return af;
-    }
-
-    template<class T>
-    T& GetWrite()
-    {
-        B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
-        B2D_STATIC_ASSERT(T::MASK & WRITE_MASK, "Cannot get component as writeable that is marked as read only!");
-        static T af;
-        return af;
-    }
-};
-
-class TestS : public SBase<
-    Read<TC>,
-    Read<SC>,
-    Write<AC>,
-    Write<EC>
->
-{
-    
-};
-
 void SystemAdmin::Tick(float deltaTime)
 {
     PROFILE_GAME_SYSTEM_NEW_FRAME();
+    
+    static bool b = true;
+    if (b)
+    {
+        B2D_CORE_INFO("-- System Dump --");
+        for (System* const s : mSystems)
+        {
+            std::bitset<16> readbits(s->GetReadMask());
+            std::bitset<16> writebits(s->GetWriteMask());
 
-//      std::bitset<16> read(TestS::READ_MASK);
-//      std::bitset<16> write(TestS::WRITE_MASK);
-// 
-//      std::bitset<16> one(EC::MASK - 1);
-//      one = one & read;
-//      int index = one.count();
-//      
-//      TestS sss;
-//      uint16 ssa = TestS::READ_MASK;
-//      uint16 mm = sss.GetReadMask();
-//      SC const& aas = sss.GetRead<SC>();
-// 
-//      TestTuple<Write<TC>, Read<EC>> testttt;
-// 
-//      std::vector<SBaseBase*> afaof;
-//      afaof.emplace_back(&sss);
-//      for (SBaseBase* s : afaof)
-//      {
-// 
-//      }
+            B2D_CORE_INFO("{} {}\nREAD  {}\nWRITE {}", s->GetName(), s->IsMultithreaded(), readbits.to_string(), writebits.to_string());
+        }
+
+        B2D_CORE_INFO("-- Before --");
+        for (System* const s : mSystems)
+        {
+            B2D_CORE_INFO("{}", s->GetName());
+        }
+
+        std::sort(mSystems.begin(), mSystems.end(), [](System const* a, System const* b)
+        {
+            bool conflict = (a->GetReadMask() & b->GetReadMask()) != 0;
+            return !conflict && a->IsMultithreaded() && !b->IsMultithreaded();
+        });
+
+        B2D_CORE_INFO("-- After --");
+        for (System* const s : mSystems)
+        {
+            B2D_CORE_INFO("{}", s->GetName());
+        }
+
+        b = false;
+    }
+
+//     for (System* const s : mSystems)
+//     {
+//         PROFILE_GAME_SYSTEM(s->GetName());
+//         s->Update(deltaTime);
+//     }
+//     PROFILE_GAME_SYSTEM_END_FRAME();
+//     return;
+
+    std::vector<std::future<void>> tasks;
+
+    std::atomic<uint16> currentRead = 0;
+    std::atomic<uint16> currentWrite = 0;
+
+    std::array<std::atomic<uint8>, sizeof(uint16) * 8> currentReads;
+    for (std::atomic<uint8>& r : currentReads) { r = 0; }
+
+    {
+        PROFILE_GAME_SYSTEM("Wait overflow systems");
+        for (auto const& task : mOverflowTasks)
+        {
+            task.wait();
+        }
+        mOverflowTasks.clear();
+    }
 
     for (System* const s : mSystems)
     {
-        PROFILE_GAME_SYSTEM(s->GetName());
-        s->Update(deltaTime);
+        uint16 const read = s->GetReadMask();
+        uint16 const write = s->GetWriteMask();
+
+        {
+            //PROFILE_GAME_SYSTEM("WAIT");
+
+            bool canRead = false;
+            bool canWrite = false;
+            do {
+                canRead = (currentWrite & read) == 0;
+                canWrite = true;
+                for (uint16 i = 0; i < currentReads.size(); ++i)
+                {
+                    if ((read >> i) & (currentReads[i] != 0))
+                    {
+                        canWrite = false;
+                        break;
+                    }
+                }
+            } while (!canRead || !canWrite);
+        }
+
+        if (!s->IsMultithreaded())
+        {
+            PROFILE_GAME_SYSTEM(s->GetName());
+            s->Update(deltaTime);
+            continue;
+        }
+
+        currentRead |= read;
+        currentWrite |= write;
+        for (uint16 i = 0; i < currentReads.size(); ++i)
+        {
+            currentReads[i] += (read >> i) & 1;
+        }
+
+        if (s->GetReadMask() == 3)
+        {
+            mOverflowTasks.emplace_back(std::async(std::launch::async, [s, deltaTime]() {
+                s->Update(deltaTime);
+            }));
+            continue;
+        }
+
+        tasks.emplace_back(std::async(std::launch::async, [this, &currentReads, &currentWrite, s, deltaTime]() {
+            PROFILE_GAME_SYSTEM(s->GetName());
+            s->Update(deltaTime);
+
+            uint16 const read = s->GetReadMask();
+            uint16 const write = s->GetWriteMask();
+
+            for (uint16 i = 0; i < currentReads.size(); ++i)
+            {
+                currentReads[i] -= (read >> i) & 1;
+            }
+            currentWrite ^= write;
+
+            //OnSystemFinished(s);
+        }));
     }
 
-//     static std::vector<std::future<void>> futures;
-//     if (futures.empty())
-//     {
-//         futures.reserve(mSystems.size());
-//         futures.resize(mSystems.size());
-//     }
-// 
-//     int ii = 0;
-//     for (System* s : mSystems)
-//     {
-//         futures[ii++] = std::async(ii > 3 ? std::launch::async : std::launch::deferred, [s, deltaTime]() {
-//             PROFILE_GAME_SYSTEM(s->GetName());
-//             s->Update(deltaTime);
-//         });
-//     }
-// 
-//     int i = 0;
-//     for (auto const& f : futures)
-//     {
-//         f.wait();
-//         i++;
-//         if (i >= 4)
-//             break;
-//     }
+    for (auto const& task : tasks)
+    {
+        task.wait();
+    }
 
     PROFILE_GAME_SYSTEM_END_FRAME();
 }
+
+void SystemAdmin::OnSystemFinished(System* system)
+{
+
+}
+
+// template<class... _Rest>
+// class TestTuple;
+// 
+// template<>
+// class TestTuple<>
+// {
+// public:
+//     constexpr TestTuple() noexcept
+//     {	// default construct
+//     }
+// 
+//     constexpr TestTuple(const TestTuple&) noexcept	// TRANSITION, for binary compatibility
+//     {	// copy construct
+//     }
+// };
+// 
+// // TODO: hold references only
+// 
+// template<class _This, class... _Rest>
+// class TestTuple<_This, _Rest...> : private TestTuple<_Rest...>
+// {
+//     typename _This::TYPE thisData;
+// };
+
+// template<class... D>
+// class SBase
+// {
+//     template<class T>
+//     T const& GetRead()
+//     {
+//         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
+//         B2D_STATIC_ASSERT(!(T::MASK & WRITE_MASK), "Type is marked as writable! For optimizations please change the accessor if you only want to read.");
+//         static T af;
+//         return af;
+//     }
+// 
+//     template<class T>
+//     T& GetWrite()
+//     {
+//         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
+//         B2D_STATIC_ASSERT(T::MASK & WRITE_MASK, "Cannot get component as writeable that is marked as read only!");
+//         static T af;
+//         return af;
+//     }
+// };

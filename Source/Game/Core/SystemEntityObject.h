@@ -6,7 +6,7 @@
 public: \
     entityname(EntityID id) : SystemEntityObject(id) {}; \
 private: \
-    DECLARE_SYSTEM(entityname) \
+    DECLARE_SYSTEM(entityname, false) \
 
 template<typename... Components>
 class SystemEntityObject : public ISystem<>, public Entity

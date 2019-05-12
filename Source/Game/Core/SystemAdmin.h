@@ -1,4 +1,5 @@
 #pragma once
+#include <future>
 
 class System;
 class World;
@@ -23,11 +24,15 @@ public:
 
     void Tick(float deltaTime);
 
+private:
+    void OnSystemFinished(System* system);
+
  private:
      World* const mWorld;
  
      std::vector<System*> mSystems;
-     std::atomic<bool> run;
+
+     std::vector<std::future<void>> mOverflowTasks;
 
 };
 

@@ -9,7 +9,7 @@ class CharacterMovementSystem : public ISystem<
     Write<TransformComponent>
 >
 {
-    DECLARE_SYSTEM(CharacterMovementSystem);
+    DECLARE_SYSTEM(CharacterMovementSystem, false);
 
 protected:
     virtual void Update(float deltaTime) override;

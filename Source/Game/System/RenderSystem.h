@@ -8,7 +8,7 @@ class RenderSystem : public ISystem<
     Read<SpriteComponent>
 >
 {
-    DECLARE_SYSTEM(RenderSystem);
+    DECLARE_SYSTEM(RenderSystem, true);
 
 protected:
     virtual void Update(float deltaTime) override;
