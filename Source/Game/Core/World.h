@@ -43,6 +43,8 @@ public:
     WorldRenderDataInterface* GetWorldRenderDataInterface() { return mWorldRenderDataInterface; }
     WorldRenderDataInterface const* GetWorldRenderDataInterface() const { return mWorldRenderDataInterface; }
 
+    SystemAdmin& GetSystemAdmin() { return mSystemAdmin; }
+
 public:
     std::unordered_map<EntityID, Entity*> mEntities;
 

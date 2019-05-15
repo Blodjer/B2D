@@ -15,6 +15,8 @@
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 #include "Editor/View/WorldEditorView.h"
+#include "Game/Core/SystemAdmin.h"
+#include "Game/Core/World.h"
 
 GameEngine* GameEngine::sInstance = nullptr;
 
@@ -70,7 +72,7 @@ void GameEngine::Init()
     B2D_ASSERT(mGHI->Init());
 
     mRenderManager = new RenderManger();
-    mRenderManager->Init(true);
+    mRenderManager->Init(mConfig.multithread);
 
 #if 1 // Load Editor
     mModuleManager.Load<EditorModule>();

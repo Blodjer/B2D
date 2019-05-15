@@ -1,36 +1,32 @@
 #include "B2D_pch.h"
 #include "Profiler.h"
 
-ProfilerData Profiler::msScopedStatistics;
-uint64 Profiler::msLastGameSystemFrameStartIndex = 0;
+GenericStatisticDataList Profiler::msGenericStatistics;
+GameSystemStatisticDataList Profiler::msGameSystemStatistics;
 std::mutex Profiler::msMutex;
+uint64 Profiler::frameId;
+TimeStamp Profiler::msGameStart;
+TimeStamp Profiler::msGameEnd;
 
-FORCEINLINE void Profiler::AddStatistic(StatisticData const& data)
+void Profiler::OnGameSystemBeginFrame()
 {
-    msMutex.lock();
-    msScopedStatistics.emplace_back(data);
-    msMutex.unlock();
-}
-
-ScopedStatistic::ScopedStatistic(StatisticTag const tag)
-{
-    mData.tag = tag;
-    mData.thread = std::this_thread::get_id();
-    mData.startTimestamp = Clock::now();
-}
-
-ScopedStatistic::~ScopedStatistic()
-{
-    mData.duration = Clock::now() - mData.startTimestamp;
-    Profiler::AddStatistic(mData);
-}
-
-void Profiler::OnGameSystemNewFrame()
-{
-    msScopedStatistics.clear();
+    frameId++;
+    msGameSystemStatistics.clear();
+    msGameStart = Clock::now();
 }
 
 void Profiler::OnGameSystemEndFrame()
 {
+    msGameEnd = Clock::now();
+}
 
+ScopedGenericStatistic::ScopedGenericStatistic(StatisticLabel label)
+{
+    mData.label = label;
+}
+
+ScopedGameSystemStatistic::ScopedGameSystemStatistic(GameSystemStatisticData::EType type, StatisticLabel label)
+{
+    mData.label = label;
+    mData.type = type;
 }

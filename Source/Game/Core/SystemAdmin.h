@@ -7,12 +7,14 @@ class World;
 class SystemAdmin final
 {
     friend class World;
+    friend class GameSystemView;
 
 protected:
     SystemAdmin(World* const world);
     ~SystemAdmin();
 
-public:
+    void AddSystem(System* system);
+
     template<class S>
     void AddSystem()
     {
@@ -20,19 +22,23 @@ public:
         AddSystem(new S());
     }
 
-    void AddSystem(System* system);
-
     void Tick(float deltaTime);
 
 private:
-    void OnSystemFinished(System* system);
+    FORCEINLINE void TickSingleThread(float const deltaTime);
+    FORCEINLINE void TickMultiThread(float const deltaTime);
 
- private:
-     World* const mWorld;
- 
-     std::vector<System*> mSystems;
+    FORCEINLINE void TickSystem(float const deltaTime);
 
-     std::vector<std::future<void>> mOverflowTasks;
+    void OptimizeSystemOrder();
 
+private:
+    World* const mWorld = nullptr;
+    std::vector<System*> mSystemsRaw;
+    std::vector<System*> mSystemsOptimized;
+    std::vector<std::future<void>> mOverflowTasks;
+
+    bool mMultithreaded = true;
+    bool mUseOptimizedSystems = true;
 };
 

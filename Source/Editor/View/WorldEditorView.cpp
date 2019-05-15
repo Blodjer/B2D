@@ -10,11 +10,14 @@
 
 WorldEditorView::WorldEditorView()
 {
+    static uint32 count = 0;
+    count++;
+
     mWorldRenderer = GameEngine::Instance()->GetRenderManager()->CreateRenderer<WorldRenderer>();
 
     mViewportName = "Viewport";
     mViewportName += "##";
-    mViewportName += std::to_string(reinterpret_cast<uintptr_t>(this));
+    mViewportName += std::to_string(count);
 }
 
 WorldEditorView::~WorldEditorView()

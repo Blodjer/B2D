@@ -18,53 +18,26 @@ SystemAdmin::~SystemAdmin()
 void SystemAdmin::AddSystem(System* system)
 {
     system->mWorld = mWorld;
-    mSystems.emplace_back(system);
+    mSystemsRaw.emplace_back(system);
+    OptimizeSystemOrder();
 }
 
 void SystemAdmin::Tick(float deltaTime)
 {
-    PROFILE_GAME_SYSTEM_NEW_FRAME();
+    PROFILE_GAME_SYSTEM_BEGIN_FRAME();
     
-    static bool b = true;
-    if (b)
+    std::vector<System*>& systems = mUseOptimizedSystems ? mSystemsOptimized : mSystemsRaw;
+
+    if (!mMultithreaded)
     {
-        B2D_CORE_INFO("-- System Dump --");
-        for (System* const s : mSystems)
+        for (System* const s : systems)
         {
-            std::bitset<16> readbits(s->GetReadMask());
-            std::bitset<16> writebits(s->GetWriteMask());
-
-            B2D_CORE_INFO("{} {}\nREAD  {}\nWRITE {}", s->GetName(), s->IsMultithreaded(), readbits.to_string(), writebits.to_string());
+            PROFILE_GAME_SYSTEM(s->GetName());
+            s->Update(deltaTime);
         }
-
-        B2D_CORE_INFO("-- Before --");
-        for (System* const s : mSystems)
-        {
-            B2D_CORE_INFO("{}", s->GetName());
-        }
-
-        std::sort(mSystems.begin(), mSystems.end(), [](System const* a, System const* b)
-        {
-            bool conflict = (a->GetReadMask() & b->GetReadMask()) != 0;
-            return !conflict && a->IsMultithreaded() && !b->IsMultithreaded();
-        });
-
-        B2D_CORE_INFO("-- After --");
-        for (System* const s : mSystems)
-        {
-            B2D_CORE_INFO("{}", s->GetName());
-        }
-
-        b = false;
+        PROFILE_GAME_SYSTEM_END_FRAME();
+        return;
     }
-
-//     for (System* const s : mSystems)
-//     {
-//         PROFILE_GAME_SYSTEM(s->GetName());
-//         s->Update(deltaTime);
-//     }
-//     PROFILE_GAME_SYSTEM_END_FRAME();
-//     return;
 
     std::vector<std::future<void>> tasks;
 
@@ -72,10 +45,10 @@ void SystemAdmin::Tick(float deltaTime)
     std::atomic<uint16> currentWrite = 0;
 
     std::array<std::atomic<uint8>, sizeof(uint16) * 8> currentReads;
-    for (std::atomic<uint8>& r : currentReads) { r = 0; }
+    for (std::atomic<uint8>& r : currentReads) { r.store(0, std::memory_order_relaxed); }
 
     {
-        PROFILE_GAME_SYSTEM("Wait overflow systems");
+        PROFILE_GAME_SYSTEM_THREAD_OVERHEAD("Wait for overflow systems");
         for (auto const& task : mOverflowTasks)
         {
             task.wait();
@@ -83,13 +56,13 @@ void SystemAdmin::Tick(float deltaTime)
         mOverflowTasks.clear();
     }
 
-    for (System* const s : mSystems)
+    for (System* const s : systems)
     {
         uint16 const read = s->GetReadMask();
         uint16 const write = s->GetWriteMask();
 
         {
-            //PROFILE_GAME_SYSTEM("WAIT");
+            //PROFILE_GAME_SYSTEM_THREAD_OVERHEAD("Dependency Block");
 
             bool canRead = false;
             bool canWrite = false;
@@ -121,7 +94,8 @@ void SystemAdmin::Tick(float deltaTime)
             currentReads[i] += (read >> i) & 1;
         }
 
-        if (s->GetReadMask() == 3)
+        // TODO: Check if this is the last system affecting these masks
+        if (write == 0 && read == 3)
         {
             mOverflowTasks.emplace_back(std::async(std::launch::async, [s, deltaTime]() {
                 s->Update(deltaTime);
@@ -141,8 +115,6 @@ void SystemAdmin::Tick(float deltaTime)
                 currentReads[i] -= (read >> i) & 1;
             }
             currentWrite ^= write;
-
-            //OnSystemFinished(s);
         }));
     }
 
@@ -154,9 +126,14 @@ void SystemAdmin::Tick(float deltaTime)
     PROFILE_GAME_SYSTEM_END_FRAME();
 }
 
-void SystemAdmin::OnSystemFinished(System* system)
+void SystemAdmin::OptimizeSystemOrder()
 {
-
+    mSystemsOptimized = mSystemsRaw;
+    std::sort(mSystemsOptimized.begin(), mSystemsOptimized.end(), [](System const* a, System const* b)
+    {
+        bool conflict = (a->GetReadMask() & b->GetReadMask()) != 0;
+        return !conflict && a->IsMultithreaded() && !b->IsMultithreaded();
+    });
 }
 
 // template<class... _Rest>

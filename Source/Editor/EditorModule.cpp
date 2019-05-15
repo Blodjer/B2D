@@ -4,6 +4,7 @@
 #include "View/IEditorView.h"
 #include "GameEngine.h"
 #include "Platform/GenericWindow.h"
+#include "View/GameSystemView.h"
 #include "View/GameSystemProfilerView.h"
 #include "View/WorldEditorView.h"
 
@@ -46,6 +47,7 @@ void EditorModule::Init()
 void EditorModule::InitDefaultEditorViews()
 {
     CreateEditorView<WorldEditorView>();
+    CreateEditorView<GameSystemView>();
     CreateEditorView<GameSystemProfilerView>();
 }
 

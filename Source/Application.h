@@ -5,8 +5,9 @@
 struct ApplicationConfig
 {
     std::string name = "Game";
-    uint32 windowWidth = 1280;
-    uint32 windowHeight = 720;
+    uint32 windowWidth = 1600;
+    uint32 windowHeight = 900;
+    bool multithread = true;
 
     static void Dump(ApplicationConfig const& config)
     {
@@ -14,6 +15,7 @@ struct ApplicationConfig
         B2D_CORE_INFO("name            {}", config.name);
         B2D_CORE_INFO("windowWidth     {}", config.windowWidth);
         B2D_CORE_INFO("windowHeight    {}", config.windowHeight);
+        B2D_CORE_INFO("multithread     {}", config.multithread);
         B2D_CORE_INFO("-----------------------------------------\n");
     }
 };

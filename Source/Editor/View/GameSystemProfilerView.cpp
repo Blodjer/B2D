@@ -2,50 +2,90 @@
 #include "GameSystemProfilerView.h"
 #include "Core/Profiler.h"
 
-GameSystemProfilerView::GameSystemProfilerView()
-{
-}
-
-
-GameSystemProfilerView::~GameSystemProfilerView()
-{
-}
-
 void GameSystemProfilerView::Tick(float deltaTime)
 {
     if (ImGui::Begin("Game System Profiler"))
     {
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        static uint64 lastFrameId = -1;
+        static std::vector<float> frameDurations;
+        static uint32 idx = 0;
+        static size_t maxidx = 0;
 
-        ProfilerData const& statistics = Profiler::GetLastFrame();
+        TimeStamp frameStartTimeStamp;
+        TimeStamp frameEndTimeStamp;
+        GameSystemStatisticDataList const* statistics = nullptr;
+        uint64 frameId = Profiler::GetGameSystemStatistics(statistics, frameStartTimeStamp, frameEndTimeStamp);
+
+        std::chrono::duration<float, std::milli> const chronoframeDuration = frameEndTimeStamp - frameStartTimeStamp;
+        float frameDuration = chronoframeDuration.count();
+
+        if (frameId != lastFrameId)
+        {
+            if (idx < frameDurations.size())
+            {
+                frameDurations[idx] = frameDuration;
+            }
+            else
+            {
+                frameDurations.emplace_back(frameDuration);
+                maxidx++;
+            }
+            idx++;
+
+            lastFrameId = frameId;
+        }
+
+        float accFrameDuration = 0;
+        float minFrameDuration = FLT_MAX;
+        float maxFrameDuration = FLT_MIN;
+
+        size_t frameListSize = UMath::Min(maxidx, frameDurations.size());
+        for (uint32 i = 0; i < frameListSize; ++i)
+        {
+            float d = frameDurations[i];
+            accFrameDuration += d;
+
+            if (d < minFrameDuration)
+            {
+                minFrameDuration = d;
+            }
+
+            if (d > maxFrameDuration)
+            {
+                maxFrameDuration = d;
+            }
+        }
+        float avgFrameDuration = accFrameDuration / frameDurations.size();
+
+        float accSinceLastReset = 0;
+        for (uint32 i = 0; i < idx; ++i)
+        {
+            accSinceLastReset += frameDurations[i];
+        }
+        if (accSinceLastReset > 1500)
+        {
+            idx = 0;
+            maxidx = frameDurations.size();
+        }
+
+        ImGui::Text("Delta:     %.3fms", frameDuration);
+        ImGui::Text("Avg Delta: %.3fms", avgFrameDuration);
+        ImGui::Text("Min Delta: %.3fms", minFrameDuration);
+        ImGui::Text("Max Delta: %.3fms", maxFrameDuration);
+        ImGui::NewLine();
 
         static std::unordered_map<std::thread::id, uint32> threadSet;
         uint32 threadCount = threadSet.size();
 
-        ImVec2 regionMin = ImGui::GetWindowContentRegionMin();
-
-        TimeStamp startTimeStamp = TimeStamp::max();
-        TimeStamp endTimeStamp = TimeStamp::min();
-        for (StatisticData const& data : statistics)
-        {
-            if (data.startTimestamp < startTimeStamp)
-            {
-                startTimeStamp = data.startTimestamp;
-            }
-
-            if ((data.startTimestamp + data.duration) > endTimeStamp)
-            {
-                endTimeStamp = data.startTimestamp + data.duration;
-            }
-        }
-        Duration const duration = endTimeStamp - startTimeStamp;
-        std::chrono::duration<float, std::milli> const md = endTimeStamp - startTimeStamp;
-
-        float maxWidth = ImGui::GetContentRegionAvailWidth();
+        ImVec2 const cursorPos = ImGui::GetCursorPos();
+        float const maxWidth = ImGui::GetContentRegionAvailWidth();
 
         ImGui::BeginGroup();
-        for (StatisticData const& data : statistics)
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        for (GameSystemStatisticData const& data : *statistics)
         {
+            float duration = std::chrono::duration<float, std::milli>(data.duration).count();
+
             uint32 threadIndex;
 
             auto const it = threadSet.find(data.thread);
@@ -60,24 +100,35 @@ void GameSystemProfilerView::Tick(float deltaTime)
                 threadCount++;
             }
 
-            auto b = (data.startTimestamp - startTimeStamp);
-            std::chrono::duration<float, std::milli> m = b;
+            std::chrono::duration<float, std::milli> const durationSinceFrameStart = data.startTimestamp - frameStartTimeStamp;
+            float const startPosRatio = durationSinceFrameStart.count() / frameDuration;
+            float const widthRatio = duration / frameDuration;
 
-            float startPos = (m.count() / md.count());
-            float width = std::chrono::duration<float, std::milli>(data.duration).count() / md.count();
+            ImGui::SetCursorPos(ImVec2(startPosRatio * maxWidth, cursorPos.y + threadIndex * ImGui::GetItemsLineHeightWithSpacing() + 2));
 
-            ImGui::SetCursorPos(ImVec2(startPos * maxWidth, regionMin.y + threadIndex * ImGui::GetItemsLineHeightWithSpacing() + 2));
-            ImGui::Button(data.tag, ImVec2(width * maxWidth, 0));
+            switch (data.type)
+            {
+                case GameSystemStatisticData::EType::ThreadOverhead:
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.2f, 0.2f, 0.6f));
+                    break;
+                case GameSystemStatisticData::EType::System:
+                default:
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_Button));
+                    break;
+            }
+
+            ImGui::Button(data.label, ImVec2(widthRatio * maxWidth, 0));
+            ImGui::PopStyleColor();
+
             if (ImGui::IsItemHovered())
             {
                 ImGui::BeginTooltip();
-                ImGui::SetTooltip("%s\n%.3fms", data.tag, std::chrono::duration<float, std::milli>(data.duration).count());
+                ImGui::SetTooltip("%s\n%.3fms", data.label, duration);
                 ImGui::EndTooltip();
             }
         }
-        ImGui::EndGroup();
-
         ImGui::PopStyleVar();
+        ImGui::EndGroup();
     }
 
     ImGui::End();
