@@ -112,29 +112,17 @@ template<typename PrimComp, typename... SecoComps>
 class ComponentItr
 {
 private:
-    using iterator = typename std::vector<PrimComp>::iterator;
-    using reverse_iterator = typename std::vector<PrimComp>::reverse_iterator;
-    
-    std::vector<PrimComp>& mComponentList;
-    iterator mIt;
-    iterator mEndIt;
+    using iterator = typename std::array<PrimComp, 100000>::iterator;
+
+    std::array<PrimComp, 100000>& mComponentList;
+    uint64 idx = 0;
+    uint64 size = 0;
 
 public:
     ComponentItr(World const* const world)
         : mComponentList(world->GetComponents<PrimComp>())
     {
-        reverse_iterator it = mComponentList.rbegin();
-        for (; it != mComponentList.rend(); ++it)
-        {
-            PrimComp const& c = *it;
-            if (c.owner->Has(MASK))
-            {
-                mEndIt = it.base();
-                return;
-            }
-        }
-
-        mEndIt = mComponentList.begin();
+        size = world->GetComponentIndex<PrimComp>();
     }
 
     template<typename Comp>
@@ -150,61 +138,103 @@ public:
 
     iterator begin()
     {
-        mIt = mComponentList.begin();
-        return getNext();
+        idx = 0;
+        return mComponentList.begin();
     }
 
     void operator++()
     {
-        ++mIt;
+        ++idx;
         getNext();
     }
 
-    FORCEINLINE iterator getNext()
+    FORCEINLINE uint64 getNext()
     {
-        for (; mIt != end(); ++mIt)
+        for (; idx < size; ++idx)
         {
-            PrimComp& c = *mIt;
+            PrimComp const& c = mComponentList[idx];
             if (c.owner->Has(MASK))
             {
-                return mIt;
+                return idx;
             }
         }
 
-        return end();
+        return size;
     }
 
     iterator end() const
     {
-        return mEndIt;
-    }
-
-    // Deprecated
-    template<typename C>
-    C* Sibling()
-    {
-        Entity const* const entity = *mIt;
-        auto const& components = entity->mComponents;
-
-        for (auto const& componentIndex : entity->mComponentIndex)
-        {
-            if (componentIndex.first == C::MASK)
-            {
-                return static_cast<C*>(components[componentIndex.first]);
-            }
-        }
-
-        B2D_TRAPf("Sibling component not found. This function must not be called if the component is not the a sibling!");
-        return nullptr;
+        return mComponentList.begin() + size;
     }
 
     PrimComp& operator*()
     {
-        return *mIt;
+        return mComponentList[idx];
     }
 
-    bool operator!=(const ComponentItr<PrimComp, SecoComps...>& other)
+    bool operator!=(ComponentItr<PrimComp, SecoComps...> const& other)
     {
-        return mIt != other.mIt;
+        return idx != other.idx;
     }
 };
+
+class CompTuple
+{
+    template<class C>
+    C& GetRead() const
+    {
+
+    }
+
+    template<class C>
+    C const& GetWrite() const
+    {
+
+    }
+};
+
+// template<class... _Rest>
+// class TestTuple;
+// 
+// template<>
+// class TestTuple<>
+// {
+// public:
+//     constexpr TestTuple() noexcept
+//     {	// default construct
+//     }
+// 
+//     constexpr TestTuple(const TestTuple&) noexcept	// TRANSITION, for binary compatibility
+//     {	// copy construct
+//     }
+// };
+// 
+// // TODO: hold references only
+// 
+// template<class _This, class... _Rest>
+// class TestTuple<_This, _Rest...> : private TestTuple<_Rest...>
+// {
+//     typename _This::TYPE thisData;
+// };
+
+// template<class... D>
+// class SBase
+// {
+//     template<class T>
+//     T const& GetRead()
+//     {
+//         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
+//         B2D_STATIC_ASSERT(!(T::MASK & WRITE_MASK), "Type is marked as writable! For optimizations please change the accessor if you only want to read.");
+//         static T af;
+//         return af;
+//     }
+// 
+//     template<class T>
+//     T& GetWrite()
+//     {
+//         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
+//         B2D_STATIC_ASSERT(T::MASK & WRITE_MASK, "Cannot get component as writeable that is marked as read only!");
+//         static T af;
+//         return af;
+//     }
+// };

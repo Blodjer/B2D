@@ -35,7 +35,10 @@ public:
     FORCEINLINE void AddSystem() { mSystemAdmin.AddSystem<S>(); }
 
     template<class C>
-    std::vector<C>& GetComponents() const;
+    std::array<C, 100000>& GetComponents() const;
+
+    template<class C>
+    uint64& GetComponentIndex() const;
 
 public:
     CGameInstance* GetOwningGameInstance() const { return mOwningGameInstance; }
@@ -96,8 +99,11 @@ C& World::AddComponent(EntityID entity, Params... p)
     Entity* realEntity = mEntities[entity];
     B2D_ASSERT(realEntity);
 
-    C& c = GetComponents<C>().emplace_back(C(p...));
+    uint64& i = GetComponentIndex<C>();
+    C& c = GetComponents<C>()[i];
+    c = C(p...);
     c.owner = realEntity;
+    i++;
 
     realEntity->mComponents.emplace_back(&c);
     realEntity->mComponentMask |= C::MASK;
@@ -111,11 +117,17 @@ C& World::AddComponent(EntityID entity, Params... p)
 }
 
 template<class C>
-std::vector<C>& World::GetComponents() const
+std::array<C, 100000>& World::GetComponents() const
 {
     B2D_STATIC_ASSERT_TYPE(Component, C);
 
-    static std::vector<C> components;
-    components.reserve(100000);
+    static std::array<C, 100000> components;
     return components;
+}
+
+template<class C>
+uint64& World::GetComponentIndex() const
+{
+    static uint64 i = 0;
+    return i;
 }
