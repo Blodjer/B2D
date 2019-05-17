@@ -31,13 +31,13 @@ struct AccessSpecefier : AccessSpecefierBase
 };
 
 template<class T>
-struct Read : AccessSpecefier<T>
+struct Read : public AccessSpecefier<T>
 {
     static constexpr bool WRITE = false;
 };
 
 template<class T>
-struct Write : AccessSpecefier<T>
+struct Write : public AccessSpecefier<T>
 {
     static constexpr bool WRITE = true;
 };
@@ -59,6 +59,36 @@ protected:
 protected:
     World* mWorld;
 };
+
+// template<class TPrimary, uint16 READ_MASK, uint16 WRITE_MASK>
+// class ComponentTuple
+// {
+// public:
+//     template<class T>
+//     T const& GetRead() const
+//     {
+//         B2D_STATIC_ASSERT_TYPE(Component, T);
+//         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Type is not registered!");
+//         B2D_STATIC_ASSERT(!(T::MASK & WRITE_MASK), "Type is marked as writable! For optimizations please change the accessor if you only want to read.");
+//         static T af;
+//         return af;
+//     }
+// 
+//     template<>
+//     TPrimary const& GetRead<TPrimary>() const
+//     {
+//         return *mPrimaryComponent;
+//     }
+// 
+//     template<class T>
+//     T& GetWrite() const
+//     {
+// 
+//     }
+// 
+// private:
+//     TPrimary::TYPE* mPrimaryComponent;
+// };
 
 template<class... TComponents>
 class ISystem : public System
@@ -95,10 +125,13 @@ public:
 
     virtual uint16 GetReadMask() const override { return READ_MASK; }
     virtual uint16 GetWriteMask() const override { return WRITE_MASK; }
+
+   // using Tpppple = ComponentTuple<TPrim, READ_MASK, WRITE_MASK>;
+
 };
 
 template<>
-class ISystem<> : public System
+class ISystem<void> : public System
 {
 public:
     static constexpr uint16 READ_MASK = 0;
@@ -175,21 +208,6 @@ public:
     bool operator!=(ComponentItr<PrimComp, SecoComps...> const& other)
     {
         return idx != other.idx;
-    }
-};
-
-class CompTuple
-{
-    template<class C>
-    C& GetRead() const
-    {
-
-    }
-
-    template<class C>
-    C const& GetWrite() const
-    {
-
     }
 };
 
