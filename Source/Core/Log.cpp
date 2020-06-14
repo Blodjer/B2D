@@ -3,16 +3,16 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-std::shared_ptr<spdlog::logger> Log::mLoggerCore;
-std::shared_ptr<spdlog::logger> Log::mLoggerApp;
+std::shared_ptr<spdlog::logger> Log::m_loggerCore;
+std::shared_ptr<spdlog::logger> Log::m_loggerApp;
 
 void Log::Init(std::string const& applicationName)
 {
 	spdlog::set_pattern("%^[%T] [%n] [%l]%$ %v");
 
-	mLoggerCore = spdlog::stdout_color_mt("Core");
-	mLoggerCore->set_level(spdlog::level::debug);
+	m_loggerCore = spdlog::stdout_color_mt("Core");
+	m_loggerCore->set_level(spdlog::level::debug);
 
-	mLoggerApp = spdlog::stdout_color_mt(applicationName);
-	mLoggerApp->set_level(spdlog::level::debug);
+	m_loggerApp = spdlog::stdout_color_mt(applicationName);
+	m_loggerApp->set_level(spdlog::level::debug);
 }

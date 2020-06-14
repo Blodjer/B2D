@@ -3,20 +3,20 @@
 
 #include "GameEngine.h"
 
-InputState Input::sInputState;
+InputState Input::ms_inputState;
 
 void Input::Flush()
 {
-    sInputState.Flush();
+    ms_inputState.Flush();
 }
 
 bool Input::IsKey(EKey key, EKeyEvent keyEvent)
 {
-    return sInputState.IsKey(key, keyEvent);
+    return ms_inputState.IsKey(key, keyEvent);
 }
 
 void Input::OnKey(EKey key, EKeyEvent keyEvent)
 {
-    sInputState.SetKeyState(key, keyEvent);
+    ms_inputState.SetKeyState(key, keyEvent);
 }
 

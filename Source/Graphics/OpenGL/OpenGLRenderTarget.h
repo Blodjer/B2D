@@ -7,13 +7,13 @@ class OpenGLRenderTarget : public GHIRenderTarget
 public:
     OpenGLRenderTarget(GLuint handle, GHITexture* targetTexture);
     
-    GLuint GetHandle() const { return mHandle; }
+    GLuint GetHandle() const { return m_handle; }
 
-    virtual GHITexture* GetTexture() const override { return mTargetTexture; };
+    virtual GHITexture* GetTexture() const override { return m_targetTexture; };
 
 private:
-    GLuint mHandle;
-    GHITexture* mTargetTexture;
+    GLuint m_handle;
+    GHITexture* m_targetTexture;
 
 };
 

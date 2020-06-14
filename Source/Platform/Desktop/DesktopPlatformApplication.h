@@ -40,8 +40,8 @@ private:
     static void OnGlfwDropCallback(GLFWwindow* window, int count, const char** paths);
 
 private:
-    std::vector<IPlatformMessageHandlerInterface*> mMessageHandler;
-    std::vector<DesktopWindow*> mWindows;
+    std::vector<IPlatformMessageHandlerInterface*> m_messageHandler;
+    std::vector<DesktopWindow*> m_windows;
 
-    static DesktopPlatformApplication* sInstance;
+    static DesktopPlatformApplication* ms_instance;
 };

@@ -23,13 +23,13 @@ public:
 
         T* renderer = new T();
 
-        if (mMultithreaded)
+        if (m_multithreaded)
         {
-            mRenderThreadRunnable->AddRenderer(renderer);
+            m_renderThreadRunnable->AddRenderer(renderer);
         }
         else
         {
-            mRenderers.emplace_back(renderer);
+            m_renderers.emplace_back(renderer);
             renderer->Init();
         }
 
@@ -39,19 +39,19 @@ public:
     template<class T>
     void DeleteRenderer(T*& renderer)
     {
-        if (mMultithreaded)
+        if (m_multithreaded)
         {
-            mRenderThreadRunnable->RemoveRenderer(renderer);
+            m_renderThreadRunnable->RemoveRenderer(renderer);
         }
         else
         {
             renderer->Shutdown();
             
-            auto it = std::find(mRenderers.begin(), mRenderers.end(), renderer);
-            if (it != mRenderers.end())
+            auto it = std::find(m_renderers.begin(), m_renderers.end(), renderer);
+            if (it != m_renderers.end())
             {
-                std::iter_swap(it, mRenderers.end() - 1);
-                mRenderers.pop_back();
+                std::iter_swap(it, m_renderers.end() - 1);
+                m_renderers.pop_back();
             }
 
             delete renderer;
@@ -65,11 +65,11 @@ public:
     void Draw();
 
 private:
-    std::vector<IRenderer*> mRenderers;
+    std::vector<IRenderer*> m_renderers;
 
-    bool mMultithreaded = false;
-    Thread* mRenderThread = nullptr;
-    RenderThread* mRenderThreadRunnable = nullptr;
+    bool m_multithreaded = false;
+    Thread* m_renderThread = nullptr;
+    RenderThread* m_renderThreadRunnable = nullptr;
 };
 
 /*

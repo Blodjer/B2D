@@ -18,10 +18,10 @@ protected:
     virtual void RenderInternal(GHIRenderTarget* const renderTarget) override;
 
 private:
-    WorldRenderDataInterface* mWRDI = nullptr;
-    CViewport const* mViewport = nullptr;
+    WorldRenderDataInterface* m_wrdi = nullptr;
+    CViewport const* m_viewport = nullptr;
 
-    std::atomic<uint32> mRenderedFrame = 0;
+    std::atomic<uint32> m_renderedFrame = 0;
 };
 
 

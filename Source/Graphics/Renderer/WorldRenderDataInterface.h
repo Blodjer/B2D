@@ -13,24 +13,24 @@ public:
     template<typename F>
     bool ClearAndSetRenderData(F fillRenderObjectBufferFunction);
 
-    uint32 GetPreparedFrame() const { return mPreparedFrame; }
+    uint32 GetPreparedFrame() const { return m_preparedFrame; }
 
-    RenderObjectBuffer<QuadRenderObject> const& GetQuadBuffer() const { return mQuadBuffer; }
+    RenderObjectBuffer<QuadRenderObject> const& GetQuadBuffer() const { return m_quadBuffer; }
 
 public:
-    FORCEINLINE void StartWrite() { mMutex.lock(); }
-    FORCEINLINE void StopWrite() { mMutex.unlock(); }
-    FORCEINLINE bool TryWrite() { return mMutex.try_lock(); }
-    FORCEINLINE void StartRead() { mMutex.lock_shared(); }
-    FORCEINLINE void StopRead() { mMutex.unlock_shared(); }
+    FORCEINLINE void StartWrite() { m_mutex.lock(); }
+    FORCEINLINE void StopWrite() { m_mutex.unlock(); }
+    FORCEINLINE bool TryWrite() { return m_mutex.try_lock(); }
+    FORCEINLINE void StartRead() { m_mutex.lock_shared(); }
+    FORCEINLINE void StopRead() { m_mutex.unlock_shared(); }
 
     // TODO: Add ref count and only write if ref count > 0
 
 private:
-    RenderObjectBuffer<QuadRenderObject> mQuadBuffer;
+    RenderObjectBuffer<QuadRenderObject> m_quadBuffer;
 
-    std::shared_mutex mMutex;
-    std::atomic<uint32> mPreparedFrame;
+    std::shared_mutex m_mutex;
+    std::atomic<uint32> m_preparedFrame;
 
 };
 
@@ -42,10 +42,10 @@ bool WorldRenderDataInterface::ClearAndSetRenderData(F quadBufferFunction)
         return false;
     }
 
-    mQuadBuffer.Clear();
-    quadBufferFunction(mQuadBuffer);
+    m_quadBuffer.Clear();
+    quadBufferFunction(m_quadBuffer);
 
-    mPreparedFrame++;
+    m_preparedFrame++;
 
     StopWrite();
 

@@ -1,4 +1,4 @@
 #include "B2D_pch.h"
 #include "Resource.h"
 
-ResourceList IResourceManager::mLoadedResources;
+ResourceList IResourceManager::ms_loadedResources;

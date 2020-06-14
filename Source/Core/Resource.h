@@ -37,12 +37,12 @@ protected:
 public:
     static constexpr auto GetFallbackResourcePath();
 
-    FORCEINLINE void AddRef() const { ++mRefCount; }
-    FORCEINLINE void RemoveRef() const { --mRefCount; }
+    FORCEINLINE void AddRef() const { ++m_refCount; }
+    FORCEINLINE void RemoveRef() const { --m_refCount; }
 
     void RegisterChangeCallback(TResourceChangedDelegate const& callback) const
     {
-        mOnChangeCallbacks.emplace_back(callback);
+        m_onChangeCallbacks.emplace_back(callback);
     }
 
     void RemoveChangeCallback(TResourceChangedDelegate const& callback)
@@ -53,15 +53,15 @@ public:
 private:
     void OnChange() const
     {
-        for (TResourceChangedDelegate const& callback : mOnChangeCallbacks)
+        for (TResourceChangedDelegate const& callback : m_onChangeCallbacks)
         {
             callback();
         }
     }
 
 private:
-    mutable uint32 mRefCount = 0;
-    mutable std::vector<TResourceChangedDelegate> mOnChangeCallbacks;
+    mutable uint32 m_refCount = 0;
+    mutable std::vector<TResourceChangedDelegate> m_onChangeCallbacks;
 };
 
 template <typename T>
@@ -70,58 +70,58 @@ class ResourcePtr
 	friend IResourceManager;
 
 private:
-	ResourceList::value_type* mPtr;
+	ResourceList::value_type* m_ptr;
 
 private:
 	ResourcePtr(ResourceList::iterator& ptr)
-		: mPtr(&*ptr)
+		: m_ptr(&*ptr)
 	{
-        mPtr->second->AddRef();
+        m_ptr->second->AddRef();
 	}
 
 public:
     ResourcePtr(ResourcePtr const& other)
     {
-        mPtr = other.mPtr;
-        mPtr->second->AddRef();
+        m_ptr = other.m_ptr;
+        m_ptr->second->AddRef();
     };
 
 	ResourcePtr& operator=(ResourcePtr const& other)
 	{
-		mPtr = other.mPtr;
-        mPtr->second->AddRef();
+		m_ptr = other.m_ptr;
+        m_ptr->second->AddRef();
 
 		return *this;
 	}
 
     ~ResourcePtr()
     {
-        mPtr->second->RemoveRef();
+        m_ptr->second->RemoveRef();
     }
 
 	T const* operator->() const
 	{
-		return static_cast<T const*>(mPtr->second);
+		return static_cast<T const*>(m_ptr->second);
 	}
 
 	bool operator==(ResourcePtr& other) const
 	{
-		return mPtr == other.mPtr;
+		return m_ptr == other.m_ptr;
 	}
 
     FORCEINLINE bool IsValid() const
     {
-        return mPtr && mPtr->second;
+        return m_ptr && m_ptr->second;
     }
 };
 
 class IResourceManager
 {
 private:
-	static ResourceList mLoadedResources;
+	static ResourceList ms_loadedResources;
 
 public:
-	static ResourceList const& GetLoadedResources() { return mLoadedResources; }
+	static ResourceList const& GetLoadedResources() { return ms_loadedResources; }
 
     template<typename T>
     static ResourcePtr<T> Get(ResourcePath const& path);
@@ -140,7 +140,7 @@ ResourcePtr<T> IResourceManager::Get(ResourcePath const& path)
 {
     B2D_STATIC_ASSERT_TYPE(IResource, T);
 
-    if (mLoadedResources.find(path) == mLoadedResources.end())
+    if (ms_loadedResources.find(path) == ms_loadedResources.end())
     {
 #ifndef B2D_NO_LOGGING
         auto loadingStartTime = std::chrono::high_resolution_clock::now();
@@ -149,7 +149,7 @@ ResourcePtr<T> IResourceManager::Get(ResourcePath const& path)
         IResource* resource = new T();
         if (resource->Load(path))
         {
-            mLoadedResources.emplace(path, resource);
+            ms_loadedResources.emplace(path, resource);
 
 #ifndef B2D_NO_LOGGING
             std::chrono::duration<double> elapsedTime = std::chrono::high_resolution_clock::now() - loadingStartTime;
@@ -159,17 +159,17 @@ ResourcePtr<T> IResourceManager::Get(ResourcePath const& path)
         else
         {
             delete resource;
-            mLoadedResources.emplace(path, nullptr);
+            ms_loadedResources.emplace(path, nullptr);
 
             B2D_CORE_ERROR("Failed to load resource: {0}", path);
 
 #ifdef RESOURCE_FALLBACK
-            mLoadedResources[path] = TryGetFallback<T>();
+            ms_loadedResources[path] = TryGetFallback<T>();
 #endif
         }
     }
 
-    return ResourcePtr<T>(mLoadedResources.find(path));
+    return ResourcePtr<T>(ms_loadedResources.find(path));
 }
 
 template<typename T>
@@ -183,18 +183,18 @@ static bool IResourceManager::Reload(ResourcePtr<T> const resourcePtr)
     _CrtMemCheckpoint(&memBefore);
 #endif
 
-    ResourcePath const& path = resourcePtr.mPtr->first;
-    IResource const* resource = resourcePtr.mPtr->second;
+    ResourcePath const& path = resourcePtr.m_ptr->first;
+    IResource const* resource = resourcePtr.m_ptr->second;
 
-    B2D_ASSERT(mLoadedResources.find(path) != mLoadedResources.end());
+    B2D_ASSERT(ms_loadedResources.find(path) != ms_loadedResources.end());
 
-    ResourceList::iterator fallback = mLoadedResources.find(T::GetFallbackResourcePath());
-    if (!resourcePtr.IsValid() || (fallback != mLoadedResources.end() && fallback->second == resource))
+    ResourceList::iterator fallback = ms_loadedResources.find(T::GetFallbackResourcePath());
+    if (!resourcePtr.IsValid() || (fallback != ms_loadedResources.end() && fallback->second == resource))
     {
         IResource* newResource = new T();
         if (newResource->Load(path))
         {
-            mLoadedResources[path] = newResource;
+            ms_loadedResources[path] = newResource;
 
             B2D_CORE_INFO("Reloaded resource: {0}", path);
             resource->OnChange();
@@ -220,7 +220,7 @@ static bool IResourceManager::Reload(ResourcePtr<T> const resourcePtr)
     {
         delete resource;
 #ifdef RESOURCE_FALLBACK
-        mLoadedResources[path] = TryGetFallback<T>();
+        ms_loadedResources[path] = TryGetFallback<T>();
 #endif
         B2D_CORE_ERROR("Failed to reload resource: {0}", path);
         return false;
@@ -269,20 +269,20 @@ static T const* IResourceManager::TryGetFallback()
         return nullptr;
     }
 
-    if (mLoadedResources.find(path) == mLoadedResources.end())
+    if (ms_loadedResources.find(path) == ms_loadedResources.end())
     {
         IResource* fallbackResource = new T();
         if (fallbackResource->Load(path))
         {
-            mLoadedResources.emplace(path, fallbackResource);
-            fallback = static_cast<T const*>(mLoadedResources[path]);
+            ms_loadedResources.emplace(path, fallbackResource);
+            fallback = static_cast<T const*>(ms_loadedResources[path]);
         }
         else
         {
             B2D_CORE_ERROR("Failed to load fallback resource: {0}", path);
 
             delete fallbackResource;
-            mLoadedResources.emplace(path, nullptr);
+            ms_loadedResources.emplace(path, nullptr);
             return nullptr;
         }
     }

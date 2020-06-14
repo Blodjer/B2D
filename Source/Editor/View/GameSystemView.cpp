@@ -16,9 +16,9 @@ void GameSystemView::Tick(float deltaTime)
         // System Admin Settings
         ImGui::BeginGroup();
 
-        ImGui::Checkbox("Enable Multithreading", &systemAdmin.mMultithreaded);
+        ImGui::Checkbox("Enable Multithreading", &systemAdmin.m_multithreaded);
 
-        ImGui::Checkbox("Use Optimized Order", &systemAdmin.mUseOptimizedSystems);
+        ImGui::Checkbox("Use Optimized Order", &systemAdmin.m_useOptimizedSystems);
 
         ImGui::NewLine();
 
@@ -36,7 +36,7 @@ void GameSystemView::Tick(float deltaTime)
         ImGui::NextColumn();
         //ImGui::Text("Multithreaded");
         char const* const multithreadText = "Multithreaded";
-        if (systemAdmin.mMultithreaded)
+        if (systemAdmin.m_multithreaded)
         {
             ImGui::Text(multithreadText);
         }
@@ -47,7 +47,7 @@ void GameSystemView::Tick(float deltaTime)
         ImGui::Separator();
         ImGui::NextColumn();
 
-        std::vector<System*> const& systems = systemAdmin.mUseOptimizedSystems ? systemAdmin.mSystemsOptimized : systemAdmin.mSystemsRaw;
+        std::vector<System*> const& systems = systemAdmin.m_useOptimizedSystems ? systemAdmin.m_systemsOptimized : systemAdmin.m_systemsRaw;
         for (System* s : systems)
         {
             ImGui::Text(s->GetName());
@@ -60,7 +60,7 @@ void GameSystemView::Tick(float deltaTime)
 
             ImGui::NextColumn();
             char const* const multithreadText = s->IsMultithreaded() ? "Yes" : "No";
-            if (systemAdmin.mMultithreaded)
+            if (systemAdmin.m_multithreaded)
             {
                 ImGui::Text(multithreadText);
             }

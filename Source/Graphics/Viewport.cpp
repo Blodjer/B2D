@@ -6,40 +6,42 @@
 
 #include <GL/glew.h>
 
-CViewport::CViewport(int32 x, int32 y, uint32 width, uint32 height) :
-	mX(x), mY(y),
-	mWidth(width), mHeight(height)
+CViewport::CViewport(int32 x, int32 y, uint32 width, uint32 height)
+    : m_x(x)
+    , m_y(y)
+    , m_width(width)
+    , m_height(height)
 {
     
 }
 
 void CViewport::SetCamera(CameraEntity* camera)
 {
-	if (mCurrentCamera == camera)
+	if (m_currentCamera == camera)
 		return;
 
-	mCurrentCamera = camera;
+	m_currentCamera = camera;
 }
 
 void CViewport::SetSize(uint32 width, uint32 height)
 {
-	mWidth = width;
-	mHeight = height;
+	m_width = width;
+	m_height = height;
 }
 
 bool CViewport::GetViewProjectionMatrix(TMatrix& matrix) const
 {
-    if (mCurrentCamera == nullptr)
+    if (m_currentCamera == nullptr)
     {
         B2D_CORE_ERROR("No active camera for viewport");
         return false;
     }
 
-    matrix = mCurrentCamera->GetProjectionMatrix(this) * mCurrentCamera->GetViewMatrix();
+    matrix = m_currentCamera->GetProjectionMatrix(this) * m_currentCamera->GetViewMatrix();
     return true;
 }
 
 void CViewport::Use()
 {
-	glViewport(mX, mY, mWidth, mHeight);
+	glViewport(m_x, m_y, m_width, m_height);
 }

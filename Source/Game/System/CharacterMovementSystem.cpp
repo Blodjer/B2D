@@ -4,7 +4,7 @@
 
 void CharacterMovementSystem::Update(float deltaTime)
 {
-    for (ComponentSlice slice : ComponentIterator(mWorld))
+    for (ComponentSlice slice : ComponentIterator(m_world))
     {
         CharacterMovementComponent& movement = slice.GetWrite<CharacterMovementComponent>();
         TransformComponent& transform = slice.GetWrite<TransformComponent>();
@@ -13,7 +13,7 @@ void CharacterMovementSystem::Update(float deltaTime)
             continue;
 
         transform.position += movement.controlInputVector * deltaTime;
-        B2D_CORE_INFO("CharacterMovementSystem {} {}", transform.position.X , transform.position.Z);
+        B2D_CORE_INFO("CharacterMovementSystem {} {}", transform.position.x , transform.position.z);
     }
 }
 

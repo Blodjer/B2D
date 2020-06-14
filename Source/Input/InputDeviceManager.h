@@ -22,11 +22,11 @@ private:
     void RemoveInputDevice(InputDeviceID inputId);
 
 private:
-    CGameInstance const* const mOwningGameInstance = nullptr;
+    CGameInstance const* const m_owningGameInstance = nullptr;
 
-    std::unordered_set<InputDeviceID> mAvailableDevices;
-    std::unordered_map<InputDeviceID, uint32> mAssignedDevices;
-    std::queue<uint32> mPendingPlayers;
+    std::unordered_set<InputDeviceID> m_availableDevices;
+    std::unordered_map<InputDeviceID, uint32> m_assignedDevices;
+    std::queue<uint32> m_pendingPlayers;
 };
 
 // enum class EInputDeviceType : uint8

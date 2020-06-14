@@ -12,13 +12,13 @@ public:
     void AssignInput(InputDeviceID inputDeviceId);
     void DeassignInput(InputDeviceID inputDeviceId);
 
-	uint32 GetId() const { return mId; };
-    std::unordered_set<InputDeviceID> const& GetAssignedInputDevices() const { return mAssignedInput; }
+	uint32 GetId() const { return m_id; };
+    std::unordered_set<InputDeviceID> const& GetAssignedInputDevices() const { return m_assignedInput; }
 
 private:
-    uint32 const mId;
+    uint32 const m_id;
 
-    std::unordered_set<InputDeviceID> mAssignedInput;
-    InputState mInputState;
+    std::unordered_set<InputDeviceID> m_assignedInput;
+    InputState m_inputState;
 
 };

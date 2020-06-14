@@ -9,19 +9,19 @@ public:
     Entity(EntityID id);
     ~Entity();
 
-    EntityID GetID() const { return mID; }
+    EntityID GetID() const { return m_id; }
 
     FORCEINLINE bool Has(uint16 const mask) const
     {
-        return (mComponentMask & mask) == mask;
+        return (m_componentMask & mask) == mask;
     }
 
 public:
-    std::vector<Component*> mComponents;
-    uint16 mComponentMask = 0;
+    std::vector<Component*> m_components;
+    uint16 m_componentMask = 0;
 
 private:
-    EntityID mID;
+    EntityID m_id;
 
 };
 

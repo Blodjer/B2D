@@ -8,7 +8,7 @@ InputState::InputState()
 
 InputState::InputState(InputState& inputState)
 {
-    mKeyMap = inputState.mKeyMap;
+    m_keyMap = inputState.m_keyMap;
 }
 
 bool InputState::IsKey(EKey key, EKeyEvent keyEvent)
@@ -18,17 +18,17 @@ bool InputState::IsKey(EKey key, EKeyEvent keyEvent)
 
 EKeyEvent const& InputState::GetKeyState(EKey key)
 {
-    return mKeyMap.at(static_cast<size_t>(key));
+    return m_keyMap.at(static_cast<size_t>(key));
 }
 
 void InputState::SetKeyState(EKey key, EKeyEvent event)
 {
-    mKeyMap.at(static_cast<size_t>(key)) = event;
+    m_keyMap.at(static_cast<size_t>(key)) = event;
 }
 
 void InputState::Flush()
 {
-    for (EKeyEvent& keyEvent : mKeyMap)
+    for (EKeyEvent& keyEvent : m_keyMap)
     {
         keyEvent = EKeyEvent::None;
     }

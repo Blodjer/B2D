@@ -8,10 +8,10 @@
 #include "Platform/GenericWindow.h"
 
 World::World(CGameInstance* const owningGameInstance)
-    : mOwningGameInstance(owningGameInstance)
-    , mSystemAdmin(this)
+    : m_owningGameInstance(owningGameInstance)
+    , m_systemAdmin(this)
 {
-    mWorldRenderDataInterface = new WorldRenderDataInterface();
+    m_worldRenderDataInterface = new WorldRenderDataInterface();
 
     CameraEntity* defaultCamera = AddSystemEntityObject<CameraEntity>();
     GameEngine::Instance()->GetMainWindow()->GetViewport()->SetCamera(defaultCamera);
@@ -19,10 +19,10 @@ World::World(CGameInstance* const owningGameInstance)
 
 World::~World()
 {
-    delete mWorldRenderDataInterface;
+    delete m_worldRenderDataInterface;
 }
 
 void World::Tick(float deltaTime)
 {
-    mSystemAdmin.Tick(deltaTime);
+    m_systemAdmin.Tick(deltaTime);
 }

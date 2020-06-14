@@ -1,32 +1,32 @@
 #include "B2D_pch.h"
 #include "Profiler.h"
 
-GenericStatisticDataList Profiler::msGenericStatistics;
-GameSystemStatisticDataList Profiler::msGameSystemStatistics;
-std::mutex Profiler::msMutex;
-uint64 Profiler::frameId;
-TimeStamp Profiler::msGameStart;
-TimeStamp Profiler::msGameEnd;
+GenericStatisticDataList Profiler::ms_genericStatistics;
+GameSystemStatisticDataList Profiler::ms_gameSystemStatistics;
+std::mutex Profiler::ms_mutex;
+uint64 Profiler::ms_frameId;
+TimeStamp Profiler::ms_gameStart;
+TimeStamp Profiler::ms_gameEnd;
 
 void Profiler::OnGameSystemBeginFrame()
 {
-    frameId++;
-    msGameSystemStatistics.clear();
-    msGameStart = Clock::now();
+    ms_frameId++;
+    ms_gameSystemStatistics.clear();
+    ms_gameStart = Clock::now();
 }
 
 void Profiler::OnGameSystemEndFrame()
 {
-    msGameEnd = Clock::now();
+    ms_gameEnd = Clock::now();
 }
 
 ScopedGenericStatistic::ScopedGenericStatistic(StatisticLabel label)
 {
-    mData.label = label;
+    m_data.label = label;
 }
 
 ScopedGameSystemStatistic::ScopedGameSystemStatistic(GameSystemStatisticData::EType type, StatisticLabel label)
 {
-    mData.label = label;
-    mData.type = type;
+    m_data.label = label;
+    m_data.type = type;
 }

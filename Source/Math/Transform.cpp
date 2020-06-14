@@ -2,25 +2,25 @@
 #include "Transform.h"
 
 Transform::Transform()
-    : mPosition(0.0f, 0.0f, 0.0f)
-    , mScale(1.0f)
+    : m_position(0.0f, 0.0f, 0.0f)
+    , m_scale(1.0f)
 {
 
 }
 
 void Transform::SetPosition(TVec3 const& position)
 {
-    mPosition = position;
+    m_position = position;
 }
 
 void Transform::SetScale(TVec3 const& scale)
 {
-    mScale = scale;
+    m_scale = scale;
 }
 
 void Transform::CalculateMatrix(TMatrix& matrix)
 {
     matrix = TMatrix(1.0f);
-    matrix = TMatrix::Translate(matrix, mPosition);
-    matrix = TMatrix::Scale(matrix, mScale);
+    matrix = TMatrix::Translate(matrix, m_position);
+    matrix = TMatrix::Scale(matrix, m_scale);
 }

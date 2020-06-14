@@ -2,7 +2,7 @@
 #include "Entity.h"
 
 Entity::Entity(EntityID id)
-    : mID(id)
+    : m_id(id)
 {
 
 }

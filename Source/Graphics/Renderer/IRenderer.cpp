@@ -12,17 +12,17 @@
 void IRenderer::Init()
 {
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-    mRenderTexture1 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
-    mRenderTexture2 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
-    mRenderTarget1 = ghi->CreateRenderTarget(mRenderTexture1);
-    mRenderTarget2 = ghi->CreateRenderTarget(mRenderTexture2);
+    m_renderTexture1 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
+    m_renderTexture2 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
+    m_renderTarget1 = ghi->CreateRenderTarget(m_renderTexture1);
+    m_renderTarget2 = ghi->CreateRenderTarget(m_renderTexture2);
 }
 
 void IRenderer::Shutdown()
 {
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-    ghi->DeleteRenderTarget(mRenderTarget1, true);
-    ghi->DeleteRenderTarget(mRenderTarget2, true);
+    ghi->DeleteRenderTarget(m_renderTarget1, true);
+    ghi->DeleteRenderTarget(m_renderTarget2, true);
 }
 
 void IRenderer::Render()
@@ -34,14 +34,14 @@ void IRenderer::Render()
 
         std::chrono::time_point<clock> start = clock::now();
 
-        GHIRenderTarget* const target = mRenderToSwtich ? mRenderTarget1 : mRenderTarget2;
+        GHIRenderTarget* const target = m_renderToSwtich ? m_renderTarget1 : m_renderTarget2;
 
         PreRender();
         RenderInternal(target);
         PostRender();
 
         duration ChronoTick = clock::now() - start;
-        mRenderTime = ChronoTick.count();
+        m_renderTime = ChronoTick.count();
     }
 }
 
@@ -55,12 +55,12 @@ void IRenderer::PostRender()
     glFinish();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    mMutex.lock();
-    mRenderToSwtich.store(!mRenderToSwtich);
-    mMutex.unlock();
+    m_mutex.lock();
+    m_renderToSwtich.store(!m_renderToSwtich);
+    m_mutex.unlock();
 }
 
 GHITexture* IRenderer::GetRenderOutput()
 {
-    return mRenderToSwtich ? mRenderTexture2 : mRenderTexture1;
+    return m_renderToSwtich ? m_renderTexture2 : m_renderTexture1;
 }

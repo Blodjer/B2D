@@ -8,8 +8,8 @@ class OpenGLShader : public GHIShader
 public:
     OpenGLShader(GLuint handle);
 
-    GLuint GetHandle() const { return mHandle; }
+    GLuint GetHandle() const { return m_handle; }
 
 private:
-    GLuint mHandle = 0;
+    GLuint m_handle = 0;
 };

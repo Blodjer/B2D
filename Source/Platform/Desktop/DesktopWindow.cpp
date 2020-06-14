@@ -12,16 +12,16 @@
 DesktopWindow::DesktopWindow(GLFWwindow* context, uint32 width, uint32 height)
     : GenericWindow(width, height)
 {
-	mContext = context;
-    mWidth = width;
-    mHeight = height;
+	m_context = context;
+    m_width = width;
+    m_height = height;
 	
     glfwSetWindowUserPointer(context, this);
 
     MakeContextCurrent();
 	SetVsync(false);
 
-	glfwSetFramebufferSizeCallback(mContext, [](GLFWwindow* window, int width, int height) {
+	glfwSetFramebufferSizeCallback(m_context, [](GLFWwindow* window, int width, int height) {
 		DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
 		userPointer->OnGlfwFramebufferSizeCallback(width, height);
 	});
@@ -34,15 +34,15 @@ DesktopWindow::~DesktopWindow()
 
 bool DesktopWindow::IsCurrentContext() const
 {
-    return glfwGetCurrentContext() == mContext;
+    return glfwGetCurrentContext() == m_context;
 }
 
 void DesktopWindow::SetSize(uint32 width, uint32 height)
 {
-	glfwSetWindowSize(mContext, width, height);
+	glfwSetWindowSize(m_context, width, height);
 
-	mWidth = width;
-	mHeight = height;
+	m_width = width;
+	m_height = height;
 	GetViewport()->SetSize(width, height);
 }
 
@@ -62,12 +62,12 @@ void DesktopWindow::SetVsync(bool enable)
 
 bool DesktopWindow::IsFocused() const
 {
-    return glfwGetWindowAttrib(mContext, GLFW_FOCUSED);
+    return glfwGetWindowAttrib(m_context, GLFW_FOCUSED);
 }
 
 void DesktopWindow::Focus()
 {
-    glfwFocusWindow(mContext);
+    glfwFocusWindow(m_context);
 }
 
 void DesktopWindow::MakeContextCurrent()
@@ -77,27 +77,27 @@ void DesktopWindow::MakeContextCurrent()
         return;
     }
 
-	glfwMakeContextCurrent(mContext);
+	glfwMakeContextCurrent(m_context);
 }
 
 void DesktopWindow::Swap()
 {
-	glfwSwapBuffers(mContext);
+	glfwSwapBuffers(m_context);
 }
 
 void DesktopWindow::SetShouldClose(bool close)
 {
-	glfwSetWindowShouldClose(mContext, close);
+	glfwSetWindowShouldClose(m_context, close);
 }
 
 bool DesktopWindow::ShouldClose() const
 {
-	return glfwWindowShouldClose(mContext);
+	return glfwWindowShouldClose(m_context);
 }
 
 void DesktopWindow::OnGlfwFramebufferSizeCallback(int width, int height)
 {
-	mWidth = width;
-	mHeight = height;
+	m_width = width;
+	m_height = height;
     GetViewport()->SetSize(width, height);
 }

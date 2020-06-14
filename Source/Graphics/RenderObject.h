@@ -9,15 +9,15 @@ class RenderObjectBuffer
 public:
     RenderObjectBuffer(uint32 capacity)
     {
-        mBuffer = static_cast<C*>(std::malloc(sizeof(C) * capacity));
-        B2D_ASSERT(mBuffer != nullptr);
+        m_buffer = static_cast<C*>(std::malloc(sizeof(C) * capacity));
+        B2D_ASSERT(m_buffer != nullptr);
 
-        mCapacity = capacity;
+        m_capacity = capacity;
     }
 
     ~RenderObjectBuffer()
     {
-        free(mBuffer);
+        free(m_buffer);
     }
 
     RenderObjectBuffer(RenderObjectBuffer const&) = delete;
@@ -26,40 +26,40 @@ public:
 public:
     FORCEINLINE C& operator[](uint32 const i) const
     {
-        B2D_ASSERT(i < mCapacity);
-        return mBuffer[i];
+        B2D_ASSERT(i < m_capacity);
+        return m_buffer[i];
     }
 
     template<typename... V>
     FORCEINLINE void Add(V&... values)
     {
-        if (B2D_CHECKf(mSize >= mCapacity, "Cannot add RenderObject. RenderObjectBuffer has reached it's maximum capacity of {} elements", mCapacity))
+        if (B2D_CHECKf(m_size >= m_capacity, "Cannot add RenderObject. RenderObjectBuffer has reached it's maximum capacity of {} elements", m_capacity))
         {
             return;
         }
 
-        mBuffer[mSize] = C(values...);
-        mSize++;
+        m_buffer[m_size] = C(values...);
+        m_size++;
     }
 
-    FORCEINLINE void Clear() { mSize = 0; }
-    FORCEINLINE uint32 const Size() const { return mSize; }
+    FORCEINLINE void Clear() { m_size = 0; }
+    FORCEINLINE uint32 const Size() const { return m_size; }
 
 private:
-    C* mBuffer = nullptr;
-    uint32 mCapacity = 0;
-    uint32 mSize = 0;
+    C* m_buffer = nullptr;
+    uint32 m_capacity = 0;
+    uint32 m_size = 0;
 };
 
 class QuadRenderObject
 {
 public:
     QuadRenderObject(TMatrix const& matrix, Material* material)
-        : mMatrix(matrix)
-        , mMaterial(material)
+        : m_matrix(matrix)
+        , m_material(material)
     {
     }
 
-    TMatrix mMatrix;
-    Material* mMaterial;
+    TMatrix m_matrix;
+    Material* m_material;
 };

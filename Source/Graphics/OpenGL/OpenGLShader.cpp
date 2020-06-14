@@ -3,5 +3,5 @@
 
 OpenGLShader::OpenGLShader(GLuint handle)
 {
-    mHandle = handle;
+    m_handle = handle;
 }

@@ -21,7 +21,7 @@ private:
     GameEngine(const GameEngine&) = delete;
     void operator=(const GameEngine&) = delete;
 
-    static GameEngine* sInstance;
+    static GameEngine* ms_instance;
 
 public:
     static void Create(ApplicationConfig const& config);
@@ -29,8 +29,8 @@ public:
     static void Shutdown();
 
 	static GameEngine* const Instance() {
-        B2D_ASSERT(sInstance != nullptr);
-		return sInstance;
+        B2D_ASSERT(ms_instance != nullptr);
+		return ms_instance;
 	}
 
 public:
@@ -39,15 +39,15 @@ public:
 	void RequestShutdown();
 
 public:
-    IPlatformApplicationInterface* GetPA() const { return mPA; }
+    IPlatformApplicationInterface* GetPA() const { return m_PA; }
 
-    IGraphicsHardwareInterface* GetGHI() const { return mGHI; }
+    IGraphicsHardwareInterface* GetGHI() const { return m_GHI; }
 
-    ModuleManager* const GetModuleManager() { return &mModuleManager; }
-    RenderManger* GetRenderManager() const { return mRenderManager; }
+    ModuleManager* const GetModuleManager() { return &m_moduleManager; }
+    RenderManger* GetRenderManager() const { return m_renderManager; }
 
-	CGameInstance* GetGameInstance() const { return mGameInstance; }
-    GenericWindow* GetMainWindow() const { return mMainWindow; }
+	CGameInstance* GetGameInstance() const { return m_gameInstance; }
+    GenericWindow* GetMainWindow() const { return m_mainWindow; }
 
 private:
     virtual bool OnKeyEvent(GenericWindow* window, int32 scancode, EKey key, EKeyEvent event) override;
@@ -55,17 +55,17 @@ private:
     virtual bool OnMouseButton(GenericWindow* window, EMouseButton button, EMouseButtonEvent event) override;
 
 private:
-	bool mPendingShutdown = false;
+	bool m_pendingShutdown = false;
 
-	ApplicationConfig const mConfig;
+	ApplicationConfig const m_config;
 
-    IPlatformApplicationInterface* mPA = nullptr;
-    IGraphicsHardwareInterface* mGHI = nullptr;
+    IPlatformApplicationInterface* m_PA = nullptr;
+    IGraphicsHardwareInterface* m_GHI = nullptr;
 
-    ModuleManager mModuleManager;
-    RenderManger* mRenderManager = nullptr;
+    ModuleManager m_moduleManager;
+    RenderManger* m_renderManager = nullptr;
 
-    GenericWindow* mMainWindow = nullptr;
-	CGameInstance* mGameInstance = nullptr;
+    GenericWindow* m_mainWindow = nullptr;
+	CGameInstance* m_gameInstance = nullptr;
 
 };

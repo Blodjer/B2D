@@ -13,10 +13,10 @@ public:
     virtual ~GenericWindow();
 
     void AssignGameInstance(CGameInstance* gameInstance);
-    CGameInstance* GetAssignedGameInstance() const { return mAssignedGameInstance; }
+    CGameInstance* GetAssignedGameInstance() const { return m_assignedGameInstance; }
 
-    CViewport* GetViewport() const { return mViewports[0]; }
-    std::vector<CViewport*> const& GetViewports() const { return mViewports; }
+    CViewport* GetViewport() const { return m_viewports[0]; }
+    std::vector<CViewport*> const& GetViewports() const { return m_viewports; }
 
     virtual void SetSize(uint32 width, uint32 height) = 0;
     virtual void SetVsync(bool enable) = 0;
@@ -29,7 +29,7 @@ public:
     virtual void Swap() = 0;
 
 private:
-    CGameInstance* mAssignedGameInstance = nullptr;
+    CGameInstance* m_assignedGameInstance = nullptr;
 
-    std::vector<CViewport*> mViewports;
+    std::vector<CViewport*> m_viewports;
 };

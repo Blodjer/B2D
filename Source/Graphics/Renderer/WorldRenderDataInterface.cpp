@@ -3,8 +3,8 @@
 
 
 WorldRenderDataInterface::WorldRenderDataInterface()
-    : mQuadBuffer(100000)
-    , mPreparedFrame(0)
+    : m_quadBuffer(100000)
+    , m_preparedFrame(0)
 {
 
 }

@@ -18,76 +18,76 @@
 #include "Game/Core/SystemAdmin.h"
 #include "Game/Core/World.h"
 
-GameEngine* GameEngine::sInstance = nullptr;
+GameEngine* GameEngine::ms_instance = nullptr;
 
 GameEngine::GameEngine(ApplicationConfig const& config)
-    : mConfig(config)
+    : m_config(config)
 {
 }
 
 GameEngine::~GameEngine()
 {
-    delete mGameInstance;
+    delete m_gameInstance;
 
     // TODO: replace by smart pointer
     // TODO: replace by base (init, shutdown,...)
 
-    mPA->Shutdown();
-    mGHI->Shutdown();
-    mRenderManager->Shutdown();
+    m_PA->Shutdown();
+    m_GHI->Shutdown();
+    m_renderManager->Shutdown();
 
-    delete mPA;
-    delete mGHI;
-    delete mRenderManager;
+    delete m_PA;
+    delete m_GHI;
+    delete m_renderManager;
 }
 
 void GameEngine::Create(ApplicationConfig const& config)
 {
-    if (B2D_CHECK(sInstance != nullptr))
+    if (B2D_CHECK(ms_instance != nullptr))
     {
         return;
     }
 
-    sInstance = new GameEngine(config);
-    sInstance->Init();
+    ms_instance = new GameEngine(config);
+    ms_instance->Init();
 }
 
 void GameEngine::Init()
 {
     B2D_CORE_INFO("Initialize engine...");
 
-    ApplicationConfig::Dump(mConfig);
+    ApplicationConfig::Dump(m_config);
     UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
 
     // Platform Initialization
-    mPA = new PlatformApplication();
-    B2D_ASSERT(mPA->Init());
-    mPA->AddMessageHandler(this);
+    m_PA = new PlatformApplication();
+    B2D_ASSERT(m_PA->Init());
+    m_PA->AddMessageHandler(this);
 
     // Create Main Window
-    mMainWindow = mPA->MakeWindow(mConfig.windowWidth, mConfig.windowHeight, mConfig.name);
+    m_mainWindow = m_PA->MakeWindow(m_config.windowWidth, m_config.windowHeight, m_config.name);
 
     // Load Graphics Hardware Interface
-    mGHI = mPA->CreateGHI();
-    B2D_ASSERT(mGHI->Init());
+    m_GHI = m_PA->CreateGHI();
+    B2D_ASSERT(m_GHI->Init());
 
-    mRenderManager = new RenderManger();
-    mRenderManager->Init(mConfig.multithread);
+    m_renderManager = new RenderManger();
+    m_renderManager->Init(m_config.multithread);
 
 #if 1 // Load Editor
-    mModuleManager.Load<EditorModule>();
+    m_moduleManager.Load<EditorModule>();
     //mPA->AddMessageHandler(mEditor);
 #endif
 
     // TODO: GameInstance should only be valid while the game is running. Should be null in editor mode.
-    mGameInstance = new CGameInstance(mMainWindow);
+    m_gameInstance = new CGameInstance(m_mainWindow);
 
     B2D_CORE_INFO("Engine initilized!\n");
 }
 
 void GameEngine::Shutdown()
 {
-    delete sInstance;
+    delete ms_instance;
 }
 
 void GameEngine::Run()
@@ -114,9 +114,9 @@ void GameEngine::Run()
 		}
 
         Input::Flush();
-        mPA->PollEvents();
+        m_PA->PollEvents();
 
-        mModuleManager.ForwardBeginFrame();
+        m_moduleManager.ForwardBeginFrame();
 
         static bool p_open = true;
         ImGui::SetNextWindowBgAlpha(0.35f);
@@ -140,16 +140,16 @@ void GameEngine::Run()
 		// Tick
         if (!pause || Input::IsKey(EKey::O, EKeyEvent::Press))
         {
-            mGameInstance->Tick(deltaTime);
+            m_gameInstance->Tick(deltaTime);
         }
 
-        mRenderManager->Tick(deltaTime);
+        m_renderManager->Tick(deltaTime);
 
-        mModuleManager.ForwardTick(deltaTime);
+        m_moduleManager.ForwardTick(deltaTime);
 
-        mModuleManager.ForwardEndFrame();
+        m_moduleManager.ForwardEndFrame();
         
-        mRenderManager->Draw();
+        m_renderManager->Draw();
 
 		frames++;
 	}
@@ -158,7 +158,7 @@ void GameEngine::Run()
 void GameEngine::RequestShutdown()
 {
 	GetMainWindow()->SetShouldClose(true);
-	mPendingShutdown = true;
+	m_pendingShutdown = true;
 }
 
 bool GameEngine::OnKeyEvent(GenericWindow* window, int32 scancode, EKey key, EKeyEvent event)

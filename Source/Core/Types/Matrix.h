@@ -19,9 +19,9 @@ public:
 	FORCEINLINE static TMatrix LookAt(TVec3 const& eyePosition, TVec3 const& lookAtPosition, TVec3 const& upVector)
 	{
 		return glm::lookAt(
-            glm::vec3(eyePosition.X, eyePosition.Y, eyePosition.Z),
-            glm::vec3(lookAtPosition.X, lookAtPosition.Y, lookAtPosition.Z),
-            glm::vec3(upVector.X, upVector.Y, upVector.Z)
+            glm::vec3(eyePosition.x, eyePosition.y, eyePosition.z),
+            glm::vec3(lookAtPosition.x, lookAtPosition.y, lookAtPosition.z),
+            glm::vec3(upVector.x, upVector.y, upVector.z)
         );
 	}
 
@@ -29,7 +29,7 @@ public:
 	{
 		return glm::translate(
             matrix,
-            glm::vec3(translation.X, translation.Y, translation.Z)
+            glm::vec3(translation.x, translation.y, translation.z)
         );
 	}
 
@@ -38,7 +38,7 @@ public:
 		return glm::rotate(
             matrix,
             angle,
-            glm::vec3(axis.X, axis.Y, axis.Z)
+            glm::vec3(axis.x, axis.y, axis.z)
         );
 	}
 
@@ -46,7 +46,7 @@ public:
 	{
 		return glm::scale(
             matrix,
-            glm::vec3(scale.X, scale.Y, scale.Z)
+            glm::vec3(scale.x, scale.y, scale.z)
         );
 	}
 
@@ -74,9 +74,9 @@ public:
     void SetPosition(TVec3 const& position)
     {
         float* valuePtr = glm::value_ptr(*(static_cast<glm::mat4*>(this)));
-        valuePtr[12] = position.X;
-        valuePtr[13] = position.Y;
-        valuePtr[14] = position.Z;
+        valuePtr[12] = position.x;
+        valuePtr[13] = position.y;
+        valuePtr[14] = position.z;
     }
 
 	FORCEINLINE float const* GetPtr() const

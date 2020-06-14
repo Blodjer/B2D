@@ -21,8 +21,8 @@ public:
 	virtual void SetShouldClose(bool close) override;
 	virtual bool ShouldClose() const override;
 
-    virtual void* GetGenericContext() const override { return mContext; }
-    GLFWwindow* GetContext() const { return mContext; }
+    virtual void* GetGenericContext() const override { return m_context; }
+    GLFWwindow* GetContext() const { return m_context; }
 
 public:
     virtual void MakeContextCurrent() override;
@@ -31,10 +31,10 @@ public:
 	void OnGlfwFramebufferSizeCallback(int width, int height);
 
 private:
-	uint32 mWidth;
-	uint32 mHeight;
+	uint32 m_width;
+	uint32 m_height;
 
-    GLFWwindow* mContext = nullptr;
+    GLFWwindow* m_context = nullptr;
 
 };
 

@@ -5,7 +5,7 @@
 #include "Game/LocalPlayer.h"
 
 InputDeviceManager::InputDeviceManager(CGameInstance const* const owningGameInstance)
-    : mOwningGameInstance(owningGameInstance)
+    : m_owningGameInstance(owningGameInstance)
 {
 #ifdef B2D_PLATFORM_WINDOWS // TODO: replace with desktop platform
     AddInputDevice(InputDeviceID::KeyboardAndMouse);
@@ -14,20 +14,20 @@ InputDeviceManager::InputDeviceManager(CGameInstance const* const owningGameInst
 
 void InputDeviceManager::AssignNextAvailableDevice(LocalPlayer* localPlayer)
 {
-    if (mAvailableDevices.size() == 0)
+    if (m_availableDevices.size() == 0)
     {
         B2D_CORE_INFO("Not enough available input devices. Added local player ({0}) to input device queue.");
-        mPendingPlayers.emplace(localPlayer->GetId());
+        m_pendingPlayers.emplace(localPlayer->GetId());
     }
 
-    for (InputDeviceID inputDeviceId : mAvailableDevices)
+    for (InputDeviceID inputDeviceId : m_availableDevices)
     {
         localPlayer->AssignInput(inputDeviceId);
-        mAssignedDevices.emplace(inputDeviceId, localPlayer->GetId());
+        m_assignedDevices.emplace(inputDeviceId, localPlayer->GetId());
 
         if (inputDeviceId == InputDeviceID::KeyboardAndMouse)
         {
-            mPendingPlayers.emplace(localPlayer->GetId());
+            m_pendingPlayers.emplace(localPlayer->GetId());
         }
     }
 }
@@ -38,38 +38,38 @@ void InputDeviceManager::DeassignDevices(LocalPlayer* localPlayer)
     for (InputDeviceID const& inputDevice : inputDevices)
     {
         localPlayer->DeassignInput(inputDevice);
-        mAssignedDevices.erase(inputDevice);
+        m_assignedDevices.erase(inputDevice);
     }
 }
 
 void InputDeviceManager::AddInputDevice(InputDeviceID inputDeviceId)
 {
     // If the device was already assigned
-    if (mAssignedDevices.find(inputDeviceId) != mAssignedDevices.end())
+    if (m_assignedDevices.find(inputDeviceId) != m_assignedDevices.end())
     {
         return;
     }
 
-    while (mPendingPlayers.size() > 0)
+    while (m_pendingPlayers.size() > 0)
     {
-        uint32 playerId = mPendingPlayers.front();
-        mPendingPlayers.pop();
+        uint32 playerId = m_pendingPlayers.front();
+        m_pendingPlayers.pop();
 
-        LocalPlayer* localPlayer = mOwningGameInstance->GetLocalPlayer(playerId);
+        LocalPlayer* localPlayer = m_owningGameInstance->GetLocalPlayer(playerId);
         if (localPlayer == nullptr)
         {
             continue;
         }
 
         localPlayer->AssignInput(inputDeviceId);
-        mAssignedDevices.emplace(inputDeviceId, playerId);
+        m_assignedDevices.emplace(inputDeviceId, playerId);
         return;
     }
 
-    mAvailableDevices.insert(inputDeviceId);
+    m_availableDevices.insert(inputDeviceId);
 }
 
 void InputDeviceManager::RemoveInputDevice(InputDeviceID inputId)
 {
-    mAvailableDevices.erase(inputId);
+    m_availableDevices.erase(inputId);
 }

@@ -197,7 +197,7 @@ EditorViewport : IViewport
 */
 void RenderSystem::Update(float deltaTime)
 {
-    WorldRenderDataInterface* wrdi = mWorld->GetWorldRenderDataInterface();
+    WorldRenderDataInterface* wrdi = m_world->GetWorldRenderDataInterface();
     if (wrdi == nullptr)
     {
         return;
@@ -205,7 +205,7 @@ void RenderSystem::Update(float deltaTime)
 
     wrdi->ClearAndSetRenderData([&](RenderObjectBuffer<QuadRenderObject>& buffer) {
 
-        for (ComponentSlice slice : ComponentIterator(mWorld))
+        for (ComponentSlice slice : ComponentIterator(m_world))
         {
             buffer.Add(
                 slice.GetRead<TransformComponent>().matrix,

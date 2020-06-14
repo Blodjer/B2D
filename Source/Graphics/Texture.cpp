@@ -12,22 +12,22 @@ bool CTexture::Load(ResourcePath const& path)
 {
 	stbi_set_flip_vertically_on_load(1);
 
-	if (!stbi_info(path.c_str(), &mWidth, &mHeight, &mComponents))
+	if (!stbi_info(path.c_str(), &m_width, &m_height, &m_components))
 	{
 		return false;
 	}
 
-	void* imgPtr = stbi_load(path.c_str(), &mWidth, &mHeight, &mComponents, STBI_default);
+	void* imgPtr = stbi_load(path.c_str(), &m_width, &m_height, &m_components, STBI_default);
 	if (imgPtr == nullptr)
 	{
 		return false;
 	}
 
-    mGHITexture = GameEngine::Instance()->GetGHI()->CreateTexture(imgPtr, mWidth, mHeight, mComponents);
+    m_ghiTexture = GameEngine::Instance()->GetGHI()->CreateTexture(imgPtr, m_width, m_height, m_components);
     
     stbi_image_free(imgPtr);
 
-    if (mGHITexture == nullptr)
+    if (m_ghiTexture == nullptr)
     {
         return false;
     }
@@ -37,5 +37,5 @@ bool CTexture::Load(ResourcePath const& path)
 
 void CTexture::Free()
 {
-    GameEngine::Instance()->GetGHI()->FreeTexture(mGHITexture);
+    GameEngine::Instance()->GetGHI()->FreeTexture(m_ghiTexture);
 }

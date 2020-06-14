@@ -2,7 +2,7 @@
 #include "OpenGLTexture.h"
 
 OpenGLTexture::OpenGLTexture(GLuint handle)
-    : mHandle(handle)
+    : m_handle(handle)
 {
 
 }

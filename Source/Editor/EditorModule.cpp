@@ -53,7 +53,7 @@ void EditorModule::InitDefaultEditorViews()
 
 void EditorModule::Shutdown()
 {
-    for (IEditorView* editorView : mEditorViews)
+    for (IEditorView* editorView : m_editorViews)
     {
         CloseEditorView(editorView);
     }
@@ -72,7 +72,7 @@ void EditorModule::BeginFrame()
 
 void EditorModule::Tick(float deltaTime)
 {
-    for (IEditorView* const editorView : mEditorViews)
+    for (IEditorView* const editorView : m_editorViews)
     {
         editorView->Tick(deltaTime);
     }
@@ -101,22 +101,22 @@ void EditorModule::Draw()
 
 void EditorModule::CloseEditorView(IEditorView* editorView)
 {
-    mEditorToRemove.emplace(editorView);
+    m_editorToRemove.emplace(editorView);
     editorView = nullptr;
 }
 
 void EditorModule::ClosePendingEditorViews()
 {
-    while (!mEditorToRemove.empty())
+    while (!m_editorToRemove.empty())
     {
-        IEditorView* editor = mEditorToRemove.front();
-        mEditorToRemove.pop();
+        IEditorView* editor = m_editorToRemove.front();
+        m_editorToRemove.pop();
 
-        auto it = std::find(mEditorViews.begin(), mEditorViews.end(), editor);
-        if (it != mEditorViews.end())
+        auto it = std::find(m_editorViews.begin(), m_editorViews.end(), editor);
+        if (it != m_editorViews.end())
         {
-            std::iter_swap(it, mEditorViews.end() - 1);
-            mEditorViews.pop_back();
+            std::iter_swap(it, m_editorViews.end() - 1);
+            m_editorViews.pop_back();
         }
 
         delete editor;

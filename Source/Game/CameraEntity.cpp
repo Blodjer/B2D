@@ -5,7 +5,7 @@
 void CameraEntity::Initialize()
 {
     TransformComponent& transform = GetComponent<TransformComponent>();
-    transform.position.Z = -10.0f;
+    transform.position.z = -10.0f;
 }
 
 void CameraEntity::Update(float deltaTime)

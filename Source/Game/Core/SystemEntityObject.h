@@ -34,20 +34,20 @@ public:
     template<typename C>
     C& AddComponent()
     {
-        C& c = mWorld->AddComponent<C>(GetID());
-        std::get<C*>(mComponentTuple) = &c;
+        C& c = m_world->AddComponent<C>(GetID());
+        std::get<C*>(m_componentTuple) = &c;
         return c;
     }
 
     template<typename C>
     FORCEINLINE C& GetComponent() const
     {
-        B2D_ASSERT(std::get<C*>(mComponentTuple));
-        return *static_cast<C*>(std::get<C*>(mComponentTuple));
+        B2D_ASSERT(std::get<C*>(m_componentTuple));
+        return *static_cast<C*>(std::get<C*>(m_componentTuple));
     }
 
 private:
     static constexpr std::size_t NUMBER_OF_COMPONENTS = sizeof...(Components);
-    std::tuple<Components*...> mComponentTuple;
+    std::tuple<Components*...> m_componentTuple;
 
 };

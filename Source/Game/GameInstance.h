@@ -14,24 +14,24 @@ class CGameInstance
 public:
 	~CGameInstance();
 
-    World* GetWorld() { return mWorld; }
-    GenericWindow* const GetWindow() { return mWindow; }
+    World* GetWorld() { return m_world; }
+    GenericWindow* const GetWindow() { return m_window; }
 
 	LocalPlayer* AddLocalPlayer();
 	void RemoveLocalPlayer(uint32 const playerId);
 
     LocalPlayer* GetLocalPlayer(uint32 const playerId) const;
-    std::vector<LocalPlayer*> const& GetLocalPlayers() const { return mLocalPlayers; }
+    std::vector<LocalPlayer*> const& GetLocalPlayers() const { return m_localPlayers; }
 
 private:
 	void Tick(float deltaTime);
 
 private:
-    World* mWorld = nullptr;
-    GenericWindow* const mWindow = nullptr;
+    World* m_world = nullptr;
+    GenericWindow* const m_window = nullptr;
 
-    std::vector<LocalPlayer*> mLocalPlayers;
-    uint32 mLocalPlayerIdCount = 0;
+    std::vector<LocalPlayer*> m_localPlayers;
+    uint32 m_localPlayerIdCount = 0;
 
     //InputDeviceManager
     //  std::unordered_set<uint32> mAvailableDevices

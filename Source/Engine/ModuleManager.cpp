@@ -8,7 +8,7 @@ ModuleManager::ModuleManager()
 
 ModuleManager::~ModuleManager()
 {
-    for (IEngineModule*& module : mModules)
+    for (IEngineModule*& module : m_modules)
     {
         Unload(module);
     }
@@ -16,7 +16,7 @@ ModuleManager::~ModuleManager()
 
 void ModuleManager::ForwardBeginFrame()
 {
-    for (IEngineModule* const module : mModules)
+    for (IEngineModule* const module : m_modules)
     {
         module->BeginFrame();
     }
@@ -24,7 +24,7 @@ void ModuleManager::ForwardBeginFrame()
 
 void ModuleManager::ForwardTick(float deltaTime)
 {
-    for (IEngineModule* const module : mModules)
+    for (IEngineModule* const module : m_modules)
     {
         module->Tick(deltaTime);
     }
@@ -32,7 +32,7 @@ void ModuleManager::ForwardTick(float deltaTime)
 
 void ModuleManager::ForwardEndFrame()
 {
-    for (IEngineModule* const module : mModules)
+    for (IEngineModule* const module : m_modules)
     {
         module->EndFrame();
     }

@@ -15,5 +15,5 @@ public:
     void Flush();
 
 private:
-    std::array<EKeyEvent, gNumberOfKeys> mKeyMap;
+    std::array<EKeyEvent, g_numberOfKeys> m_keyMap;
 };

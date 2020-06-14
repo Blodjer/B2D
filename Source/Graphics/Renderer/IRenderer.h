@@ -14,9 +14,9 @@ public:
     virtual void Shutdown();
 
     GHITexture* GetRenderOutput();
-    float GetRenderTime() const { return mRenderTime; }
+    float GetRenderTime() const { return m_renderTime; }
 
-    std::mutex mMutex;
+    std::mutex m_mutex;
 
 protected:
     virtual bool ShouldRenderNextFrame() { return true; }
@@ -26,11 +26,11 @@ protected:
     void PostRender();
 
 private:
-    std::atomic<bool> mRenderToSwtich; // true = 1, false = 2
-    std::atomic<float> mRenderTime;
+    std::atomic<bool> m_renderToSwtich; // true = 1, false = 2
+    std::atomic<float> m_renderTime;
 
-    GHIRenderTarget* mRenderTarget1 = nullptr;
-    GHIRenderTarget* mRenderTarget2 = nullptr;
-    GHITexture* mRenderTexture1 = nullptr;
-    GHITexture* mRenderTexture2 = nullptr;
+    GHIRenderTarget* m_renderTarget1 = nullptr;
+    GHIRenderTarget* m_renderTarget2 = nullptr;
+    GHITexture* m_renderTexture1 = nullptr;
+    GHITexture* m_renderTexture2 = nullptr;
 };

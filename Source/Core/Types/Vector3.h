@@ -7,15 +7,13 @@ struct TVec3
 public:
     TVec3::TVec3() { }
 
-    TVec3::TVec3(float f) : X(f), Y(f), Z(f) { }
+    TVec3::TVec3(float f) : x(f), y(f), z(f) { }
 
-    TVec3::TVec3(float x, float y) : X(x), Y(y), Z(0) { }
+    TVec3::TVec3(float x, float y, float z) : x(x), y(y), z(z) { }
 
-    TVec3::TVec3(float x, float y, float z) : X(x), Y(y), Z(z) { }
-
-    float X;
-    float Y;
-    float Z;
+    float x;
+    float y;
+    float z;
 
     static const TVec3 Zero;
     static const TVec3 One;
@@ -25,52 +23,52 @@ public:
 public:
     FORCEINLINE TVec3 TVec3::operator+(const TVec3& v) const
     {
-        return TVec3(X + v.X, Y + v.Y, Z + v.Z);
+        return TVec3(x + v.x, y + v.y, z + v.z);
     }
 
     FORCEINLINE TVec3& TVec3::operator+=(const TVec3& v)
     {
-        X += v.X;
-        Y += v.Y;
-        Z += v.Z;
+        x += v.x;
+        y += v.y;
+        z += v.z;
         return *this;
     }
 
     FORCEINLINE TVec3 TVec3::operator-(const TVec3& v) const
     {
-        return TVec3(X - v.X, Y - v.Y, Z - v.Z);
+        return TVec3(x - v.x, y - v.y, z - v.z);
     }
 
     FORCEINLINE TVec3 TVec3::operator-() const
     {
-        return TVec3(-X, -Y, -Z);
+        return TVec3(-x, -y, -z);
     }
 
     FORCEINLINE TVec3 TVec3::operator*(const float f) const
     {
-        return TVec3(X * f, Y * f, Z * f);
+        return TVec3(x * f, y * f, z * f);
     }
 
     FORCEINLINE TVec3& TVec3::operator*=(const float f)
     {
-        X *= f;
-        Y *= f;
-        Z *= f;
+        x *= f;
+        y *= f;
+        z *= f;
         return *this;
     }
 
     FORCEINLINE TVec3 TVec3::operator*(const TVec3& v) const
     {
-        return TVec3(X * v.X, Y * v.Y, Z * v.Z);
+        return TVec3(x * v.x, y * v.y, z * v.z);
     }
 
     FORCEINLINE bool TVec3::operator==(const TVec3& v) const
     {
-        return X == v.X && Y == v.Y && Z == v.Z;
+        return x == v.x && y == v.y && z == v.z;
     }
 
     FORCEINLINE bool TVec3::operator!=(const TVec3 & v) const
     {
-        return X != v.X || Y != v.Y || Z != v.Z;
+        return x != v.x || y != v.y || z != v.z;
     }
 };

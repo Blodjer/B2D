@@ -66,7 +66,7 @@ void CRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const tar
     {
         QuadRenderObject const& ro = quadRenderObjectBuffer[i];
 
-        Material const* const material = ro.mMaterial;
+        Material const* const material = ro.m_material;
         OpenGLMaterial const* mat = static_cast<OpenGLMaterial*>(material->GetGHIMaterial());
 
         if (lastMaterial != material)
@@ -96,7 +96,7 @@ void CRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const tar
         }
 
         GLuint ul2 = glGetUniformLocation(mat->GetHandle(), "model");
-        glUniformMatrix4fv(ul2, 1, GL_FALSE, ro.mMatrix.GetPtr());
+        glUniformMatrix4fv(ul2, 1, GL_FALSE, ro.m_matrix.GetPtr());
 
         glPolygonMode(GL_FRONT, GL_FILL);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

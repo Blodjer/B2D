@@ -27,24 +27,24 @@ bool WorldRenderer::ShouldRenderNextFrame()
         return false;
     }
 
-    mWRDI = GameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
-    return mWRDI->GetPreparedFrame() != mRenderedFrame;
+    m_wrdi = GameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
+    return m_wrdi->GetPreparedFrame() != m_renderedFrame;
 }
 
 void WorldRenderer::RenderInternal(GHIRenderTarget* const renderTarget)
 {
-    mWRDI = GameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
-    mViewport = GameEngine::Instance()->GetMainWindow()->GetViewport();
+    m_wrdi = GameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
+    m_viewport = GameEngine::Instance()->GetMainWindow()->GetViewport();
 
-    mWRDI->StartRead();
+    m_wrdi->StartRead();
 
     static GHIRenderTarget* rt = GameEngine::Instance()->GetGHI()->CreateRenderTarget();
 
-    CRenderer::RenderWorldFromViewportToRenderTarget(rt, mWRDI, mViewport, mViewport->GetCamera());
+    CRenderer::RenderWorldFromViewportToRenderTarget(rt, m_wrdi, m_viewport, m_viewport->GetCamera());
 
     CRenderer::PostProcessPass(rt, renderTarget, nullptr);
 
-    mRenderedFrame.store(mWRDI->GetPreparedFrame());
+    m_renderedFrame.store(m_wrdi->GetPreparedFrame());
 
-    mWRDI->StopRead();
+    m_wrdi->StopRead();
 }

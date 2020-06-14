@@ -6,12 +6,12 @@
 
 GenericWindow::GenericWindow(uint32 width, uint32 height)
 {
-    mViewports.emplace_back(new CViewport(0, 0, width, height));
+    m_viewports.emplace_back(new CViewport(0, 0, width, height));
 }
 
 GenericWindow::~GenericWindow()
 {
-    for (CViewport* viewport : mViewports)
+    for (CViewport* viewport : m_viewports)
     {
         delete viewport;
     }
@@ -19,6 +19,6 @@ GenericWindow::~GenericWindow()
 
 void GenericWindow::AssignGameInstance(CGameInstance* gameInstance)
 {
-    B2D_CHECKf(mAssignedGameInstance != nullptr, "Window already has a assigned game instance");
-    mAssignedGameInstance = gameInstance;
+    B2D_CHECKf(m_assignedGameInstance != nullptr, "Window already has a assigned game instance");
+    m_assignedGameInstance = gameInstance;
 }

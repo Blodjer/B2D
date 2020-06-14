@@ -26,7 +26,7 @@ public:
         }
 
         module = new C();
-        mModules.emplace_back(module);
+        m_modules.emplace_back(module);
 
         static_cast<IEngineModule*>(module)->Init();
 
@@ -61,7 +61,7 @@ private:
     {
         module->Shutdown();
 
-        mModules.erase(std::remove(mModules.begin(), mModules.end(), module));
+        m_modules.erase(std::remove(m_modules.begin(), m_modules.end(), module));
 
         delete module;
 
@@ -69,7 +69,7 @@ private:
     }
 
 private:
-    std::vector<IEngineModule*> mModules;
+    std::vector<IEngineModule*> m_modules;
 
 };
 

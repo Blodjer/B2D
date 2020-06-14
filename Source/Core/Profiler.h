@@ -37,18 +37,18 @@ public:
     {
         B2D_STATIC_ASSERT_TYPE(StatisticDataBase, T);
 
-        mData.thread = std::this_thread::get_id();
-        mData.startTimestamp = Clock::now();
+        m_data.thread = std::this_thread::get_id();
+        m_data.startTimestamp = Clock::now();
     }
 
     virtual ~ScopedStatistic()
     {
-        mData.duration = Clock::now() - mData.startTimestamp;
-        Profiler::AddStatistic<T>(mData);
+        m_data.duration = Clock::now() - m_data.startTimestamp;
+        Profiler::AddStatistic<T>(m_data);
     }
 
 protected:
-    T mData;
+    T m_data;
 };
 
 class ScopedGenericStatistic : public ScopedStatistic<GenericStatisticData>
@@ -85,32 +85,32 @@ public:
     template<>
     FORCEINLINE static void AddStatistic<GenericStatisticData>(GenericStatisticData const& data)
     {
-        msMutex.lock();
-        msGenericStatistics.emplace_back(data);
-        msMutex.unlock();
+        ms_mutex.lock();
+        ms_genericStatistics.emplace_back(data);
+        ms_mutex.unlock();
     }
 
     template<>
     FORCEINLINE static void AddStatistic<GameSystemStatisticData>(GameSystemStatisticData const& data)
     {
-        msMutex.lock();
-        msGameSystemStatistics.emplace_back(data);
-        msMutex.unlock();
+        ms_mutex.lock();
+        ms_gameSystemStatistics.emplace_back(data);
+        ms_mutex.unlock();
     }
 
-    static GenericStatisticDataList const& GetGenericStatistics() { return msGenericStatistics; }
+    static GenericStatisticDataList const& GetGenericStatistics() { return ms_genericStatistics; }
     static uint64 GetGameSystemStatistics(GameSystemStatisticDataList const*& dataList, TimeStamp& start, TimeStamp& end) {
-        start = msGameStart; end = msGameEnd; dataList = &msGameSystemStatistics; return frameId;
+        start = ms_gameStart; end = ms_gameEnd; dataList = &ms_gameSystemStatistics; return ms_frameId;
     }
 
     static void OnGameSystemBeginFrame();
     static void OnGameSystemEndFrame();
 
 private:
-    static GenericStatisticDataList msGenericStatistics;
-    static GameSystemStatisticDataList msGameSystemStatistics;
-    static std::mutex msMutex;
-    static uint64 frameId;
-    static TimeStamp msGameStart;
-    static TimeStamp msGameEnd;
+    static GenericStatisticDataList ms_genericStatistics;
+    static GameSystemStatisticDataList ms_gameSystemStatistics;
+    static std::mutex ms_mutex;
+    static uint64 ms_frameId;
+    static TimeStamp ms_gameStart;
+    static TimeStamp ms_gameEnd;
 };

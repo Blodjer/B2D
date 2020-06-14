@@ -25,18 +25,18 @@ RenderManger::~RenderManger()
 
 void RenderManger::Init(bool multithreaded)
 {
-    mMultithreaded = multithreaded;
-    if (mMultithreaded)
+    m_multithreaded = multithreaded;
+    if (m_multithreaded)
     {
         GenericWindow* offscreenRenderContext = GameEngine::Instance()->GetPA()->CreateOffscreenRenderContext();
-        mRenderThreadRunnable = new RenderThread(offscreenRenderContext);
-        mRenderThread = Thread::Create(mRenderThreadRunnable);
+        m_renderThreadRunnable = new RenderThread(offscreenRenderContext);
+        m_renderThread = Thread::Create(m_renderThreadRunnable);
     }
 }
 
 void RenderManger::Shutdown()
 {
-    for (IRenderer* renderer : mRenderers)
+    for (IRenderer* renderer : m_renderers)
     {
         DeleteRenderer(renderer);
     }
@@ -44,13 +44,13 @@ void RenderManger::Shutdown()
 
 void RenderManger::Tick(float deltaTime)
 {
-    if (mMultithreaded)
+    if (m_multithreaded)
     {
         return;
     }
 
     // TODO: We just render manually here
-    for (IRenderer* const renderer : mRenderers)
+    for (IRenderer* const renderer : m_renderers)
     {
         renderer->Render();
     }

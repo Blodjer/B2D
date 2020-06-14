@@ -32,7 +32,7 @@ public:
     C& AddComponent(EntityID entity, Params... p);
 
     template<class S>
-    FORCEINLINE void AddSystem() { mSystemAdmin.AddSystem<S>(); }
+    FORCEINLINE void AddSystem() { m_systemAdmin.AddSystem<S>(); }
 
     template<class C>
     std::array<C, 100000>& GetComponents() const;
@@ -41,21 +41,21 @@ public:
     uint64& GetComponentIndex() const;
 
 public:
-    CGameInstance* GetOwningGameInstance() const { return mOwningGameInstance; }
+    CGameInstance* GetOwningGameInstance() const { return m_owningGameInstance; }
 
-    WorldRenderDataInterface* GetWorldRenderDataInterface() { return mWorldRenderDataInterface; }
-    WorldRenderDataInterface const* GetWorldRenderDataInterface() const { return mWorldRenderDataInterface; }
+    WorldRenderDataInterface* GetWorldRenderDataInterface() { return m_worldRenderDataInterface; }
+    WorldRenderDataInterface const* GetWorldRenderDataInterface() const { return m_worldRenderDataInterface; }
 
-    SystemAdmin& GetSystemAdmin() { return mSystemAdmin; }
+    SystemAdmin& GetSystemAdmin() { return m_systemAdmin; }
 
 public:
-    std::unordered_map<EntityID, Entity*> mEntities;
+    std::unordered_map<EntityID, Entity*> m_entities;
 
 private:
-    CGameInstance* const mOwningGameInstance;
-    WorldRenderDataInterface* mWorldRenderDataInterface;
+    CGameInstance* const m_owningGameInstance;
+    WorldRenderDataInterface* m_worldRenderDataInterface;
 
-    SystemAdmin mSystemAdmin;
+    SystemAdmin m_systemAdmin;
 };
 
 template<class E>
@@ -67,7 +67,7 @@ EntityID World::AddEntity()
     E* entity = new E(id);
     id++;
 
-    mEntities.emplace(entity->GetID(), entity);
+    m_entities.emplace(entity->GetID(), entity);
 
     return entity->GetID();
 }
@@ -82,9 +82,9 @@ SE* World::AddSystemEntityObject(Params... p)
     SE* se = new SE(id);
     id++;
 
-    mEntities.emplace(se->GetID(), se);
+    m_entities.emplace(se->GetID(), se);
 
-    mSystemAdmin.AddSystem(se);
+    m_systemAdmin.AddSystem(se);
 
     se->Setup(p...);
 
@@ -96,7 +96,7 @@ C& World::AddComponent(EntityID entity, Params... p)
 {
     B2D_STATIC_ASSERT_TYPE(Component, C);
 
-    Entity* realEntity = mEntities[entity];
+    Entity* realEntity = m_entities[entity];
     B2D_ASSERT(realEntity);
 
     uint64& i = GetComponentIndex<C>();
@@ -105,10 +105,10 @@ C& World::AddComponent(EntityID entity, Params... p)
     c.owner = realEntity;
     i++;
 
-    realEntity->mComponents.emplace_back(&c);
-    realEntity->mComponentMask |= C::MASK;
+    realEntity->m_components.emplace_back(&c);
+    realEntity->m_componentMask |= C::MASK;
 
-    std::sort(realEntity->mComponents.begin(), realEntity->mComponents.end(), [](Component const* a, Component const* b)
+    std::sort(realEntity->m_components.begin(), realEntity->m_components.end(), [](Component const* a, Component const* b)
     {
         return a->GET_MASK() < b->GET_MASK();
     });

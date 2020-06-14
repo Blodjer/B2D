@@ -18,21 +18,21 @@
 #include "Graphics/RenderManger.h"
 
 CGameInstance::CGameInstance(GenericWindow* const owningWindow)
-    : mWindow(owningWindow)
+    : m_window(owningWindow)
 {
-    mWorld = new World(this);
+    m_world = new World(this);
 
-    mWorld->AddSystem<InputSystem>();
-    mWorld->AddSystem<HoverSystem>();
-    mWorld->AddSystem<CharacterMovementSystem>();
-    mWorld->AddSystem<RenderSystem>();
+    m_world->AddSystem<InputSystem>();
+    m_world->AddSystem<HoverSystem>();
+    m_world->AddSystem<CharacterMovementSystem>();
+    m_world->AddSystem<RenderSystem>();
 }
 
 CGameInstance::~CGameInstance()
 {
-    delete mWorld;
+    delete m_world;
 
-	for (auto p : mLocalPlayers)
+	for (auto p : m_localPlayers)
 	{
 		delete p;
 	}
@@ -40,41 +40,41 @@ CGameInstance::~CGameInstance()
 
 void CGameInstance::Tick(float deltaTime)
 {
-    if (B2D_CHECKf(mWorld == nullptr, "No world loaded!"))
+    if (B2D_CHECKf(m_world == nullptr, "No world loaded!"))
     {
         return;
     }
 
-    mWorld->Tick(deltaTime);
+    m_world->Tick(deltaTime);
 }
 
 LocalPlayer* CGameInstance::AddLocalPlayer()
 {
-    mLocalPlayerIdCount++;
-	LocalPlayer* newLocalPlayer = mLocalPlayers.emplace_back(new LocalPlayer(mLocalPlayerIdCount));
+    m_localPlayerIdCount++;
+	LocalPlayer* newLocalPlayer = m_localPlayers.emplace_back(new LocalPlayer(m_localPlayerIdCount));
 
 	return newLocalPlayer;
 }
 
 void CGameInstance::RemoveLocalPlayer(uint32 const playerId)
 {
-    for (std::vector<LocalPlayer*>::iterator it; it < mLocalPlayers.end(); ++it)
+    for (std::vector<LocalPlayer*>::iterator it; it < m_localPlayers.end(); ++it)
     {
         if ((*it)->GetId() == playerId)
         {
-            std::iter_swap(it, mLocalPlayers.end() - 1);
-            mLocalPlayers.pop_back();
+            std::iter_swap(it, m_localPlayers.end() - 1);
+            m_localPlayers.pop_back();
         }
     }
 }
 
 LocalPlayer* CGameInstance::GetLocalPlayer(uint32 const playerId) const
 {
-    auto it = std::find_if(mLocalPlayers.begin(), mLocalPlayers.end(), [&playerId](LocalPlayer* player) {
+    auto it = std::find_if(m_localPlayers.begin(), m_localPlayers.end(), [&playerId](LocalPlayer* player) {
         return player->GetId() == playerId;
     });
 
-    if (it != mLocalPlayers.end())
+    if (it != m_localPlayers.end())
     {
         return nullptr;
     }

@@ -7,9 +7,9 @@ class OpenGLMaterial : public GHIMaterial
 public:
     OpenGLMaterial(GLuint handle);
 
-    GLuint GetHandle() const { return mHandle; }
+    GLuint GetHandle() const { return m_handle; }
 
 private:
-    GLuint mHandle;
+    GLuint m_handle;
 };
 

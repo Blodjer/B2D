@@ -3,7 +3,7 @@
 #include "OpenGLShader.h"
 
 OpenGLMaterial::OpenGLMaterial(GLuint handle)
-    : mHandle(handle)
+    : m_handle(handle)
 {
 
 }

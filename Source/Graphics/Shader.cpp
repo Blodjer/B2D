@@ -31,17 +31,17 @@ bool Shader::Load(ResourcePath const& path, ShaderType type)
     switch (type)
     {
         case ShaderType::Vertex:
-            mGHIShader = ghi->CreateVertexShader(code.data());
+            m_ghiShader = ghi->CreateVertexShader(code.data());
             break;
         case ShaderType::Pixel:
-            mGHIShader = ghi->CreatePixelShader(code.data());
+            m_ghiShader = ghi->CreatePixelShader(code.data());
             break;
         default:
             B2D_BREAKf("ShaderType {} not implemented", static_cast<int32>(type));
             break;
     }
 
-    if (mGHIShader == nullptr)
+    if (m_ghiShader == nullptr)
     {
         return false;
     }
@@ -52,8 +52,8 @@ bool Shader::Load(ResourcePath const& path, ShaderType type)
 void Shader::Free()
 {
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-    ghi->DeleteShader(mGHIShader);
-    mGHIShader = nullptr;
+    ghi->DeleteShader(m_ghiShader);
+    m_ghiShader = nullptr;
 }
 
 bool Shader::ReadShaderFromFile(ResourcePath const& path, std::string& outCode)

@@ -8,7 +8,7 @@
 #include <GLFW/glfw3.h>
 
 RenderThread::RenderThread(GenericWindow* offscreenRenderContext)
-    : mOffscreenRenderContext(offscreenRenderContext)
+    : m_offscreenRenderContext(offscreenRenderContext)
 {
 
 }
@@ -19,21 +19,21 @@ RenderThread::~RenderThread()
 
 void RenderThread::AddRenderer(IRenderer* renderer)
 {
-    mMutex.lock();
-    mRenderersToAdd.emplace_back(renderer);
-    mMutex.unlock();
+    m_mutex.lock();
+    m_renderersToAdd.emplace_back(renderer);
+    m_mutex.unlock();
 }
 
 void RenderThread::RemoveRenderer(IRenderer* renderer)
 {
-    mMutex.lock();
-    mRenderersToRemove.emplace_back(renderer);
-    mMutex.unlock();
+    m_mutex.lock();
+    m_renderersToRemove.emplace_back(renderer);
+    m_mutex.unlock();
 }
 
 bool RenderThread::Init()
 {
-    mOffscreenRenderContext->MakeContextCurrent();
+    m_offscreenRenderContext->MakeContextCurrent();
 
     glewInit();
 
@@ -76,41 +76,41 @@ void RenderThread::Run()
 {
     while (true)
     {
-        mMutex.lock();
+        m_mutex.lock();
 
-        if (!mRenderersToRemove.empty())
+        if (!m_renderersToRemove.empty())
         {
-            for (IRenderer* renderer : mRenderersToRemove)
+            for (IRenderer* renderer : m_renderersToRemove)
             {
                 renderer->Shutdown();
 
-                auto it = std::find(mRenderers.begin(), mRenderers.end(), renderer);
-                if (it != mRenderers.end())
+                auto it = std::find(m_renderers.begin(), m_renderers.end(), renderer);
+                if (it != m_renderers.end())
                 {
-                    std::iter_swap(it, mRenderers.end() - 1);
-                    mRenderers.pop_back();
+                    std::iter_swap(it, m_renderers.end() - 1);
+                    m_renderers.pop_back();
                 }
 
                 delete renderer;
             }
-            mRenderersToRemove.clear();
-            mRenderersToRemove.resize(0);
+            m_renderersToRemove.clear();
+            m_renderersToRemove.resize(0);
         }
 
-        if (!mRenderersToAdd.empty())
+        if (!m_renderersToAdd.empty())
         {
-            for (IRenderer* const renderer : mRenderersToAdd)
+            for (IRenderer* const renderer : m_renderersToAdd)
             {
-                mRenderers.emplace_back(renderer);
+                m_renderers.emplace_back(renderer);
                 renderer->Init();
             }
-            mRenderersToAdd.clear();
-            mRenderersToAdd.resize(0);
+            m_renderersToAdd.clear();
+            m_renderersToAdd.resize(0);
         }
 
-        mMutex.unlock();
+        m_mutex.unlock();
 
-        for (IRenderer* const renderer : mRenderers)
+        for (IRenderer* const renderer : m_renderers)
         {
             renderer->Render();
         }

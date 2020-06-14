@@ -18,13 +18,13 @@ protected:
     virtual void Free() override;
 
 public:
-    GHIShader* GetGHIShader() const { return mGHIShader; }
+    GHIShader* GetGHIShader() const { return m_ghiShader; }
 
 private:
     bool ReadShaderFromFile(ResourcePath const& path, std::string& outCode);
 
 private:
-    GHIShader* mGHIShader = nullptr;
+    GHIShader* m_ghiShader = nullptr;
 };
 
 class VertexShader : public Shader

@@ -18,18 +18,18 @@ public:
     void SetVector(char const* name, float const* value);
     void SetTexture(uint32 index, TextureRef const& texture);
 
-    std::vector<TextureRef> const& GetTextures() const { return mTextures; }
+    std::vector<TextureRef> const& GetTextures() const { return m_textures; }
 
-    GHIMaterial* GetGHIMaterial() const { return mGHIMaterial; }
+    GHIMaterial* GetGHIMaterial() const { return m_ghiMaterial; }
 
 private:
     void OnShaderChanged();
 
 private:
-    VertexShaderRef mVertexShader;
-    PixelShaderRef mPixelShader;
+    VertexShaderRef m_vertexShader;
+    PixelShaderRef m_pixelShader;
 
-    std::vector<TextureRef> mTextures;
+    std::vector<TextureRef> m_textures;
 
-    GHIMaterial* mGHIMaterial;
+    GHIMaterial* m_ghiMaterial;
 };

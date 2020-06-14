@@ -2,8 +2,8 @@
 #include "OpenGLRenderTarget.h"
 
 OpenGLRenderTarget::OpenGLRenderTarget(GLuint handle, GHITexture* targetTexture)
-    : mHandle(handle)
-    , mTargetTexture(targetTexture)
+    : m_handle(handle)
+    , m_targetTexture(targetTexture)
 {
 
 }

@@ -33,12 +33,12 @@ private:
     void OptimizeSystemOrder();
 
 private:
-    World* const mWorld = nullptr;
-    std::vector<System*> mSystemsRaw;
-    std::vector<System*> mSystemsOptimized;
-    std::vector<std::future<void>> mOverflowTasks;
+    World* const m_world = nullptr;
+    std::vector<System*> m_systemsRaw;
+    std::vector<System*> m_systemsOptimized;
+    std::vector<std::future<void>> m_overflowTasks;
 
-    bool mMultithreaded = true;
-    bool mUseOptimizedSystems = true;
+    bool m_multithreaded = true;
+    bool m_useOptimizedSystems = true;
 };
 

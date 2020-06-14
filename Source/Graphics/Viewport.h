@@ -17,19 +17,19 @@ public:
 public:
     bool GetViewProjectionMatrix(TMatrix& matrix) const;
 
-    CameraEntity* GetCamera() const { return mCurrentCamera; }
-    uint32 GetWidth() const { return mWidth; }
-    uint32 GetHeight() const { return mHeight; }
+    CameraEntity* GetCamera() const { return m_currentCamera; }
+    uint32 GetWidth() const { return m_width; }
+    uint32 GetHeight() const { return m_height; }
 
 	void Use();
 
 private:
-    CameraEntity* mCurrentCamera;
+    CameraEntity* m_currentCamera;
 
-    int32 mX;
-    int32 mY;
-    uint32 mWidth;
-    uint32 mHeight;
+    int32 m_x;
+    int32 m_y;
+    uint32 m_width;
+    uint32 m_height;
 
 };
 

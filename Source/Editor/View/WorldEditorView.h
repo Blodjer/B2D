@@ -13,8 +13,8 @@ protected:
     virtual void Tick(float deltaTime) override;
 
 private:
-    WorldRenderer* mWorldRenderer = nullptr;
-    bool mOpen = true;
-    std::string mViewportName;
+    WorldRenderer* m_worldRenderer = nullptr;
+    bool m_open = true;
+    std::string m_viewportName;
 };
 

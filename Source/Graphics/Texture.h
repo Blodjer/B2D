@@ -13,14 +13,14 @@ protected:
 public:
     static constexpr auto GetFallbackResourcePath() { return "Content/Sprites/MissingTexture.png"; }
 
-    GHITexture const* GetGHITexture() const { return mGHITexture; }
+    GHITexture const* GetGHITexture() const { return m_ghiTexture; }
 
 private:
-	int32 mWidth;
-	int32 mHeight;
-	int32 mComponents;
+	int32 m_width;
+	int32 m_height;
+	int32 m_components;
 
-	GHITexture* mGHITexture;
+	GHITexture* m_ghiTexture;
 };
 
 using TextureRef = ResourcePtr<CTexture>;

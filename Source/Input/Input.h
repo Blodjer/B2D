@@ -18,7 +18,7 @@ private:
     static void OnKey(EKey key, EKeyEvent keyEvent);
 
 private:
-    static InputState sInputState;
+    static InputState ms_inputState;
 
 };
 

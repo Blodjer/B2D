@@ -13,12 +13,12 @@ private:
 	// Void function signature of the caller
 	using Signature = void(*)(void* object, params...);
 
-	void* mObject; // generic pointer
-	Signature mCaller; // pointer to function
+	void* m_object; // generic pointer
+	Signature m_caller; // pointer to function
 
 public:
 	TDelegate() = default;
-	TDelegate(void* object, Signature caller) : mObject(object), mCaller(caller) {}
+	TDelegate(void* object, Signature caller) : m_object(object), m_caller(caller) {}
 
 	// F needs to be a member function of T and has to have the the same parameters as the declared delegate
 	template <class T, void(T::*F)(params...)>
@@ -31,7 +31,7 @@ public:
     FORCEINLINE void operator()(params... p) const
 	{
 		// Call the function template and feed it with the target object
-		(*this->mCaller)(this->mObject, p...);
+		(*this->m_caller)(this->m_object, p...);
 	}
 
 private:

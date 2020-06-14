@@ -7,16 +7,16 @@ struct TVec2
 public:
 	TVec2::TVec2() { }
 
-	TVec2::TVec2(float f) : X(f), Y(f) { }
+	TVec2::TVec2(float f) : x(f), y(f) { }
 
-    TVec2::TVec2(float x, float y) : X(x), Y(y) { }
+    TVec2::TVec2(float x, float y) : x(x), y(y) { }
 
-    TVec2::TVec2(double x, double y) : X(static_cast<float>(x)), Y(static_cast<float>(y)) { }
+    TVec2::TVec2(double x, double y) : x(static_cast<float>(x)), y(static_cast<float>(y)) { }
 
-    TVec2::TVec2(int32 x, int32 y) : X(static_cast<float>(x)), Y(static_cast<float>(y)) { }
+    TVec2::TVec2(int32 x, int32 y) : x(static_cast<float>(x)), y(static_cast<float>(y)) { }
 
-	float X;
-	float Y;
+	float x;
+	float y;
 
 	static const TVec2 Zero;
 	static const TVec2 One;
@@ -24,43 +24,43 @@ public:
 public:
 	FORCEINLINE TVec2 TVec2::operator+(const TVec2& v) const
 	{
-		return TVec2(X + v.X, Y + v.Y);
+		return TVec2(x + v.x, y + v.y);
 	}
 
 	FORCEINLINE TVec2 TVec2::operator-(const TVec2& v) const
 	{
-		return TVec2(X - v.X, Y - v.Y);
+		return TVec2(x - v.x, y - v.y);
 	}
 
 	FORCEINLINE TVec2 TVec2::operator-() const
 	{
-		return TVec2(-X, -Y);
+		return TVec2(-x, -y);
 	}
 
 	FORCEINLINE TVec2 TVec2::operator*(const float f) const
 	{
-		return TVec2(X * f, Y * f);
+		return TVec2(x * f, y * f);
 	}
 
 	FORCEINLINE TVec2& TVec2::operator*=(const float f)
 	{
-		X *= f;
-		Y *= f;
+		x *= f;
+		y *= f;
 		return *this;
 	}
 
 	FORCEINLINE TVec2 TVec2::operator*(const TVec2& v) const
 	{
-		return TVec2(X * v.X, Y * v.Y);
+		return TVec2(x * v.x, y * v.y);
 	}
 
 	FORCEINLINE bool TVec2::operator==(const TVec2& v) const
 	{
-		return X == v.X && Y == v.Y;
+		return x == v.x && y == v.y;
 	}
 
 	FORCEINLINE bool TVec2::operator!=(const TVec2 & v) const
 	{
-		return X != v.X || Y != v.Y;
+		return x != v.x || y != v.y;
 	}
 };

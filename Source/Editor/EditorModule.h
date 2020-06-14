@@ -25,7 +25,7 @@ public:
         B2D_STATIC_ASSERT_TYPE(IEditorView, C);
 
         C* editorView = new C();
-        mEditorViews.emplace_back(editorView);
+        m_editorViews.emplace_back(editorView);
         return editorView;
     }
 
@@ -35,8 +35,8 @@ private:
     void ClosePendingEditorViews();
 
 private:
-    std::vector<IEditorView*> mEditorViews;
-    std::queue<IEditorView*> mEditorToRemove;
+    std::vector<IEditorView*> m_editorViews;
+    std::queue<IEditorView*> m_editorToRemove;
 
 };
 

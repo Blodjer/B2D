@@ -5,12 +5,12 @@
 
 void Thread::Run()
 {
-    if (!mRunnable->Init())
+    if (!m_runnable->Init())
     {
         return;
     }
 
-    mRunnable->Run();
+    m_runnable->Run();
 
-    mRunnable->Shutdown();
+    m_runnable->Shutdown();
 }

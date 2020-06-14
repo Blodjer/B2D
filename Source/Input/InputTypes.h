@@ -186,4 +186,4 @@ enum class EKey : uint16
     GAMEPAD_DPAD_DOWN,
 };
 
-constexpr uint32 gNumberOfKeys = static_cast<uint32>(EKey::GAMEPAD_DPAD_DOWN) + 1;
+constexpr uint32 g_numberOfKeys = static_cast<uint32>(EKey::GAMEPAD_DPAD_DOWN) + 1;

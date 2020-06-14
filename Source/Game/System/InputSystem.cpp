@@ -5,7 +5,7 @@
 
 void InputSystem::Update(float deltaTime)
 {
-    for (ComponentSlice slice : ComponentIterator(mWorld))
+    for (ComponentSlice slice : ComponentIterator(m_world))
     {
         /*
 

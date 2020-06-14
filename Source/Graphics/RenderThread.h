@@ -19,13 +19,13 @@ protected:
     virtual void Shutdown() override;
 
 private:
-    std::vector<IRenderer*> mRenderers;
+    std::vector<IRenderer*> m_renderers;
 
-    std::mutex mMutex;
-    std::vector<IRenderer*> mRenderersToAdd;
-    std::vector<IRenderer*> mRenderersToRemove;
+    std::mutex m_mutex;
+    std::vector<IRenderer*> m_renderersToAdd;
+    std::vector<IRenderer*> m_renderersToRemove;
 
-    GenericWindow* const mOffscreenRenderContext;
+    GenericWindow* const m_offscreenRenderContext;
 
 };
 

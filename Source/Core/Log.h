@@ -10,12 +10,12 @@
 class Log
 {
 private:
-	static std::shared_ptr<spdlog::logger> mLoggerCore;
-	static std::shared_ptr<spdlog::logger> mLoggerApp;
+	static std::shared_ptr<spdlog::logger> m_loggerCore;
+	static std::shared_ptr<spdlog::logger> m_loggerApp;
 
 public:
-	FORCEINLINE static std::shared_ptr<spdlog::logger> GetLoggerCore() { return mLoggerCore; }
-    FORCEINLINE static std::shared_ptr<spdlog::logger> GetLoggerApp() { return mLoggerApp; }
+	FORCEINLINE static std::shared_ptr<spdlog::logger> GetLoggerCore() { return m_loggerCore; }
+    FORCEINLINE static std::shared_ptr<spdlog::logger> GetLoggerApp() { return m_loggerApp; }
 
 	static void Init(std::string const& applicationName);
 
@@ -39,50 +39,50 @@ public:
 
     INLINE static void Check(CALLSTACK_SIGNATURE, const char* expr)
     {
-        mLoggerCore->warn("Check failed: ({})", expr);
+        m_loggerCore->warn("Check failed: ({})", expr);
         Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
     }
 
     template<typename... Args>
     INLINE static void Checkf(CALLSTACK_SIGNATURE, const char* expr, const char* message, Args const&... args)
     {
-        mLoggerCore->warn("Check failed: ({})", expr);
-        mLoggerCore->warn(message, args...);
+        m_loggerCore->warn("Check failed: ({})", expr);
+        m_loggerCore->warn(message, args...);
         Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
     }
 
     template<typename... Args>
     INLINE static void Break(CALLSTACK_SIGNATURE, const char* message, Args const&... args)
     {
-        mLoggerCore->warn(message, args...);
+        m_loggerCore->warn(message, args...);
         Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
     }
 
     INLINE static void Assert(CALLSTACK_SIGNATURE, const char* expr)
     {
-        mLoggerCore->critical("Assertion failed: ({})", expr);
+        m_loggerCore->critical("Assertion failed: ({})", expr);
         Callstack(spdlog::level::level_enum::critical, CALLSTACK_PARAMS);
     }
 
     template<typename... Args>
     INLINE static void Assertf(CALLSTACK_SIGNATURE, const char* expr, const char* message, Args const&... args)
     {
-        mLoggerCore->critical("Assertion failed: ({})", expr);
-        mLoggerCore->critical(message, args...);
+        m_loggerCore->critical("Assertion failed: ({})", expr);
+        m_loggerCore->critical(message, args...);
         Callstack(spdlog::level::level_enum::critical, CALLSTACK_PARAMS);
     }
 
     template<typename... Args>
     INLINE static void Trap(CALLSTACK_SIGNATURE, const char* message, Args const&... args)
     {
-        mLoggerCore->critical(message, args...);
+        m_loggerCore->critical(message, args...);
         Callstack(spdlog::level::level_enum::critical, CALLSTACK_PARAMS);
     }
 
 private:
     INLINE static void Callstack(spdlog::level::level_enum level, CALLSTACK_SIGNATURE)
     {
-        mLoggerCore->log(level, CALLSTACK_LOG_FORMAT, CALLSTACK_PARAMS);
+        m_loggerCore->log(level, CALLSTACK_LOG_FORMAT, CALLSTACK_PARAMS);
     }
 };
 

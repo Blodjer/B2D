@@ -5,7 +5,7 @@
 #include <future>
 
 SystemAdmin::SystemAdmin(World* const world)
-    : mWorld(world)
+    : m_world(world)
 {
 
 }
@@ -17,8 +17,8 @@ SystemAdmin::~SystemAdmin()
 
 void SystemAdmin::AddSystem(System* system)
 {
-    system->mWorld = mWorld;
-    mSystemsRaw.emplace_back(system);
+    system->m_world = m_world;
+    m_systemsRaw.emplace_back(system);
     OptimizeSystemOrder();
 }
 
@@ -26,9 +26,9 @@ void SystemAdmin::Tick(float deltaTime)
 {
     PROFILE_GAME_SYSTEM_BEGIN_FRAME();
     
-    std::vector<System*>& systems = mUseOptimizedSystems ? mSystemsOptimized : mSystemsRaw;
+    std::vector<System*>& systems = m_useOptimizedSystems ? m_systemsOptimized : m_systemsRaw;
 
-    if (!mMultithreaded)
+    if (!m_multithreaded)
     {
         for (System* const s : systems)
         {
@@ -49,11 +49,11 @@ void SystemAdmin::Tick(float deltaTime)
 
     {
         PROFILE_GAME_SYSTEM_THREAD_OVERHEAD("Wait for overflow systems");
-        for (auto const& task : mOverflowTasks)
+        for (auto const& task : m_overflowTasks)
         {
             task.wait();
         }
-        mOverflowTasks.clear();
+        m_overflowTasks.clear();
     }
 
     for (System* const s : systems)
@@ -97,7 +97,7 @@ void SystemAdmin::Tick(float deltaTime)
         // TODO: Check if this is the last system affecting these masks
         if (write == 0 && read == 3)
         {
-            mOverflowTasks.emplace_back(std::async(std::launch::async, [s, deltaTime]() {
+            m_overflowTasks.emplace_back(std::async(std::launch::async, [s, deltaTime]() {
                 s->Update(deltaTime);
             }));
             continue;
@@ -128,8 +128,8 @@ void SystemAdmin::Tick(float deltaTime)
 
 void SystemAdmin::OptimizeSystemOrder()
 {
-    mSystemsOptimized = mSystemsRaw;
-    std::sort(mSystemsOptimized.begin(), mSystemsOptimized.end(), [](System const* a, System const* b)
+    m_systemsOptimized = m_systemsRaw;
+    std::sort(m_systemsOptimized.begin(), m_systemsOptimized.end(), [](System const* a, System const* b)
     {
         bool conflict = (a->GetReadMask() & b->GetReadMask()) != 0;
         return !conflict && a->IsMultithreaded() && !b->IsMultithreaded();

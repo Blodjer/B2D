@@ -22,16 +22,16 @@ public:
         Gamepad_8
     };
 
-    InputDeviceID() : mInputId(Unknown) {}
-    InputDeviceID(uint8 deviceId) : mInputId(deviceId) {}
+    InputDeviceID() : m_inputId(Unknown) {}
+    InputDeviceID(uint8 deviceId) : m_inputId(deviceId) {}
 
     bool InputDeviceID::operator==(InputDeviceID const& other) const
     {
-        return mInputId == other.mInputId;
+        return m_inputId == other.m_inputId;
     }
 
 private:
-    uint8 mInputId;
+    uint8 m_inputId;
 };
 
 namespace std
@@ -41,7 +41,7 @@ namespace std
     {
         size_t operator()(InputDeviceID const& other) const
         {
-            return hash<uint8>()(other.mInputId);
+            return hash<uint8>()(other.m_inputId);
         }
     };
 }

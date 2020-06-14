@@ -8,7 +8,7 @@
 #include <GLFW/glfw3.h>
 
 #define DISPATCH_PLATFORM_MESSAGE(func, ...) \
-    for (IPlatformMessageHandlerInterface* const handler : DesktopPlatformApplication::sInstance->mMessageHandler) \
+    for (IPlatformMessageHandlerInterface* const handler : DesktopPlatformApplication::ms_instance->m_messageHandler) \
     { \
         if (handler->func(__VA_ARGS__)) \
         { \
@@ -16,16 +16,16 @@
         } \
     } \
 
-DesktopPlatformApplication* DesktopPlatformApplication::sInstance = nullptr;
+DesktopPlatformApplication* DesktopPlatformApplication::ms_instance = nullptr;
 
 bool DesktopPlatformApplication::Init()
 {
-    if (B2D_CHECK(sInstance != nullptr))
+    if (B2D_CHECK(ms_instance != nullptr))
     {
         return false;
     }
 
-    sInstance = this;
+    ms_instance = this;
 
     B2D_CORE_INFO("Initialize GLFW...");
     
@@ -46,7 +46,7 @@ void DesktopPlatformApplication::PollEvents()
 
 void DesktopPlatformApplication::Shutdown()
 {
-    for (DesktopWindow* window : mWindows)
+    for (DesktopWindow* window : m_windows)
     {
         DestroyWindow(window);
     }
@@ -64,7 +64,7 @@ GenericWindow* DesktopPlatformApplication::MakeWindow(uint32 width, uint32 heigh
     GLFWwindow* const windowContext = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 
     DesktopWindow* const window = new DesktopWindow(windowContext, width, height);
-    mWindows.emplace_back(window);
+    m_windows.emplace_back(window);
 
     glfwSetKeyCallback(windowContext, OnGlfwKeyCallback);
     glfwSetCharCallback(windowContext, OnGlfwCharCallback);
@@ -78,11 +78,11 @@ GenericWindow* DesktopPlatformApplication::MakeWindow(uint32 width, uint32 heigh
 
 void DesktopPlatformApplication::DestroyWindow(GenericWindow* window)
 {
-    auto const it = std::find_if(mWindows.begin(), mWindows.end(), [window](DesktopWindow* w) {
+    auto const it = std::find_if(m_windows.begin(), m_windows.end(), [window](DesktopWindow* w) {
         return w == window;
     });
 
-    if (B2D_CHECK(it == mWindows.end()))
+    if (B2D_CHECK(it == m_windows.end()))
     {
         return;
     }
@@ -90,7 +90,7 @@ void DesktopPlatformApplication::DestroyWindow(GenericWindow* window)
     DesktopWindow* desktopWindow = static_cast<DesktopWindow*>(window);
     glfwDestroyWindow(desktopWindow->GetContext());
 
-    mWindows.erase(it);
+    m_windows.erase(it);
     //mWindows.shrink_to_fit();
 
     delete window;
@@ -103,7 +103,7 @@ GenericWindow* DesktopPlatformApplication::CreateOffscreenRenderContext()
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     GLFWwindow* offscreenContext = glfwCreateWindow(100, 100, "", nullptr, main);
     DesktopWindow* const window = new DesktopWindow(offscreenContext, 100, 100);
-    mWindows.emplace_back(window);
+    m_windows.emplace_back(window);
 
     GameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
 
@@ -112,30 +112,30 @@ GenericWindow* DesktopPlatformApplication::CreateOffscreenRenderContext()
 
 void DesktopPlatformApplication::AddMessageHandler(IPlatformMessageHandlerInterface* messageHandler)
 {
-    auto const it = std::find_if(mMessageHandler.begin(), mMessageHandler.end(), [messageHandler](IPlatformMessageHandlerInterface* handler) {
+    auto const it = std::find_if(m_messageHandler.begin(), m_messageHandler.end(), [messageHandler](IPlatformMessageHandlerInterface* handler) {
         return messageHandler == handler;
     });
 
-    if (B2D_CHECKf(it != mMessageHandler.end(), "Message handler was already added to application"))
+    if (B2D_CHECKf(it != m_messageHandler.end(), "Message handler was already added to application"))
     {
         return;
     }
 
-    mMessageHandler.emplace_back(messageHandler);
+    m_messageHandler.emplace_back(messageHandler);
 }
 
 void DesktopPlatformApplication::RemoveMessageHandler(IPlatformMessageHandlerInterface* messageHandler)
 {
-    auto const it = std::find_if(mMessageHandler.begin(), mMessageHandler.end(), [messageHandler](IPlatformMessageHandlerInterface* handler) {
+    auto const it = std::find_if(m_messageHandler.begin(), m_messageHandler.end(), [messageHandler](IPlatformMessageHandlerInterface* handler) {
         return messageHandler == handler;
     });
 
-    if (B2D_CHECKf(it == mMessageHandler.end(), "Message handler is not used in application"))
+    if (B2D_CHECKf(it == m_messageHandler.end(), "Message handler is not used in application"))
     {
         return;
     }
 
-    mMessageHandler.erase(it);
+    m_messageHandler.erase(it);
 }
 
 void DesktopPlatformApplication::OnGlfwErrorCallback(int error, const char* description)

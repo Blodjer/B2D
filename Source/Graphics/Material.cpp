@@ -8,12 +8,12 @@
 #include "Texture.h"
 
 Material::Material(VertexShaderRef vertexShader, PixelShaderRef pixelShader)
-    : mVertexShader(vertexShader)
-    , mPixelShader(pixelShader)
+    : m_vertexShader(vertexShader)
+    , m_pixelShader(pixelShader)
 {
     if (vertexShader.IsValid() && pixelShader.IsValid())
     {
-        mGHIMaterial = GameEngine::Instance()->GetGHI()->CreateMaterial(vertexShader->GetGHIShader(), pixelShader->GetGHIShader());
+        m_ghiMaterial = GameEngine::Instance()->GetGHI()->CreateMaterial(vertexShader->GetGHIShader(), pixelShader->GetGHIShader());
     }
 
     vertexShader->RegisterChangeCallback(TResourceChangedDelegate::CREATE(this, &Material::OnShaderChanged));
@@ -42,19 +42,19 @@ void Material::SetVector(char const* name, const float* value)
 
 void Material::SetTexture(uint32 index, TextureRef const& texture)
 {
-    B2D_ASSERT(index <= mTextures.size());
+    B2D_ASSERT(index <= m_textures.size());
 
-    if (index < mTextures.size())
+    if (index < m_textures.size())
     {
-        mTextures[index] = texture;
+        m_textures[index] = texture;
     }
     else
     {
-        mTextures.emplace_back(texture);
+        m_textures.emplace_back(texture);
     }
 }
 
 void Material::OnShaderChanged()
 {
-    mGHIMaterial = GameEngine::Instance()->GetGHI()->CreateMaterial(mVertexShader->GetGHIShader(), mPixelShader->GetGHIShader());
+    m_ghiMaterial = GameEngine::Instance()->GetGHI()->CreateMaterial(m_vertexShader->GetGHIShader(), m_pixelShader->GetGHIShader());
 }

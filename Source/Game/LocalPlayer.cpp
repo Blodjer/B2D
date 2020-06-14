@@ -2,17 +2,17 @@
 #include "LocalPlayer.h"
 
 LocalPlayer::LocalPlayer(uint32 id)
-    : mId(id)
+    : m_id(id)
 {
 
 }
 
 void LocalPlayer::AssignInput(InputDeviceID inputDeviceId)
 {
-    mAssignedInput.insert(inputDeviceId);
+    m_assignedInput.insert(inputDeviceId);
 }
 
 void LocalPlayer::DeassignInput(InputDeviceID inputDeviceId)
 {
-    mAssignedInput.erase(inputDeviceId);
+    m_assignedInput.erase(inputDeviceId);
 }
