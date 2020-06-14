@@ -6,15 +6,21 @@
 
 void HoverSystem::Update(float deltaTime)
 {
-    static float f = 0;
-    f += deltaTime;
-
-    for (HoverComponent const& hover : ComponentItr<HoverComponent, TransformComponent>(mWorld))
+    for (ComponentSlice slice : ComponentIterator(mWorld))
     {
-        TransformComponent& transform = hover.Sibling<TransformComponent>();
+        HoverComponent& hover = slice.GetWrite<HoverComponent>();
+        TransformComponent& transform = slice.GetWrite<TransformComponent>();
 
-        transform.position.Y = UMath::Sin(f * hover.speed) * hover.amplitude;
-        transform.matrix = TMatrix::Translate(transform.matrix, TVec3(0, transform.position.Y, 0));
+        if (!hover.originSet)
+        {
+            hover.origin = transform.position.Y;
+            hover.originSet = true;
+        }
+
+        hover.time += deltaTime;
+
+        transform.position.Y = hover.origin + UMath::Sin(hover.time * hover.speed) * hover.amplitude;
+        transform.matrix.SetPosition(transform.position);
     }
 }
 

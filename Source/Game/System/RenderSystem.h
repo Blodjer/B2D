@@ -4,8 +4,8 @@
 #include "Game/Component/SpriteComponent.h"
 
 class RenderSystem : public ISystem<
-    Read<TransformComponent>,
-    Read<SpriteComponent>
+    Read<SpriteComponent>,
+    Read<TransformComponent>
 >
 {
     DECLARE_SYSTEM(RenderSystem, true);

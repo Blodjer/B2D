@@ -205,11 +205,11 @@ void RenderSystem::Update(float deltaTime)
 
     wrdi->ClearAndSetRenderData([&](RenderObjectBuffer<QuadRenderObject>& buffer) {
 
-        for (SpriteComponent const& spriteComponent : ComponentItr<SpriteComponent, TransformComponent>(mWorld))
+        for (ComponentSlice slice : ComponentIterator(mWorld))
         {
             buffer.Add(
-                spriteComponent.Sibling<TransformComponent>().matrix,
-                spriteComponent.material
+                slice.GetRead<TransformComponent>().matrix,
+                slice.GetRead<SpriteComponent>().material
             );
         }
     });

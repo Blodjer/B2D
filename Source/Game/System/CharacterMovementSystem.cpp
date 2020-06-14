@@ -1,11 +1,13 @@
 #include "B2D_pch.h"
 #include "CharacterMovementSystem.h"
+#include "Game/Component/SpriteComponent.h"
 
 void CharacterMovementSystem::Update(float deltaTime)
 {
-    for (CharacterMovementComponent& movement : ComponentItr<CharacterMovementComponent, TransformComponent>(mWorld))
+    for (ComponentSlice slice : ComponentIterator(mWorld))
     {
-        TransformComponent& transform = movement.Sibling<TransformComponent>();
+        CharacterMovementComponent& movement = slice.GetWrite<CharacterMovementComponent>();
+        TransformComponent& transform = slice.GetWrite<TransformComponent>();
 
         if (movement.controlInputVector == TVec3::Zero)
             continue;

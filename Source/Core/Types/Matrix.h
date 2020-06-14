@@ -71,7 +71,15 @@ public:
 		return glm::make_mat4(ret);
 	}
 
-	FORCEINLINE const float* GetPtr() const
+    void SetPosition(TVec3 const& position)
+    {
+        float* valuePtr = glm::value_ptr(*(static_cast<glm::mat4*>(this)));
+        valuePtr[12] = position.X;
+        valuePtr[13] = position.Y;
+        valuePtr[14] = position.Z;
+    }
+
+	FORCEINLINE float const* GetPtr() const
 	{
 		return glm::value_ptr(*(static_cast<const glm::mat4*>(this)));
 	}

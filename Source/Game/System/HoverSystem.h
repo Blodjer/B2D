@@ -4,7 +4,7 @@
 #include "Game/Component/TransformComponent.h"
 
 class HoverSystem : public ISystem<
-    Read<HoverComponent>,
+    Write<HoverComponent>,
     Write<TransformComponent>
 >
 {

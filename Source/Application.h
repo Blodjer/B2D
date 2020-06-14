@@ -2,6 +2,8 @@
 
 #include "Core/Core.h"
 
+class World;
+
 struct ApplicationConfig
 {
     std::string name = "Game";
