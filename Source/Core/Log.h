@@ -5,7 +5,7 @@
 #define CALLSTACK __FILE__, __LINE__, __FUNCSIG__
 #define CALLSTACK_SIGNATURE const char* file, int line, const char* func
 #define CALLSTACK_PARAMS file, line, func
-#define CALLSTACK_LOG_FORMAT "{}:{} {}"
+#define CALLSTACK_LOG_FORMAT "{}:{}\n{}"
 
 class Log
 {
@@ -39,14 +39,14 @@ public:
 
     INLINE static void Check(CALLSTACK_SIGNATURE, const char* expr)
     {
-        m_loggerCore->warn("Check failed: ({})", expr);
+        m_loggerCore->warn("Check failed: {}", expr);
         Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
     }
 
     template<typename... Args>
     INLINE static void Checkf(CALLSTACK_SIGNATURE, const char* expr, const char* message, Args const&... args)
     {
-        m_loggerCore->warn("Check failed: ({})", expr);
+        m_loggerCore->warn("Check failed: {}", expr);
         m_loggerCore->warn(message, args...);
         Callstack(spdlog::level::level_enum::warn, CALLSTACK_PARAMS);
     }
@@ -60,14 +60,14 @@ public:
 
     INLINE static void Assert(CALLSTACK_SIGNATURE, const char* expr)
     {
-        m_loggerCore->critical("Assertion failed: ({})", expr);
+        m_loggerCore->critical("Assertion failed: {}", expr);
         Callstack(spdlog::level::level_enum::critical, CALLSTACK_PARAMS);
     }
 
     template<typename... Args>
     INLINE static void Assertf(CALLSTACK_SIGNATURE, const char* expr, const char* message, Args const&... args)
     {
-        m_loggerCore->critical("Assertion failed: ({})", expr);
+        m_loggerCore->critical("Assertion failed: {}", expr);
         m_loggerCore->critical(message, args...);
         Callstack(spdlog::level::level_enum::critical, CALLSTACK_PARAMS);
     }
