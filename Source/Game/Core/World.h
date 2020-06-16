@@ -48,13 +48,11 @@ public:
 
     SystemAdmin& GetSystemAdmin() { return m_systemAdmin; }
 
-public:
-    std::unordered_map<EntityID, Entity*> m_entities;
-
 private:
     CGameInstance* const m_owningGameInstance;
     WorldRenderDataInterface* m_worldRenderDataInterface;
 
+    std::unordered_map<EntityID, Entity*> m_entities;
     SystemAdmin m_systemAdmin;
 };
 
@@ -92,26 +90,26 @@ SE* World::AddSystemEntityObject(Params... p)
 }
 
 template<class C, typename... Params>
-C& World::AddComponent(EntityID entity, Params... p)
+C& World::AddComponent(EntityID entityId, Params... p)
 {
     B2D_STATIC_ASSERT_TYPE(Component, C);
 
-    Entity* realEntity = m_entities[entity];
-    B2D_ASSERT(realEntity);
+    Entity* const entity = m_entities[entityId];
+    B2D_ASSERT(entity);
+
+    if (B2D_CHECKf(entity->Has<C>(), "Entity already has a component of this type!"))
+    {
+        return entity->Get<C>();
+    }
 
     uint64& i = GetComponentIndex<C>();
+
     C& c = GetComponents<C>()[i];
     c = C(p...);
-    c.owner = realEntity;
+    c.owner = entity;
+    entity->RegisterComponent(c);
+    
     i++;
-
-    realEntity->m_components.emplace_back(&c);
-    realEntity->m_componentMask |= C::MASK;
-
-    std::sort(realEntity->m_components.begin(), realEntity->m_components.end(), [](Component const* a, Component const* b)
-    {
-        return a->GET_MASK() < b->GET_MASK();
-    });
 
     return c;
 }

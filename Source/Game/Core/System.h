@@ -78,7 +78,7 @@ public:
     {
         B2D_STATIC_ASSERT_TYPE(Component, T);
         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Component is not registered!");
-        B2D_STATIC_ASSERT(!(T::MASK & WRITE_MASK), "Component is marked as writable! Change the accessor if you only want to read.");
+        B2D_STATIC_ASSERT(!(T::MASK & WRITE_MASK), "Component is set as writable! Change the accessor if you only want to read.");
         return GetSibling<T>();
     }
 
@@ -87,21 +87,21 @@ public:
     {
         B2D_STATIC_ASSERT_TYPE(Component, T);
         B2D_STATIC_ASSERT(T::MASK & READ_MASK, "Component is not registered!");
-        B2D_STATIC_ASSERT(T::MASK & WRITE_MASK, "Cannot get component as writeable that is marked as read only!");
+        B2D_STATIC_ASSERT(T::MASK & WRITE_MASK, "Cannot get component as writeable that is set as read only!");
         return GetSibling<T>();
     }
 
     template<>
     FORCEINLINE TPrimary const& GetRead<TPrimary>() const
     {
-        B2D_STATIC_ASSERT(!(TPrimary::MASK & WRITE_MASK), "Component is marked as writable! Change the accessor if you only want to read.");
+        B2D_STATIC_ASSERT(!(TPrimary::MASK & WRITE_MASK), "Component is set as writable! Change the accessor if you only want to read.");
         return m_primaryComponent;
     }
 
     template<>
     FORCEINLINE TPrimary& GetWrite<TPrimary>() const
     {
-        B2D_STATIC_ASSERT(TPrimary::MASK & WRITE_MASK, "Cannot get component as writeable that is marked as read only!");
+        B2D_STATIC_ASSERT(TPrimary::MASK & WRITE_MASK, "Cannot get component as writeable that is set as read only!");
         return m_primaryComponent;
     }
 
@@ -109,53 +109,7 @@ private:
     template<class T>
     FORCEINLINE T& GetSibling() const
     {
-        Entity const* const owner = m_primaryComponent.owner;
-
-        // TODO: enforce to always have an Transform component which can be returned immediately. (But at the same time, not all components should require a transform e.g. data/manager components)
-        if constexpr (T::MASK == 1 && TransformComponent::MASK == 1)
-        {
-            return *static_cast<T* const>(*owner->m_components._Myfirst());
-        }
-
-        size_t constexpr INVERTED_MASK = T::MASK - 1;
-
-        size_t index = INVERTED_MASK & owner->m_componentMask;
-        index = CountBits(index);
-
-        Component* const c = owner->m_components[index];
-        B2D_ASSERT(dynamic_cast<T* const>(c));
-
-        return *static_cast<T* const>(c);
-    }
-
-    FORCEINLINE static size_t CountBits(size_t mask) noexcept
-    {
-        constexpr char const* const bitsperbyte =
-            "\0\1\1\2\1\2\2\3\1\2\2\3\2\3\3\4"
-            "\1\2\2\3\2\3\3\4\2\3\3\4\3\4\4\5"
-            "\1\2\2\3\2\3\3\4\2\3\3\4\3\4\4\5"
-            "\2\3\3\4\3\4\4\5\3\4\4\5\4\5\5\6"
-            "\1\2\2\3\2\3\3\4\2\3\3\4\3\4\4\5"
-            "\2\3\3\4\3\4\4\5\3\4\4\5\4\5\5\6"
-            "\2\3\3\4\3\4\4\5\3\4\4\5\4\5\5\6"
-            "\3\4\4\5\4\5\5\6\4\5\5\6\5\6\6\7"
-            "\1\2\2\3\2\3\3\4\2\3\3\4\3\4\4\5"
-            "\2\3\3\4\3\4\4\5\3\4\4\5\4\5\5\6"
-            "\2\3\3\4\3\4\4\5\3\4\4\5\4\5\5\6"
-            "\3\4\4\5\4\5\5\6\4\5\5\6\5\6\6\7"
-            "\2\3\3\4\3\4\4\5\3\4\4\5\4\5\5\6"
-            "\3\4\4\5\4\5\5\6\4\5\5\6\5\6\6\7"
-            "\3\4\4\5\4\5\5\6\4\5\5\6\5\6\6\7"
-            "\4\5\5\6\5\6\6\7\5\6\6\7\6\7\7\x8";
-
-        unsigned char const* ptr = &reinterpret_cast<unsigned char const&>(mask);
-        unsigned char const* const end = ptr + sizeof(mask);
-
-        size_t val = 0;
-        for (; ptr != end; ++ptr)
-            val += bitsperbyte[*ptr];
-
-        return (val);
+        return m_primaryComponent.owner->Get<T>();
     }
 };
 
@@ -164,20 +118,14 @@ class ComponentIterator
 {
 public:
     template<class TPrimaryComponent, uint16 MASK>
-    struct itrrr
+    struct itr
     {
-        //using iterator_category = _Category;
-        using value_type = TPrimaryComponent;
-        //using difference_type = _Diff;
-        using pointer = TPrimaryComponent*;
-        using reference = TPrimaryComponent&;
-
         uint64 m_idx = 0;
 
         std::array<TPrimaryComponent, 100000>& m_componentList;
         uint64 const m_size = 0;
 
-        itrrr(std::array<TPrimaryComponent, 100000>& componentList, uint64 size, uint64 idx)
+        itr(std::array<TPrimaryComponent, 100000>& componentList, uint64 size, uint64 idx)
             : m_componentList(componentList)
             , m_size(size)
             , m_idx(idx)
@@ -185,13 +133,13 @@ public:
 
         }
 
-        itrrr& operator++()
+        itr& operator++()
         {
             ++m_idx;
             for (; m_idx < m_size; ++m_idx)
             {
-                TPrimaryComponent const& c = m_componentList[m_idx];
-                if (c.owner->Has(MASK))
+                TPrimaryComponent const& component = m_componentList[m_idx];
+                if (component.owner->Has(MASK))
                 {
                     break;
                 }
@@ -210,7 +158,7 @@ public:
             return &m_componentList[m_idx];
         }
 
-        bool operator!=(itrrr const& other)
+        bool operator!=(itr const& other)
         {
             return m_idx != other.m_idx;
         }
@@ -227,14 +175,14 @@ public:
         
     }
 
-    itrrr<TPrimaryComponent, MASK> begin() const
+    itr<TPrimaryComponent, MASK> begin() const
     {
-        return itrrr<TPrimaryComponent, MASK>(m_componentList, m_size, 0);
+        return itr<TPrimaryComponent, MASK>(m_componentList, m_size, 0);
     }
 
-    itrrr<TPrimaryComponent, MASK> end() const
+    itr<TPrimaryComponent, MASK> end() const
     {
-        return itrrr<TPrimaryComponent, MASK>(m_componentList, m_size, m_size);
+        return itr<TPrimaryComponent, MASK>(m_componentList, m_size, m_size);
     }
 };
 
