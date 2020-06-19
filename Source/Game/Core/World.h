@@ -97,7 +97,7 @@ C& World::AddComponent(EntityID entityId, Params... p)
     Entity* const entity = m_entities[entityId];
     B2D_ASSERT(entity);
 
-    if (B2D_CHECKf(entity->Has<C>(), "Entity already has a component of this type!"))
+    if (B2D_CHECKf(entity->Has<C>(), "Entity already has a component of type {0}! No new component will be added.", C::NAME))
     {
         return entity->Get<C>();
     }

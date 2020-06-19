@@ -6,6 +6,7 @@ class Entity;
 #define DECLARE_COMPONENT(name, id) \
 public: \
     static constexpr uint16 MASK = UMath::Pow2(id); \
+    static constexpr char const* const NAME = #name; \
 public: \
     virtual uint16 GET_MASK() const override { return MASK; } \
 public:
