@@ -29,6 +29,8 @@ struct GameSystemStatisticData : StatisticDataBase
     EType type;
 };
 
+class Profiler;
+
 template<class T>
 class ScopedStatistic
 {

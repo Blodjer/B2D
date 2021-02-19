@@ -169,7 +169,8 @@ ResourcePtr<T> IResourceManager::Get(ResourcePath const& path)
         }
     }
 
-    return ResourcePtr<T>(ms_loadedResources.find(path));
+    ResourceList::iterator resourceIt = ms_loadedResources.find(path);
+    return ResourcePtr<T>(resourceIt);
 }
 
 template<typename T>

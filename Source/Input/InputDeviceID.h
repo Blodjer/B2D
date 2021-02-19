@@ -25,7 +25,7 @@ public:
     InputDeviceID() : m_inputId(Unknown) {}
     InputDeviceID(uint8 deviceId) : m_inputId(deviceId) {}
 
-    bool InputDeviceID::operator==(InputDeviceID const& other) const
+    bool operator==(InputDeviceID const& other) const
     {
         return m_inputId == other.m_inputId;
     }

@@ -31,7 +31,7 @@ public:
 
         if constexpr (C::MASK == 1)
         {
-            return *static_cast<C*>(*m_components._Myfirst());
+            return *static_cast<C*>(*m_components._Unchecked_begin());
         }
 
         size_t const idx = GetIndexInMask<C>(m_componentMask);
