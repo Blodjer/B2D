@@ -56,10 +56,12 @@ end
 	filter "platforms:Win32"
 		system "Windows"
 		architecture "x86"
+		defines "B2D_PLATFORM_WINDOWS_X86"
 
 	filter "platforms:Win64"
 		system "Windows"
 		architecture "x64"
+		defines "B2D_PLATFORM_WINDOWS_X64"
 
 	filter "system:Windows"
 		defines "B2D_PLATFORM_DESKTOP"
@@ -106,7 +108,8 @@ project "B2D"
 		"glew",
 		"GLFW",
 		"imgui",
-		"opengl32.lib"
+		"opengl32.lib",
+		"dbghelp.lib"
 	}
 
 	filter "system:windows"

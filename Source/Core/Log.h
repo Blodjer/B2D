@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Debug/StackTraceHelper.h"
+
 #include <spdlog/spdlog.h>
 
 #define CALLSTACK __FILE__, __LINE__, __FUNCSIG__
@@ -82,7 +84,17 @@ public:
 private:
     INLINE static void Callstack(spdlog::level::level_enum level, CALLSTACK_SIGNATURE)
     {
-        m_loggerCore->log(level, CALLSTACK_LOG_FORMAT, CALLSTACK_PARAMS);
+#ifdef B2D_BUILD_DEBUG
+        std::string stackTrace;
+        if (StackTraceHelper::GetStackTrace(stackTrace, 1))
+        {
+            m_loggerCore->log(level, "Callstack:\n{}", stackTrace);
+        }
+        else
+#endif
+        {
+            m_loggerCore->log(level, CALLSTACK_LOG_FORMAT, CALLSTACK_PARAMS);
+        }
     }
 };
 

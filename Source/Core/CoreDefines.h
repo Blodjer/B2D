@@ -4,6 +4,7 @@
 
 #define INLINE inline
 #define FORCEINLINE __forceinline
+#define NOINLINE __declspec(noinline)
 
 #ifdef B2D_BUILD_DEBUG
     #define B2D_DEBUG_MEMORY
