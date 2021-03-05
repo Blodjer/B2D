@@ -3,7 +3,6 @@
 #include "B2D_pch.h"
 
 #include "Core/CoreDefines.h"
-#include "Core/Log.h"
 #include "Core/CoreAssert.h"
 
 #include "Math/BMath.h"
@@ -18,4 +17,6 @@
 #include "Input/InputDeviceID.h"
 #include "Input/InputTypes.h"
 
+#include "Core/Helpers.h"
 #include "Core/Profiler.h"
+#include "Core/Log.h"

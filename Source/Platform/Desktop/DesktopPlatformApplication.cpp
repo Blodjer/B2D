@@ -27,11 +27,11 @@ bool DesktopPlatformApplication::Init()
 
     ms_instance = this;
 
-    B2D_CORE_INFO("Initialize GLFW...");
+    B2D_INFO("Initialize GLFW...");
     
     B2D_ASSERT(glfwInit() == GLFW_TRUE)
 
-    B2D_CORE_INFO("GLFW version    {}.{}.{}\n", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
+    B2D_INFO("GLFW version    {}.{}.{}\n", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
 
     glfwSetErrorCallback(OnGlfwErrorCallback);
     glfwSetJoystickCallback(OnGlfwJoystickCallback);
@@ -140,7 +140,7 @@ void DesktopPlatformApplication::RemoveMessageHandler(IPlatformMessageHandlerInt
 
 void DesktopPlatformApplication::OnGlfwErrorCallback(int error, const char* description)
 {
-    B2D_CORE_ERROR("GLFW {0}: {1}", error, description);
+    B2D_ERROR("GLFW {0}: {1}", error, description);
 }
 
 void DesktopPlatformApplication::OnGlfwKeyCallback(GLFWwindow* window, int glfwKey, int scancode, int glfwAction, int glfwMods)
@@ -149,7 +149,7 @@ void DesktopPlatformApplication::OnGlfwKeyCallback(GLFWwindow* window, int glfwK
     
     if (glfwKey < 0)
     {
-        B2D_CORE_WARNING("Unhandled key type (scancode: {})", scancode);
+        B2D_WARNING("Unhandled key type (scancode: {})", scancode);
         return;
     }
 
@@ -166,7 +166,7 @@ void DesktopPlatformApplication::OnGlfwKeyCallback(GLFWwindow* window, int glfwK
         case GLFW_REPEAT:
             keyEvent = EKeyEvent::Repeat; break;
         default:
-            B2D_CORE_WARNING("Unhandled key callback (action: {})", glfwAction);
+            B2D_WARNING("Unhandled key callback (action: {})", glfwAction);
             return;
     }
 
@@ -217,7 +217,7 @@ void DesktopPlatformApplication::OnGlfwMouseButtonCallback(GLFWwindow* window, i
         case GLFW_RELEASE:
             mouseButtonEvent = EMouseButtonEvent::Release; break;
         default:
-            B2D_CORE_WARNING("Unhandled mouse button callback (action: {})", glfwAction);
+            B2D_WARNING("Unhandled mouse button callback (action: {})", glfwAction);
             return;
     }
 
@@ -233,7 +233,7 @@ void DesktopPlatformApplication::OnGlfwJoystickCallback(int glfwJoystickId, int 
         case GLFW_DISCONNECTED:
             break;
         default:
-            B2D_CORE_WARNING("Unhandled joystick callback (event: {})", event);
+            B2D_WARNING("Unhandled joystick callback (event: {})", event);
             return;
     }
 
@@ -242,12 +242,12 @@ void DesktopPlatformApplication::OnGlfwJoystickCallback(int glfwJoystickId, int 
     //     glfwGetGamepadName();
     //     glfwGetJoystickName();
 
-    B2D_CORE_WARNING("OnGlfwJoystickCallback is not implemented");
+    B2D_WARNING("OnGlfwJoystickCallback is not implemented");
 }
 
 void DesktopPlatformApplication::OnGlfwDropCallback(GLFWwindow* window, int count, const char** paths)
 {
     DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
 
-    B2D_CORE_WARNING("OnGlfwDropCallback is not implemented");
+    B2D_WARNING("OnGlfwDropCallback is not implemented");
 }

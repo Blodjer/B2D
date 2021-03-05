@@ -13,7 +13,7 @@ void CharacterMovementSystem::Update(float deltaTime)
             continue;
 
         transform.position += movement.controlInputVector * deltaTime;
-        B2D_CORE_INFO("CharacterMovementSystem {} {}", transform.position.x , transform.position.z);
+        B2D_INFO("CharacterMovementSystem {} {}", transform.position.x , transform.position.z);
     }
 }
 

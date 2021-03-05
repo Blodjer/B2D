@@ -45,19 +45,19 @@ bool RenderThread::Init()
         switch (severity)
         {
             case GL_DEBUG_SEVERITY_NOTIFICATION:
-                //B2D_CORE_INFO(message);
+                //B2D_INFO(message);
                 break;
             case GL_DEBUG_SEVERITY_LOW:
-                B2D_CORE_INFO(message);
+                B2D_INFO(message);
                 break;
             case GL_DEBUG_SEVERITY_MEDIUM:
-                B2D_CORE_WARNING(message);
+                B2D_WARNING(message);
                 break;
             case GL_DEBUG_SEVERITY_HIGH:
-                B2D_CORE_ERROR(message);
+                B2D_ERROR(message);
                 break;
             default:
-                B2D_CORE_WARNING(message);
+                B2D_WARNING(message);
                 break;
         }
     }, nullptr);

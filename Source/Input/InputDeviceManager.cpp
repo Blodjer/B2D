@@ -16,7 +16,7 @@ void InputDeviceManager::AssignNextAvailableDevice(LocalPlayer* localPlayer)
 {
     if (m_availableDevices.size() == 0)
     {
-        B2D_CORE_INFO("Not enough available input devices. Added local player ({0}) to input device queue.");
+        B2D_INFO("Not enough available input devices. Added local player ({0}) to input device queue.");
         m_pendingPlayers.emplace(localPlayer->GetId());
     }
 

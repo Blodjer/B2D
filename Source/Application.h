@@ -13,12 +13,12 @@ struct ApplicationConfig
 
     static void Dump(ApplicationConfig const& config)
     {
-        B2D_CORE_INFO("--- ApplicationConfig -------------------");
-        B2D_CORE_INFO("name            {}", config.name);
-        B2D_CORE_INFO("windowWidth     {}", config.windowWidth);
-        B2D_CORE_INFO("windowHeight    {}", config.windowHeight);
-        B2D_CORE_INFO("multithread     {}", config.multithread);
-        B2D_CORE_INFO("-----------------------------------------\n");
+        B2D_INFO("--- ApplicationConfig -------------------");
+        B2D_INFO("name            {}", config.name);
+        B2D_INFO("windowWidth     {}", config.windowWidth);
+        B2D_INFO("windowHeight    {}", config.windowHeight);
+        B2D_INFO("multithread     {}", config.multithread);
+        B2D_INFO("-----------------------------------------\n");
     }
 };
 

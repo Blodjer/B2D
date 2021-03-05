@@ -54,7 +54,7 @@ void GameEngine::Create(ApplicationConfig const& config)
 
 void GameEngine::Init()
 {
-    B2D_CORE_INFO("Initialize engine...");
+    B2D_INFO("Initialize engine...");
 
     ApplicationConfig::Dump(m_config);
     UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
@@ -82,7 +82,7 @@ void GameEngine::Init()
     // TODO: GameInstance should only be valid while the game is running. Should be null in editor mode.
     m_gameInstance = new CGameInstance(m_mainWindow);
 
-    B2D_CORE_INFO("Engine initilized!\n");
+    B2D_INFO("Engine initilized!\n");
 }
 
 void GameEngine::Shutdown()

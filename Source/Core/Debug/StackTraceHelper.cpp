@@ -1,5 +1,4 @@
 #include "B2D_pch.h"
-
 #include "StackTraceHelper.h"
 
 #include <dbghelp.h>
@@ -7,39 +6,6 @@
 
 static std::mutex m_symbolMutex;
 static bool m_symbolHandlerInitialized = false;
-
-#ifdef B2D_PLATFORM_WINDOWS
-#define HANDLE_LAST_ERROR() _HandleError(CALLSTACK);
-
-void _HandleError(CALLSTACK_SIGNATURE)
-{
-    DWORD const error = GetLastError();
-    if (error == 0)
-    {
-        return;
-    }
-
-    SetLastError(0);
-
-    LPSTR messageBuffer = nullptr;
-    size_t const size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, nullptr);
-
-    std::string const message(messageBuffer, size);
-    LocalFree(messageBuffer);
-
-    if (!message.empty())
-    {
-        B2D_CORE_ERROR("Error: {}\n" CALLSTACK_LOG_FORMAT, message, CALLSTACK_PARAMS);
-    }
-    else
-    {
-        B2D_CORE_ERROR("Unknown Error\n" CALLSTACK_LOG_FORMAT, CALLSTACK_PARAMS);
-    }
-}
-
-#else
-#define HANDLE_LAST_ERROR() B2D_STATIC_ASSERT(false, "Cannot use HANDLE_LAST_ERROR() in non Windows platform!");
-#endif
 
 bool StackTraceHelper::InitializeSymbolHandler()
 {
@@ -293,8 +259,10 @@ void StackTraceHelper::FormatStackTrace(StackTraceData const& stackTrace, std::s
 {
     std::stringstream stream;
 
-    for (StackTraceFrame const& frame : stackTrace.frames)
+    for (uint64 i = 0; i < stackTrace.frames.size(); ++i)
     {
+        StackTraceFrame const& frame = stackTrace.frames[i];
+
         char addressPointer[256] = {};
         snprintf(addressPointer, 256, "0x%016llx", frame.address);
 
@@ -310,7 +278,10 @@ void StackTraceHelper::FormatStackTrace(StackTraceData const& stackTrace, std::s
             stream << " [" << frame.file << ":" << frame.line << "]";
         }
 
-        stream << "\n";
+        if (i < (stackTrace.frames.size() - 1))
+        {
+            stream << "\n";
+        }
     }
 
     if (!stackTrace.capturedAll)
