@@ -45,5 +45,5 @@ private:
 	}
 };
 
-#define DECLARE_DELEGATE(DelegateName, ...) typedef TDelegate<__VA_ARGS__> DelegateName
+#define DECLARE_DELEGATE(DelegateName, ...) using DelegateName = TDelegate<__VA_ARGS__>
 #define CREATE(Object, Function) CreateInternal<std::remove_pointer_t<decltype(Object)>, Function>(Object)
