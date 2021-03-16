@@ -17,27 +17,27 @@ bool OpenGLGHI::Init()
         switch (severity)
         {
             case GL_DEBUG_SEVERITY_NOTIFICATION:
-                //B2D_INFO(message);
+                //B2D_LOG_INFO(message);
                 break;
             case GL_DEBUG_SEVERITY_LOW:
-                B2D_INFO(message);
+                B2D_LOG_INFO(message);
                 break;
             case GL_DEBUG_SEVERITY_MEDIUM:
-                B2D_WARNING(message);
+                B2D_LOG_WARNING(message);
                 break;
             case GL_DEBUG_SEVERITY_HIGH:
-                B2D_ERROR(message);
+                B2D_LOG_ERROR(message);
                 break;
             default:
-                B2D_WARNING(message);
+                B2D_LOG_WARNING(message);
                 break;
         }
     }, nullptr);
 
-    B2D_INFO("Initialize OpenGL...");
-    B2D_INFO("GL Version      {}", glGetString(GL_VERSION));
-    B2D_INFO("GL Vendor       {}", glGetString(GL_VENDOR));
-    B2D_INFO("GL Renderer     {}\n", glGetString(GL_RENDERER));
+    B2D_LOG_INFO("Initialize OpenGL...");
+    B2D_LOG_INFO("GL Version      {}", glGetString(GL_VERSION));
+    B2D_LOG_INFO("GL Vendor       {}", glGetString(GL_VENDOR));
+    B2D_LOG_INFO("GL Renderer     {}\n", glGetString(GL_RENDERER));
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
@@ -160,7 +160,7 @@ GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 heig
             format = GL_RGBA;
             break;
         default:
-            B2D_ERROR("Cannot create texture with {} components", components);
+            B2D_LOG_ERROR("Cannot create texture with {} components", components);
             return new OpenGLTexture(0);
     }
 
@@ -213,7 +213,7 @@ bool OpenGLGHI::CompileShader(char const* code, GLuint type, GLuint& outHandle)
 
         glDeleteShader(handle);
 
-        B2D_ERROR("Shader Compile Error: {0}", message);
+        B2D_LOG_ERROR("Shader Compile Error: {0}", message);
         return false;
     }
 

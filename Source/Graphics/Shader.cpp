@@ -77,7 +77,7 @@ bool Shader::ReadShaderFromFile(ResourcePath const& path, std::string& outCode)
     }
     catch (std::ifstream::failure e)
     {
-        B2D_ERROR("Shader Read Error: {0}", path);
+        B2D_LOG_ERROR("Shader Read Error: {0}", path);
     }
 
     return false;

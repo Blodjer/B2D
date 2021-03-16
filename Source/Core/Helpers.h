@@ -2,10 +2,10 @@
 #include "Core/Log.h"
 
 #ifdef B2D_PLATFORM_WINDOWS
-#define HANDLE_LAST_ERROR() ::_HandleError(STACK_LOCATION_INPUT);
+#define HANDLE_LAST_ERROR() ::_HandleError(STACKLOCATION_INPUT);
 namespace
 {
-    void _HandleError(STACK_LOCATION_SIGNATURE)
+    void _HandleError(STACKLOCATION_SIGNATURE)
     {
         DWORD const error = GetLastError();
         if (error == 0)
@@ -23,11 +23,11 @@ namespace
 
         if (!message.empty())
         {
-            B2D_ERROR("Error: {}\n" STACK_LOCATION_LOG_FORMAT, messageBuffer, STACK_LOCATION_PARAMS);
+            B2D_LOG_ERROR("Error: {}\n" STACKLOCATION_LOG_FORMAT, messageBuffer, STACKLOCATION_PARAMS);
         }
         else
         {
-            B2D_ERROR("Unknown Error\n" STACK_LOCATION_LOG_FORMAT, STACK_LOCATION_PARAMS);
+            B2D_LOG_ERROR("Unknown Error\n" STACKLOCATION_LOG_FORMAT, STACKLOCATION_PARAMS);
         }
     }
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Game/Core/Component.h"
+#include "Core/Core.h"
 
 class Entity
 {

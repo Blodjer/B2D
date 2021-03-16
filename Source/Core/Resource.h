@@ -153,7 +153,7 @@ ResourcePtr<T> IResourceManager::Get(ResourcePath const& path)
 
 #ifndef B2D_NO_LOGGING
             std::chrono::duration<double> elapsedTime = std::chrono::high_resolution_clock::now() - loadingStartTime;
-            B2D_INFO("Loaded resource: {0} ({1}s)", path, elapsedTime.count());
+            B2D_LOG_INFO("Loaded resource: {0} ({1}s)", path, elapsedTime.count());
 #endif
         }
         else
@@ -161,7 +161,7 @@ ResourcePtr<T> IResourceManager::Get(ResourcePath const& path)
             delete resource;
             ms_loadedResources.emplace(path, nullptr);
 
-            B2D_ERROR("Failed to load resource: {0}", path);
+            B2D_LOG_ERROR("Failed to load resource: {0}", path);
 
 #ifdef RESOURCE_FALLBACK
             ms_loadedResources[path] = TryGetFallback<T>();
@@ -197,7 +197,7 @@ static bool IResourceManager::Reload(ResourcePtr<T> const resourcePtr)
         {
             ms_loadedResources[path] = newResource;
 
-            B2D_INFO("Reloaded resource: {0}", path);
+            B2D_LOG_INFO("Reloaded resource: {0}", path);
             resource->OnChange();
             return true;
         }
@@ -205,7 +205,7 @@ static bool IResourceManager::Reload(ResourcePtr<T> const resourcePtr)
         {
             delete newResource;
 
-            B2D_ERROR("Failed to reload resource: {0}", path);
+            B2D_LOG_ERROR("Failed to reload resource: {0}", path);
             return false;
         }
     }
@@ -223,7 +223,7 @@ static bool IResourceManager::Reload(ResourcePtr<T> const resourcePtr)
 #ifdef RESOURCE_FALLBACK
         ms_loadedResources[path] = TryGetFallback<T>();
 #endif
-        B2D_ERROR("Failed to reload resource: {0}", path);
+        B2D_LOG_ERROR("Failed to reload resource: {0}", path);
         return false;
     }
 
@@ -238,7 +238,7 @@ static bool IResourceManager::Reload(ResourcePtr<T> const resourcePtr)
     }
 #endif
 
-    B2D_INFO("Reloaded resource: {0}", path);
+    B2D_LOG_INFO("Reloaded resource: {0}", path);
     resource->OnChange();
     return true;
 #else
@@ -280,7 +280,7 @@ static T const* IResourceManager::TryGetFallback()
         }
         else
         {
-            B2D_ERROR("Failed to load fallback resource: {0}", path);
+            B2D_LOG_ERROR("Failed to load fallback resource: {0}", path);
 
             delete fallbackResource;
             ms_loadedResources.emplace(path, nullptr);

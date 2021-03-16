@@ -33,7 +33,7 @@ bool CViewport::GetViewProjectionMatrix(TMatrix& matrix) const
 {
     if (m_currentCamera == nullptr)
     {
-        B2D_ERROR("No active camera for viewport");
+        B2D_LOG_ERROR("No active camera for viewport");
         return false;
     }
 

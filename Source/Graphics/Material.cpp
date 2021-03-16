@@ -27,17 +27,17 @@ void Material::SetBool(char const* name, bool value)
 
 void Material::SetInt(char const* name, int32 value)
 {
-    B2D_ERROR("Material::SetInt not implemented");
+    B2D_LOG_ERROR("Material::SetInt not implemented");
 }
 
 void Material::SetFloat(char const* name, float value)
 {
-    B2D_ERROR("Material::SetFloat not implemented");
+    B2D_LOG_ERROR("Material::SetFloat not implemented");
 }
 
 void Material::SetVector(char const* name, const float* value)
 {
-    B2D_ERROR("Material::SetVector not implemented");
+    B2D_LOG_ERROR("Material::SetVector not implemented");
 }
 
 void Material::SetTexture(uint32 index, TextureRef const& texture)
