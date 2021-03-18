@@ -6,6 +6,7 @@
 #include "Platform/GenericWindow.h"
 #include "View/GameSystemView.h"
 #include "View/GameSystemProfilerView.h"
+#include "View/SimpleFrameTimeView.h"
 #include "View/WorldEditorView.h"
 
 #include <GLFW/glfw3.h>
@@ -46,6 +47,7 @@ void EditorModule::Init()
 
 void EditorModule::InitDefaultEditorViews()
 {
+    CreateEditorView<SimpleFrameTimeView>();
     CreateEditorView<WorldEditorView>();
     CreateEditorView<GameSystemView>();
     CreateEditorView<GameSystemProfilerView>();

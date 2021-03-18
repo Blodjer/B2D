@@ -6,7 +6,7 @@
 
 class GameEngine;
 
-class UMath
+class UMath final
 {
 	friend GameEngine;
 
@@ -22,6 +22,24 @@ public:
 
 	template<typename T>
 	FORCEINLINE static T Clamp01(T value) { return Clamp<T>(value, 0, 1); }
+
+    template<typename T>
+    FORCEINLINE static T Floor(T value) { return std::floor(value); }
+
+    FORCEINLINE static int32 FloorToInt(float value) { return static_cast<int32>(Floor<float>(value)); }
+    FORCEINLINE static int64 FloorToInt(double value) { return static_cast<int64>(Floor<double>(value)); }
+
+    template<typename T>
+    FORCEINLINE static T Ceil(T value) { return std::ceil(value); }
+
+    FORCEINLINE static int32 CeilToInt(float value) { return static_cast<int32>(Ceil<float>(value)); }
+    FORCEINLINE static int64 CeilToInt(double value) { return static_cast<int64>(Ceil<double>(value)); }
+
+    template<typename T>
+    FORCEINLINE static T Round(T value) { return std::round(value); }
+
+    FORCEINLINE static uint32 RoundToInt(float value) { return static_cast<int32>(Round<float>(value)); }
+    FORCEINLINE static uint64 RoundToInt(double value) { return static_cast<int64>(Round<double>(value)); }
 
 	FORCEINLINE static float Sin(float value) { return std::sin(value); }
 	FORCEINLINE static float Cos(float value) { return std::cos(value); }

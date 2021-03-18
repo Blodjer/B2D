@@ -28,7 +28,7 @@ void RenderManger::Init(bool multithreaded)
     m_multithreaded = multithreaded;
     if (m_multithreaded)
     {
-        GenericWindow* offscreenRenderContext = GameEngine::Instance()->GetPA()->CreateOffscreenRenderContext();
+        GenericWindow* offscreenRenderContext = GameEngine::Instance()->GetPAI()->CreateOffscreenRenderContext();
         m_renderThreadRunnable = new RenderThread(offscreenRenderContext);
         m_renderThread = Thread::Create(m_renderThreadRunnable);
     }

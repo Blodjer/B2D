@@ -1,9 +1,10 @@
 #pragma once
 #include "Engine/EngineModule.h"
+#include "Platform/PlatformMessageHandlerInterface.h"
 
 class IEditorView;
 
-class EditorModule final : public IEngineModule
+class EditorModule final : public IEngineModule, public IPlatformMessageHandlerInterface
 {
 protected:
     virtual void Init() override;

@@ -32,11 +32,11 @@ GameEngine::~GameEngine()
     // TODO: replace by smart pointer
     // TODO: replace by base (init, shutdown,...)
 
-    m_PA->Shutdown();
+    m_PAI->Shutdown();
     m_GHI->Shutdown();
     m_renderManager->Shutdown();
 
-    delete m_PA;
+    delete m_PAI;
     delete m_GHI;
     delete m_renderManager;
 }
@@ -60,15 +60,15 @@ void GameEngine::Init()
     UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
 
     // Platform Initialization
-    m_PA = new PlatformApplication();
-    B2D_ASSERT(m_PA->Init());
-    m_PA->AddMessageHandler(this);
+    m_PAI = new PlatformApplication();
+    B2D_ASSERT(m_PAI->Init());
+    m_PAI->AddMessageHandler(this);
 
     // Create Main Window
-    m_mainWindow = m_PA->MakeWindow(m_config.windowWidth, m_config.windowHeight, m_config.name);
+    m_mainWindow = m_PAI->MakeWindow(m_config.windowWidth, m_config.windowHeight, m_config.name);
 
     // Load Graphics Hardware Interface
-    m_GHI = m_PA->CreateGHI();
+    m_GHI = m_PAI->CreateGHI();
     B2D_ASSERT(m_GHI->Init());
 
     m_renderManager = new RenderManger();
@@ -92,40 +92,28 @@ void GameEngine::Shutdown()
 
 void GameEngine::Run()
 {
-	//using duration = std::chrono::duration<double, std::milli>;
-	//using clock = std::chrono::high_resolution_clock;
-
+    double const evaluationDuration = 1.0;
+	double lastTickTime = glfwGetTime();
+	double nextEvalutationTime = glfwGetTime() + evaluationDuration;
 	uint32 frames = 0;
-	uint32 fps = 0;
 
-	double lastTick = glfwGetTime();
-	double nextSecond = glfwGetTime() + 1;
 	while (!GetMainWindow()->ShouldClose())
 	{
-        const double now = glfwGetTime();
-		const float deltaTime = static_cast<float>(now - lastTick);
-		lastTick = now;
+        double const nowTime = glfwGetTime();
+		float const deltaTime = static_cast<float>(nowTime - lastTickTime);
+		lastTickTime = nowTime;
 
-        if (nextSecond < now)
+        if (nextEvalutationTime < nowTime)
 		{
-			fps = frames;
+			m_fps = static_cast<uint32>(UMath::Floor(frames / evaluationDuration));
 			frames = 0;
-			nextSecond = now + 1;
+			nextEvalutationTime = nowTime + evaluationDuration;
 		}
 
         Input::Flush();
-        m_PA->PollEvents();
+        m_PAI->PollEvents();
 
         m_moduleManager.ForwardBeginFrame();
-
-        static bool p_open = true;
-        ImGui::SetNextWindowBgAlpha(0.35f);
-        if (ImGui::Begin("Example: Simple overlay", &p_open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav))
-        {
-            ImGui::Text("Fps:   %d", fps);
-            ImGui::Text("Delta: %.2fms", 1000.0f / fps);
-        }
-        ImGui::End();
 
         if (Input::IsKey(EKey::ESCAPE, EKeyEvent::Press))
             GameEngine::Instance()->RequestShutdown();
@@ -137,7 +125,6 @@ void GameEngine::Run()
         if (Input::IsKey(EKey::P, EKeyEvent::Press))
             pause = !pause;
 
-		// Tick
         if (!pause || Input::IsKey(EKey::O, EKeyEvent::Press))
         {
             m_gameInstance->Tick(deltaTime);
