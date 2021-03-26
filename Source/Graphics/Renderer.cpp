@@ -16,7 +16,7 @@
 
 #include <GL/glew.h>
 
-void CRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const target, WorldRenderDataInterface* wrdi, CViewport const* const viewport, CameraEntity const* const camera)
+void CRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const target, WorldRenderDataInterface const* wrdi, CViewport const* const viewport)
 {
     // flag: solid, unlit, wireframe,...
 
@@ -87,7 +87,6 @@ void CRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const tar
 
                 ghi->BindTexture(textureResource->GetGHITexture());
             }
-
 
             GLuint ul1 = glGetUniformLocation(mat->GetHandle(), "viewprojection");
             glUniformMatrix4fv(ul1, 1, GL_FALSE, viewProjectionMatrix.GetPtr());

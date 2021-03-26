@@ -9,6 +9,6 @@ class GHIRenderTarget;
 class CRenderer
 {
 public:
-    static void RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const target, WorldRenderDataInterface* wrdi, CViewport const* const viewport, CameraEntity const* const camera);
+    static void RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const target, WorldRenderDataInterface const* wrdi, CViewport const* const viewport);
     static void PostProcessPass(GHIRenderTarget* source, GHIRenderTarget* target, GHIMaterial* material);
 };

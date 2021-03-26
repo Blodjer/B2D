@@ -61,6 +61,9 @@ void RenderManger::Draw()
     IGraphicsHardwareInterface* const ghi = GameEngine::Instance()->GetGHI();
     ghi->Clear(true, true, true);
     
+    // TODO: ImGui tries to access the render outputs from the renderers. This draw is called from the main thread but the render thread might have already cleared the render output
+    // S1 Change ImGUI to always lookup the latest render output
+    // S2 Change render manager to lock all needed textures before drawing. This way the renderer would have to wait for editor to be finish drawing.
     if (EditorModule* const editor = GameEngine::Instance()->GetModuleManager()->Get<EditorModule>())
     {
         editor->Draw();

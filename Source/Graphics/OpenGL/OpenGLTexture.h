@@ -6,9 +6,9 @@
 class OpenGLTexture : public GHITexture
 {
 public:
-    OpenGLTexture(GLuint handle);
+    OpenGLTexture(GLuint handle, uint32 width, uint32 height);
 
-    virtual void* GetNativePtr() override { return reinterpret_cast<void*>(static_cast<size_t>(m_handle)); };
+    virtual void* GetNativePtr() const override { return reinterpret_cast<void*>(static_cast<size_t>(m_handle)); };
 
     FORCEINLINE GLuint GetHandle() const { return m_handle; }
 

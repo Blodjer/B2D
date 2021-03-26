@@ -34,17 +34,11 @@ bool WorldRenderer::ShouldRenderNextFrame()
 void WorldRenderer::RenderInternal(GHIRenderTarget* const renderTarget)
 {
     m_wrdi = GameEngine::Instance()->GetGameInstance()->GetWorld()->GetWorldRenderDataInterface();
-    m_viewport = GameEngine::Instance()->GetMainWindow()->GetViewport();
 
     m_wrdi->StartRead();
-
-    static GHIRenderTarget* rt = GameEngine::Instance()->GetGHI()->CreateRenderTarget();
-
-    CRenderer::RenderWorldFromViewportToRenderTarget(rt, m_wrdi, m_viewport, m_viewport->GetCamera());
-
-    CRenderer::PostProcessPass(rt, renderTarget, nullptr);
-
+    CRenderer::RenderWorldFromViewportToRenderTarget(renderTarget, m_wrdi, m_viewport);
     m_renderedFrame.store(m_wrdi->GetPreparedFrame());
-
     m_wrdi->StopRead();
+
+    //CRenderer::PostProcessPass(renderTarget, renderTarget, nullptr);
 }

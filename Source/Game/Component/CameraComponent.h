@@ -15,10 +15,9 @@ struct CameraComponent : public Component
     EProjection projection = EProjection::Perspective;
     EProjection targetProjection = projection;
     float projectionLerp = 1.0f;
-    bool useAspectRatio = false;
-    float aspectRatio = 16.0f / 9.0f;
-    float fov = 45.0f;
+    float fov = 90.0f;
     float nearPlane = 0.1f;
     float farPlane = 99999999.0f;
+    float orthoWidth = 50.0f;
 };
 

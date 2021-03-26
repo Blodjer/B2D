@@ -1,5 +1,6 @@
 #pragma once
 
+class CViewport;
 class GHIRenderTarget;
 class GHITexture;
 
@@ -13,10 +14,8 @@ public:
     void Render();
     virtual void Shutdown();
 
-    GHITexture* GetRenderOutput();
+    GHITexture const* GetRenderOutput() const;
     float GetRenderTime() const { return m_renderTime; }
-
-    std::mutex m_mutex;
 
 protected:
     virtual bool ShouldRenderNextFrame() { return true; }
@@ -25,12 +24,14 @@ protected:
     virtual void RenderInternal(GHIRenderTarget* const renderTarget) = 0;
     void PostRender();
 
+public:
+    CViewport* m_viewport = nullptr;
+
 private:
-    std::atomic<bool> m_renderToSwtich; // true = 1, false = 2
-    std::atomic<float> m_renderTime;
+    std::atomic<bool> m_isInit = false;
+    std::atomic<bool> m_renderSwtich = true; // true = 1, false = 2
+    std::atomic<float> m_renderTime = 0.0f;
 
     GHIRenderTarget* m_renderTarget1 = nullptr;
     GHIRenderTarget* m_renderTarget2 = nullptr;
-    GHITexture* m_renderTexture1 = nullptr;
-    GHITexture* m_renderTexture2 = nullptr;
 };

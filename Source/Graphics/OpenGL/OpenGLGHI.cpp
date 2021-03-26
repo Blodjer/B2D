@@ -87,9 +87,10 @@ GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
     GLuint depthrenderbuffer;
     glGenTextures(1, &depthrenderbuffer);
     glBindTexture(GL_TEXTURE_2D, depthrenderbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 1920, 1080, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, renderTexture->GetWidth(), renderTexture->GetHeight(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    OpenGLTexture* depthTexture = new OpenGLTexture(depthrenderbuffer, renderTexture->GetWidth(), renderTexture->GetHeight());
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -108,7 +109,18 @@ GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    return new OpenGLRenderTarget(fb, renderTexture);
+    return new OpenGLRenderTarget(fb, renderTexture, depthTexture);
+}
+
+void OpenGLGHI::ResizeRenderTarget(GHIRenderTarget*& renderTarget, uint32 width, uint32 height)
+{
+    OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
+    
+    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(rt->GetTexture());
+
+    DeleteRenderTarget(renderTarget, true);
+    GHITexture* t = CreateTexture(nullptr, width, height, 3);
+    renderTarget = CreateRenderTarget(t);
 }
 
 void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeTexture)
@@ -118,9 +130,12 @@ void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeText
 
     glDeleteFramebuffers(1, &handle);
 
+    GHITexture* dtexture = const_cast<GHITexture*>(rt->GetDepthTexture());
+    FreeTexture(dtexture);
+
     if (freeTexture)
     {
-        GHITexture* texture = const_cast<GHITexture*>(renderTarget->GetTexture());
+        GHITexture* texture = const_cast<GHITexture*>(rt->GetTexture());
         FreeTexture(texture);
     }
 
@@ -134,7 +149,7 @@ void OpenGLGHI::BindRenderTarget(GHIRenderTarget* renderTarget)
 
     glBindFramebuffer(GL_FRAMEBUFFER, rt->GetHandle());
 
-    glViewport(0, 0, 1920, 1080);
+    glViewport(0, 0, rt->GetWidth(), rt->GetHeight());
     glClear(GL_DEPTH_BUFFER_BIT);
 }
 
@@ -161,7 +176,7 @@ GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 heig
             break;
         default:
             B2D_LOG_ERROR("Cannot create texture with {} components", components);
-            return new OpenGLTexture(0);
+            return nullptr;
     }
 
     GLuint handle;
@@ -175,7 +190,7 @@ GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 heig
 
     B2D_ASSERT(handle != GL_INVALID_VALUE);
 
-    return new OpenGLTexture(handle);
+    return new OpenGLTexture(handle, width, height);
 }
 
 void OpenGLGHI::BindTexture(GHITexture const* texture)

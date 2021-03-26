@@ -6,7 +6,7 @@
 
 GenericWindow::GenericWindow(uint32 width, uint32 height)
 {
-    m_viewports.emplace_back(new CViewport(0, 0, width, height));
+    m_viewports.emplace_back(new CViewport(width, height));
 }
 
 GenericWindow::~GenericWindow()

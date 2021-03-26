@@ -5,13 +5,12 @@
 #include "Core/Types/BasicTypes.h"
 
 #include "Core/CoreDefines.h"
+#include "Core/Helpers.h"
+#include "Core/Log.h"
 #include "Core/CoreAssert.h"
+#include "Core/Profiler.h"
 
 #include "Math/BMath.h"
-
-#include "Core/Helpers.h"
-#include "Core/Profiler.h"
-#include "Core/Log.h"
 
 #include "Core/Types/Vector2.h"
 #include "Core/Types/Vector3.h"

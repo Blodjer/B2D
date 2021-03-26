@@ -95,13 +95,13 @@ void SystemAdmin::Tick(float deltaTime)
         }
 
         // TODO: Check if this is the last system affecting these masks
-        if (write == 0 && read == 3)
-        {
-            m_overflowTasks.emplace_back(std::async(std::launch::async, [s, deltaTime]() {
-                s->Update(deltaTime);
-            }));
-            continue;
-        }
+        //if (write == 0 && read == 3)
+        //{
+        //    m_overflowTasks.emplace_back(std::async(std::launch::async, [s, deltaTime]() {
+        //        s->Update(deltaTime);
+        //        }));
+        //    continue;
+        //}
 
         tasks.emplace_back(std::async(std::launch::async, [this, &currentReads, &currentWrite, s, deltaTime]() {
             PROFILE_GAME_SYSTEM(s->GetName());

@@ -12,13 +12,6 @@ void CameraEntity::Update(float deltaTime)
 {
     CameraComponent& camera = GetComponent<CameraComponent>();
 
-#if B2D_BUILD_DEBUG
-    if (Input::IsKey(EKey::P, EKeyEvent::Press))
-    {
-        SetProjection(camera.targetProjection == EProjection::Perspective ? EProjection::Orthographic : EProjection::Perspective);
-    }
-#endif
-
     if (camera.projectionLerp < 1.f)
     {
         camera.projectionLerp = UMath::Min(camera.projectionLerp + deltaTime, 1.f);
@@ -64,18 +57,20 @@ TMatrix CameraEntity::CreateProjectionMatrix(EProjection const projection, CView
 
     if (projection == EProjection::Perspective)
     {
-        if (camera.useAspectRatio && camera.aspectRatio > 0.0f)
-        {
-            return TMatrix::Perspective(camera.fov, camera.aspectRatio, camera.nearPlane, camera.farPlane);
-        }
-        else
-        {
-            return TMatrix::Perspective(camera.fov, static_cast<float>(viewport->GetWidth()) / static_cast<float>(viewport->GetHeight()), camera.nearPlane, camera.farPlane);
-        }
+        float aspect = static_cast<float>(viewport->GetWidth()) / static_cast<float>(viewport->GetHeight());
+        float invAspect = static_cast<float>(viewport->GetHeight()) / static_cast<float>(viewport->GetWidth());
+
+        float fovRadians = UMath::Max(0.001f, UMath::DegToRad(camera.fov));
+        float horizontalFov = 2.0f * UMath::ArcTan(UMath::Tan(fovRadians * 0.5f) * invAspect);
+
+        return TMatrix::Perspective(horizontalFov, aspect, camera.nearPlane, camera.farPlane);
     }
     else if (projection == EProjection::Orthographic)
     {
-        return TMatrix::Orthographic(viewport->GetWidth() * -0.5f, viewport->GetWidth() * 0.5f, viewport->GetHeight() * -0.5f, viewport->GetHeight() * 0.5f, camera.nearPlane, camera.farPlane);
+        float aspect = static_cast<float>(viewport->GetHeight()) / static_cast<float>(viewport->GetWidth());
+        float width = camera.orthoWidth; UMath::Max(0.001f, camera.orthoWidth);
+        float height = width * aspect;
+        return TMatrix::Orthographic(width * -0.5f, width * 0.5f, height * -0.5f, height * 0.5f, camera.nearPlane, camera.farPlane);
     }
 
     B2D_TRAPf("Projection mode {} not implemented", static_cast<uint32>(projection));

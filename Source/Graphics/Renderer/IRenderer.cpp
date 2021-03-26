@@ -8,14 +8,17 @@
 #include "Graphics/OpenGL/OpenGLTexture.h"
 #include "Graphics/OpenGL/OpenGLRenderTarget.h"
 #include "imgui/imgui.h"
+#include "../Viewport.h"
 
 void IRenderer::Init()
 {
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-    m_renderTexture1 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
-    m_renderTexture2 = ghi->CreateTexture(nullptr, 1920, 1080, 3);
-    m_renderTarget1 = ghi->CreateRenderTarget(m_renderTexture1);
-    m_renderTarget2 = ghi->CreateRenderTarget(m_renderTexture2);
+    GHITexture* renderTexture1 = ghi->CreateTexture(nullptr, 1, 1, 3);
+    GHITexture* renderTexture2 = ghi->CreateTexture(nullptr, 1, 1, 3);
+    m_renderTarget1 = ghi->CreateRenderTarget(renderTexture1);
+    m_renderTarget2 = ghi->CreateRenderTarget(renderTexture2);
+
+    m_isInit = true;
 }
 
 void IRenderer::Shutdown()
@@ -27,14 +30,19 @@ void IRenderer::Shutdown()
 
 void IRenderer::Render()
 {
-    if (ShouldRenderNextFrame())
+    if (ShouldRenderNextFrame() && m_viewport)
     {
         using duration = std::chrono::duration<float, std::milli>;
         using clock = std::chrono::high_resolution_clock;
 
         std::chrono::time_point<clock> start = clock::now();
 
-        GHIRenderTarget* const target = m_renderToSwtich ? m_renderTarget1 : m_renderTarget2;
+        GHIRenderTarget*& target = m_renderSwtich ? m_renderTarget1 : m_renderTarget2;
+
+        if (target->GetWidth() != m_viewport->GetWidth() || target->GetHeight() != m_viewport->GetHeight())
+        {
+            GameEngine::Instance()->GetGHI()->ResizeRenderTarget(target, m_viewport->GetWidth(), m_viewport->GetHeight());
+        }
 
         PreRender();
         RenderInternal(target);
@@ -55,12 +63,15 @@ void IRenderer::PostRender()
     glFinish();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    m_mutex.lock();
-    m_renderToSwtich.store(!m_renderToSwtich);
-    m_mutex.unlock();
+    m_renderSwtich.store(!m_renderSwtich);
 }
 
-GHITexture* IRenderer::GetRenderOutput()
+GHITexture const* IRenderer::GetRenderOutput() const
 {
-    return m_renderToSwtich ? m_renderTexture2 : m_renderTexture1;
+    if (!m_isInit)
+    {
+        return nullptr;
+    }
+
+    return m_renderSwtich ? m_renderTarget2->GetTexture() : m_renderTarget1->GetTexture();
 }

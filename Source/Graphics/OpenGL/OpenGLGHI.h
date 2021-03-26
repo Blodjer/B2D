@@ -37,6 +37,7 @@ public:
 
     virtual GHIRenderTarget* CreateRenderTarget() override;
     virtual GHIRenderTarget* CreateRenderTarget(GHITexture* texture) override;
+    virtual void ResizeRenderTarget(GHIRenderTarget*& renderTarget, uint32 width, uint32 height);
     virtual void DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeTexture) override;
     virtual void BindRenderTarget(GHIRenderTarget* renderTarget) override;
     virtual void BindRenderTargetAndClear(GHIRenderTarget* renderTarget) override;

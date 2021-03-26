@@ -13,7 +13,7 @@
 #define DECLARE_SYSTEM(systemname, multithread) \
 public: \
     static constexpr char const* const NAME = #systemname; \
-    virtual char const* const GetName() override { return NAME; } \
+    virtual char const* const GetName() const override { return NAME; } \
     static constexpr bool MULTITHREADED = multithread; \
     virtual bool IsMultithreaded() const override { return MULTITHREADED; } \
 private:
@@ -47,7 +47,7 @@ class System
     friend class SystemAdmin;
 
 public:
-    virtual char const* const GetName() = 0;
+    virtual char const* const GetName() const = 0;
     virtual bool IsMultithreaded() const = 0;
 
     virtual uint16 GetReadMask() const = 0;

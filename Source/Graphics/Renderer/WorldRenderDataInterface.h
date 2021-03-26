@@ -21,17 +21,16 @@ public:
     FORCEINLINE void StartWrite() { m_mutex.lock(); }
     FORCEINLINE void StopWrite() { m_mutex.unlock(); }
     FORCEINLINE bool TryWrite() { return m_mutex.try_lock(); }
-    FORCEINLINE void StartRead() { m_mutex.lock_shared(); }
-    FORCEINLINE void StopRead() { m_mutex.unlock_shared(); }
+    FORCEINLINE void StartRead() const { m_mutex.lock_shared(); }
+    FORCEINLINE void StopRead() const { m_mutex.unlock_shared(); }
 
     // TODO: Add ref count and only write if ref count > 0
 
 private:
     RenderObjectBuffer<QuadRenderObject> m_quadBuffer;
 
-    std::shared_mutex m_mutex;
+    mutable std::shared_mutex m_mutex;
     std::atomic<uint32> m_preparedFrame;
-
 };
 
 template<typename F>

@@ -108,12 +108,13 @@ void RenderThread::Run()
             m_renderersToAdd.resize(0);
         }
 
-        m_mutex.unlock();
-
         for (IRenderer* const renderer : m_renderers)
         {
             renderer->Render();
         }
+
+        // TODO: Could be further up but is currently required to prevent renderer dependencies getting deleted to early
+        m_mutex.unlock();
     }
 }
 
