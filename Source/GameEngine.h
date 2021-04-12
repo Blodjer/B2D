@@ -6,11 +6,10 @@
 
 class CGameInstance;
 class CViewport;
-class Editor;
 class GenericWindow;
 class IGraphicsHardwareInterface;
 class IPlatformApplicationInterface;
-class RenderManger;
+class RenderManager;
 
 class GameEngine final : private IPlatformMessageHandlerInterface
 {
@@ -44,7 +43,7 @@ public:
     IGraphicsHardwareInterface* GetGHI() const { return m_GHI; }
 
     ModuleManager* const GetModuleManager() { return &m_moduleManager; }
-    RenderManger* GetRenderManager() const { return m_renderManager; }
+    RenderManager* GetRenderManager() const { return m_renderManager; }
 
 	CGameInstance* GetGameInstance() const { return m_gameInstance; }
     GenericWindow* GetMainWindow() const { return m_mainWindow; }
@@ -66,7 +65,7 @@ private:
     IGraphicsHardwareInterface* m_GHI = nullptr;
 
     ModuleManager m_moduleManager;
-    RenderManger* m_renderManager = nullptr;
+    RenderManager* m_renderManager = nullptr;
 
     GenericWindow* m_mainWindow = nullptr;
 	CGameInstance* m_gameInstance = nullptr;

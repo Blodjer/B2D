@@ -7,11 +7,11 @@ class GenericWindow;
 class GHIRenderTarget;
 class Thread;
 
-class RenderManger
+class RenderManager
 {
 public:
-    RenderManger();
-    ~RenderManger();
+    RenderManager();
+    ~RenderManager();
 
     void Init(bool multithreaded);
     void Shutdown();

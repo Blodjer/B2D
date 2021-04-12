@@ -5,7 +5,7 @@
 #include "Graphics/GHI/GHIRenderTarget.h"
 #include "Graphics/OpenGL/OpenGLTexture.h"
 #include "Graphics/Renderer/WorldRenderer.h"
-#include "Graphics/RenderManger.h"
+#include "Graphics/RenderManager.h"
 #include "../EditorModule.h"
 #include "Graphics/Viewport.h"
 #include "Game/Component/CameraComponent.h"

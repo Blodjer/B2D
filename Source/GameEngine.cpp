@@ -3,20 +3,16 @@
 
 #include "Core/Core.h"
 #include "Editor/EditorModule.h"
+#include "Editor/View/WorldEditorView.h"
 #include "Game/GameInstance.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
-#include "Graphics/RenderManger.h"
+#include "Graphics/RenderManager.h"
 #include "Input/Input.h"
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformApplication.h"
 #include "Platform/PlatformInterface.h"
-#include "Core/Profiler.h"
 
 #include <GLFW/glfw3.h>
-#include <imgui/imgui.h>
-#include "Editor/View/WorldEditorView.h"
-#include "Game/Core/SystemAdmin.h"
-#include "Game/Core/World.h"
 
 GameEngine* GameEngine::ms_instance = nullptr;
 
@@ -66,18 +62,24 @@ void GameEngine::Init()
 
     // Create Main Window
     m_mainWindow = m_PAI->MakeWindow(m_config.windowWidth, m_config.windowHeight, m_config.name);
+    B2D_ASSERT(m_mainWindow);
 
     // Load Graphics Hardware Interface
     m_GHI = m_PAI->CreateGHI();
-    B2D_ASSERT(m_GHI->Init());
-
-    m_renderManager = new RenderManger();
-    m_renderManager->Init(m_config.multithread);
+    if (m_GHI)
+    {
+        B2D_ASSERT(m_GHI->Init());
+        m_renderManager = new RenderManager();
+        m_renderManager->Init(m_config.multithread);
 
 #if 1 // Load Editor
-    m_moduleManager.Load<EditorModule>();
-    //mPA->AddMessageHandler(mEditor);
+        m_moduleManager.Load<EditorModule>();
 #endif
+    }
+    else
+    {
+        B2D_LOG_WARNING("No GHI was created!");
+    }
 
     // TODO: GameInstance should only be valid while the game is running. Should be null in editor mode.
     m_gameInstance = new CGameInstance(m_mainWindow);

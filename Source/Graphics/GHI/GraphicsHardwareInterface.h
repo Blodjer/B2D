@@ -9,6 +9,13 @@ class GHITexture;
 
 class IGraphicsHardwareInterface
 {
+protected:
+    IGraphicsHardwareInterface() = default;
+
+private:
+    IGraphicsHardwareInterface(const IGraphicsHardwareInterface&) = delete;
+    void operator=(const IGraphicsHardwareInterface&) = delete;
+
 public:
     virtual bool Init() = 0;
     virtual void Shutdown() = 0;

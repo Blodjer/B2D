@@ -5,6 +5,7 @@
 #include <atomic>
 
 class CViewport;
+class GHIMaterial;
 class WorldRenderDataInterface;
 
 class WorldRenderer final : public IRenderer
@@ -16,6 +17,10 @@ public:
 protected:
     virtual bool ShouldRenderNextFrame() override;
     virtual void RenderInternal(GHIRenderTarget* const renderTarget) override;
+
+private:
+    void RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const target, WorldRenderDataInterface const* wrdi, CViewport const* const viewport);
+    void PostProcessPass(GHIRenderTarget* source, GHIRenderTarget* target, GHIMaterial* material);
 
 private:
     WorldRenderDataInterface const* m_wrdi = nullptr;

@@ -2,7 +2,7 @@
 #include "DesktopPlatformApplication.h"
 
 #include "GameEngine.h"
-#include "Graphics/OpenGL/OpenGLGHI.h"
+#include "Graphics/GHI/GraphicsHardware.h"
 #include "Platform/Desktop/DesktopWindow.h"
 
 #include <GLFW/glfw3.h>
@@ -56,7 +56,7 @@ void DesktopPlatformApplication::Shutdown()
 
 IGraphicsHardwareInterface* DesktopPlatformApplication::CreateGHI() const
 {
-    return new OpenGLGHI();
+    return GraphicsHardware::Create(EGraphicsAPI::OpenGL);
 }
 
 GenericWindow* DesktopPlatformApplication::MakeWindow(uint32 width, uint32 height, std::string const& title)

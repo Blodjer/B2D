@@ -4,6 +4,7 @@
 #include "View/IEditorView.h"
 #include "GameEngine.h"
 #include "Platform/GenericWindow.h"
+#include "Platform/PlatformInterface.h"
 #include "View/GameSystemView.h"
 #include "View/GameSystemProfilerView.h"
 #include "View/SimpleFrameTimeView.h"
@@ -43,6 +44,8 @@ void EditorModule::Init()
     ImGui_ImplOpenGL3_Init("#version 410 core");
 
     InitDefaultEditorViews();
+
+    GameEngine::Instance()->GetPAI()->AddMessageHandler(this);
 }
 
 void EditorModule::InitDefaultEditorViews()
@@ -55,6 +58,8 @@ void EditorModule::InitDefaultEditorViews()
 
 void EditorModule::Shutdown()
 {
+    GameEngine::Instance()->GetPAI()->RemoveMessageHandler(this);
+
     for (IEditorView* editorView : m_editorViews)
     {
         CloseEditorView(editorView);

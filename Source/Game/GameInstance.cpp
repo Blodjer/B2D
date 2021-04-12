@@ -3,19 +3,12 @@
 
 #include "Core/Core.h"
 #include "GameEngine.h"
-#include "Graphics/Viewport.h"
 #include "LocalPlayer.h"
 #include "Game/Core/World.h"
-#include "Game/Component/HoverComponent.h"
-#include "Game/Component/SpriteComponent.h"
-#include "Game/Component/TransformComponent.h"
 #include "Game/System/CharacterMovementSystem.h"
 #include "Game/System/HoverSystem.h"
 #include "Game/System/InputSystem.h"
 #include "Game/System/RenderSystem.h"
-#include "Graphics/Renderer/WorldRenderer.h"
-#include "Graphics/Shader.h"
-#include "Graphics/RenderManger.h"
 
 CGameInstance::CGameInstance(GenericWindow* const owningWindow)
     : m_window(owningWindow)

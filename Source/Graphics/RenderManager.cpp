@@ -1,5 +1,5 @@
 #include "B2D_pch.h"
-#include "RenderManger.h"
+#include "RenderManager.h"
 
 #include "Editor/EditorModule.h"
 #include "Engine/ModuleManager.h"
@@ -13,17 +13,17 @@
 
 #include <GLFW/glfw3.h>
 
-RenderManger::RenderManger()
+RenderManager::RenderManager()
 {
 
 }
 
-RenderManger::~RenderManger()
+RenderManager::~RenderManager()
 {
 
 }
 
-void RenderManger::Init(bool multithreaded)
+void RenderManager::Init(bool multithreaded)
 {
     m_multithreaded = multithreaded;
     if (m_multithreaded)
@@ -34,7 +34,7 @@ void RenderManger::Init(bool multithreaded)
     }
 }
 
-void RenderManger::Shutdown()
+void RenderManager::Shutdown()
 {
     for (IRenderer* renderer : m_renderers)
     {
@@ -42,7 +42,7 @@ void RenderManger::Shutdown()
     }
 }
 
-void RenderManger::Tick(float deltaTime)
+void RenderManager::Tick(float deltaTime)
 {
     if (m_multithreaded)
     {
@@ -56,7 +56,7 @@ void RenderManger::Tick(float deltaTime)
     }
 }
 
-void RenderManger::Draw()
+void RenderManager::Draw()
 {
     IGraphicsHardwareInterface* const ghi = GameEngine::Instance()->GetGHI();
     ghi->Clear(true, true, true);

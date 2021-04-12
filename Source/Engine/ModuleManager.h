@@ -19,7 +19,7 @@ public:
     {
         B2D_STATIC_ASSERT_TYPE(IEngineModule, C);
 
-        C*& module = Get<C>();
+        C*& module = GetInternal<C>();
         if (module)
         {
             return module;
@@ -38,17 +38,27 @@ public:
     {
         B2D_STATIC_ASSERT_TYPE(IEngineModule, C);
 
-        C*& module = Get<C>();
+        C*& module = GetInternal<C>();
         if (!module)
         {
             return;
         }
 
         Unload(module);
+        module = nullptr;
     }
 
     template<class C>
-    C*& Get() const
+    C* Get() const
+    {
+        B2D_STATIC_ASSERT_TYPE(IEngineModule, C);
+
+        return GetInternal<C>();
+    }
+
+private:
+    template<class C>
+    C*& GetInternal() const
     {
         B2D_STATIC_ASSERT_TYPE(IEngineModule, C);
 
@@ -56,16 +66,13 @@ public:
         return module;
     }
 
-private:
-    void Unload(IEngineModule*& module)
+    void Unload(IEngineModule* module)
     {
         module->Shutdown();
 
         m_modules.erase(std::remove(m_modules.begin(), m_modules.end(), module));
 
         delete module;
-
-        module = nullptr;
     }
 
 private:
