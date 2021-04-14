@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "GraphicsCommon.h"
 
 class GHIShader;
 class GHIMaterial;
@@ -19,6 +20,8 @@ private:
 public:
     virtual bool Init() = 0;
     virtual void Shutdown() = 0;
+
+    virtual EGraphicsAPI GetGraphicsAPI() const = 0;
 
 public:
     //virtual void SetViewport() = 0;
@@ -47,6 +50,12 @@ public:
     virtual void BindRenderTarget(GHIRenderTarget* renderTarget) = 0;
     virtual void BindRenderTargetAndClear(GHIRenderTarget* renderTarget) = 0;
 
+protected:
+    friend class EditorModule;
+    virtual bool ImGui_Init() = 0;
+    virtual void ImGui_Shutdow() = 0;
+    virtual void ImGui_BeginFrame() = 0;
+    virtual void ImGui_Render() = 0;
 };
 
 // IShader

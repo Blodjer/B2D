@@ -1,12 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
-
-enum class EGraphicsAPI
-{
-    OpenGL,
-    Vulkan
-};
+#include "GraphicsCommon.h"
 
 class IGraphicsHardwareInterface;
 

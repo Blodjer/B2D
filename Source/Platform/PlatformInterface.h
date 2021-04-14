@@ -20,4 +20,10 @@ public:
 
     virtual void AddMessageHandler(IPlatformMessageHandlerInterface* messageHandler) = 0;
     virtual void RemoveMessageHandler(IPlatformMessageHandlerInterface* messageHandler) = 0;
+
+protected:
+    friend class EditorModule;
+    virtual bool ImGui_Init() { B2D_LOG_ERROR("ImGui not implemented on this platform!"); return false; }
+    virtual void ImGui_Shutdow() { }
+    virtual void ImGui_BeginFrame() { }
 };

@@ -5,6 +5,9 @@
 #include "OpenGLShader.h"
 #include "OpenGLTexture.h"
 
+#include <imgui/imgui.h>
+#include <Editor/imgui_impl_opengl3.h>
+
 bool OpenGLGHI::Init()
 {
     glewInit();
@@ -296,4 +299,25 @@ void OpenGLGHI::BindMaterial(GHIMaterial* material)
     OpenGLMaterial* openglMaterial = static_cast<OpenGLMaterial*>(material);
 
     glUseProgram(openglMaterial->GetHandle());
+}
+
+bool OpenGLGHI::ImGui_Init()
+{
+    ImGui_ImplOpenGL3_Init("#version 410 core");
+    return true;
+}
+
+void OpenGLGHI::ImGui_Shutdow()
+{
+    ImGui_ImplOpenGL3_Shutdown();
+}
+
+void OpenGLGHI::ImGui_BeginFrame()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+}
+
+void OpenGLGHI::ImGui_Render()
+{
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

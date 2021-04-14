@@ -1,12 +1,12 @@
 #include "B2D_pch.h"
 #include "ModuleManager.h"
 
-ModuleManager::ModuleManager()
+void ModuleManager::Init()
 {
 
 }
 
-ModuleManager::~ModuleManager()
+void ModuleManager::Shutdown()
 {
     for (IEngineModule*& module : m_modules)
     {
@@ -36,4 +36,13 @@ void ModuleManager::ForwardEndFrame()
     {
         module->EndFrame();
     }
+}
+
+void ModuleManager::Unload(IEngineModule* module)
+{
+    module->Shutdown();
+
+    m_modules.erase(std::remove(m_modules.begin(), m_modules.end(), module));
+
+    delete module;
 }

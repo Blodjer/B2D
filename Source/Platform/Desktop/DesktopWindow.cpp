@@ -48,6 +48,12 @@ void DesktopWindow::SetSize(uint32 width, uint32 height)
 
 void DesktopWindow::SetVsync(bool enable)
 {
+    if (glfwGetWindowAttrib(m_context, GLFW_CLIENT_API) == GLFW_NO_API)
+    {
+		B2D_NOT_IMPLEMENTED();
+        return;
+    }
+
 	CURRENT_CONTEXT_CHECK();
 
 	if (enable)
@@ -72,6 +78,11 @@ void DesktopWindow::Focus()
 
 void DesktopWindow::MakeContextCurrent()
 {
+    if (glfwGetWindowAttrib(m_context, GLFW_CLIENT_API) == GLFW_NO_API)
+    {
+        return;
+    }
+
     if (IsCurrentContext())
     {
         return;

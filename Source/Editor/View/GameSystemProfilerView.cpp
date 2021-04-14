@@ -104,7 +104,7 @@ void GameSystemProfilerView::Tick(float deltaTime)
             float const startPosRatio = durationSinceFrameStart.count() / frameDuration;
             float const widthRatio = duration / frameDuration;
 
-            ImGui::SetCursorPos(ImVec2(startPosRatio * maxWidth, cursorPos.y + threadIndex * ImGui::GetItemsLineHeightWithSpacing() + 2));
+            ImGui::SetCursorPos(ImVec2(startPosRatio * maxWidth, cursorPos.y + threadIndex * ImGui::GetItemRectSize().y + 2));
 
             switch (data.type)
             {

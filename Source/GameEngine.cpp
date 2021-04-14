@@ -28,13 +28,24 @@ GameEngine::~GameEngine()
     // TODO: replace by smart pointer
     // TODO: replace by base (init, shutdown,...)
 
-    m_PAI->Shutdown();
-    m_GHI->Shutdown();
-    m_renderManager->Shutdown();
+    m_moduleManager.Shutdown();
 
-    delete m_PAI;
-    delete m_GHI;
+    if (m_renderManager)
+    {
+        m_renderManager->Shutdown();
+    }
+    if (m_GHI)
+    {
+        m_GHI->Shutdown();
+    }
+    if (m_PAI)
+    {
+        m_PAI->Shutdown();
+    }
+
     delete m_renderManager;
+    delete m_GHI;
+    delete m_PAI;
 }
 
 void GameEngine::Create(ApplicationConfig const& config)
@@ -64,22 +75,23 @@ void GameEngine::Init()
     m_mainWindow = m_PAI->MakeWindow(m_config.windowWidth, m_config.windowHeight, m_config.name);
     B2D_ASSERT(m_mainWindow);
 
-    // Load Graphics Hardware Interface
+    // Create Graphics Hardware Interface
     m_GHI = m_PAI->CreateGHI();
     if (m_GHI)
     {
         B2D_ASSERT(m_GHI->Init());
-        m_renderManager = new RenderManager();
-        m_renderManager->Init(m_config.multithread);
-
-#if 1 // Load Editor
-        m_moduleManager.Load<EditorModule>();
-#endif
     }
     else
     {
         B2D_LOG_WARNING("No GHI was created!");
     }
+
+    m_renderManager = new RenderManager();
+    m_renderManager->Init(m_config.multithread);
+
+#if 1 // Load Editor
+    m_moduleManager.Load<EditorModule>();
+#endif
 
     // TODO: GameInstance should only be valid while the game is running. Should be null in editor mode.
     m_gameInstance = new CGameInstance(m_mainWindow);
@@ -118,14 +130,15 @@ void GameEngine::Run()
         m_moduleManager.ForwardBeginFrame();
 
         if (Input::IsKey(EKey::ESCAPE, EKeyEvent::Press))
+        {
             GameEngine::Instance()->RequestShutdown();
-
-        if (Input::IsKey(EKey::V, EKeyEvent::Press))
-            GetModuleManager()->Get<EditorModule>()->CreateEditorView<WorldEditorView>();
+        }
         
         static bool pause = false;
         if (Input::IsKey(EKey::P, EKeyEvent::Press))
+        {
             pause = !pause;
+        }
 
         if (!pause || Input::IsKey(EKey::O, EKeyEvent::Press))
         {

@@ -1,15 +1,13 @@
 #pragma once
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
 
-#include <GL/glew.h>
-
-class OpenGLGHI final : public IGraphicsHardwareInterface
+class VulkanGHI final : public IGraphicsHardwareInterface
 {
 public:
     virtual bool Init() override;
     virtual void Shutdown() override;
 
-    EGraphicsAPI GetGraphicsAPI() const override { return EGraphicsAPI::OpenGL; }
+    EGraphicsAPI GetGraphicsAPI() const override { return EGraphicsAPI::Vulkan; };
 
 public:
     virtual void Clear(bool color, bool depth, bool stencil) override;
@@ -22,9 +20,6 @@ public:
 
     // Shader
 
-    bool CompileShader(char const* code, GLuint type, GLuint& outHandle);
-    
-    GHIShader* CreateShader(char const* code, GLuint type);
     virtual GHIShader* CreateVertexShader(char const* code) override;
     virtual GHIShader* CreatePixelShader(char const* code) override;
 
@@ -50,5 +45,6 @@ protected:
     virtual void ImGui_Shutdow() override;
     virtual void ImGui_BeginFrame() override;
     virtual void ImGui_Render() override;
+
 };
 

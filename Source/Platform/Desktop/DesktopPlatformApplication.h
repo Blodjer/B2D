@@ -23,6 +23,11 @@ public:
     virtual void AddMessageHandler(IPlatformMessageHandlerInterface* messageHandler) override;
     virtual void RemoveMessageHandler(IPlatformMessageHandlerInterface* messageHandler) override;
 
+protected:
+    virtual bool ImGui_Init() override;
+    virtual void ImGui_Shutdow() override;
+    virtual void ImGui_BeginFrame() override;
+
 private:
     // GLFW Callbacks
 

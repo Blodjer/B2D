@@ -3,9 +3,15 @@
 
 #include "GameEngine.h"
 #include "Graphics/GHI/GraphicsHardware.h"
+#include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Platform/Desktop/DesktopWindow.h"
 
 #include <GLFW/glfw3.h>
+
+#include "imgui/imgui.h"
+#include "Editor/imgui_impl_glfw.h"
+#include "Editor/imgui_impl_opengl3.h"
+#include "Editor/imgui_impl_vulkan.h"
 
 #define DISPATCH_PLATFORM_MESSAGE(func, ...) \
     for (IPlatformMessageHandlerInterface* const handler : DesktopPlatformApplication::ms_instance->m_messageHandler) \
@@ -56,12 +62,23 @@ void DesktopPlatformApplication::Shutdown()
 
 IGraphicsHardwareInterface* DesktopPlatformApplication::CreateGHI() const
 {
-    return GraphicsHardware::Create(EGraphicsAPI::OpenGL);
+    EGraphicsAPI const api = EGraphicsAPI::OpenGL;
+
+    int glfwClientApi = GLFW_NO_API;
+    if (api == EGraphicsAPI::OpenGL)
+    {
+        glfwClientApi = GLFW_OPENGL_API;
+    }
+
+    glfwWindowHint(GLFW_CLIENT_API, glfwClientApi);
+
+    return GraphicsHardware::Create(api);
 }
 
 GenericWindow* DesktopPlatformApplication::MakeWindow(uint32 width, uint32 height, std::string const& title)
 {
     GLFWwindow* const windowContext = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    B2D_ASSERT(windowContext);
 
     DesktopWindow* const window = new DesktopWindow(windowContext, width, height);
     m_windows.emplace_back(window);
@@ -98,10 +115,18 @@ void DesktopPlatformApplication::DestroyWindow(GenericWindow* window)
 
 GenericWindow* DesktopPlatformApplication::CreateOffscreenRenderContext()
 {
-    GLFWwindow* main = static_cast<GLFWwindow*>(GameEngine::Instance()->GetMainWindow()->GetGenericContext());
+    /*
+    It should also be noted that window surfaces are an entirely optional component in Vulkan,
+    if you just need off-screen rendering. Vulkan allows you to do that without hacks like creating
+    an invisible window (necessary for OpenGL).
+    */
 
+    GLFWwindow* main = static_cast<GLFWwindow*>(GameEngine::Instance()->GetMainWindow()->GetGenericContext());
+    
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     GLFWwindow* offscreenContext = glfwCreateWindow(100, 100, "", nullptr, main);
+    B2D_ASSERT(offscreenContext);
+
     DesktopWindow* const window = new DesktopWindow(offscreenContext, 100, 100);
     m_windows.emplace_back(window);
 
@@ -136,6 +161,44 @@ void DesktopPlatformApplication::RemoveMessageHandler(IPlatformMessageHandlerInt
     }
 
     m_messageHandler.erase(it);
+}
+
+bool DesktopPlatformApplication::ImGui_Init()
+{
+    GenericWindow* mainWindow = GameEngine::Instance()->GetMainWindow();
+    if (!mainWindow)
+    {
+        return false;
+    }
+
+    GLFWwindow* glfwWindow = static_cast<GLFWwindow*>(mainWindow->GetGenericContext());
+
+    switch (GameEngine::Instance()->GetGHI()->GetGraphicsAPI())
+    {
+    case EGraphicsAPI::OpenGL:
+        ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
+        //ImGui_ImplOpenGL3_Init("#version 410 core");
+        break;
+    case EGraphicsAPI::Vulkan:
+        ImGui_ImplGlfw_InitForVulkan(glfwWindow, true);
+        //ImGui_ImplVulkan_Init();
+        break;
+    default:
+        //ImGui_ImplGlfw_InitForOther(glfwWindow, true);
+        break;
+    }
+
+    return true;
+}
+
+void DesktopPlatformApplication::ImGui_Shutdow()
+{
+    ImGui_ImplGlfw_Shutdown();
+}
+
+void DesktopPlatformApplication::ImGui_BeginFrame()
+{
+    ImGui_ImplGlfw_NewFrame();
 }
 
 void DesktopPlatformApplication::OnGlfwErrorCallback(int error, const char* description)

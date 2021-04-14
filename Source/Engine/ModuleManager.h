@@ -6,8 +6,11 @@ class ModuleManager final
     friend class GameEngine;
 
 private:
-    ModuleManager();
-    ~ModuleManager();
+    ModuleManager() = default;
+    ~ModuleManager() = default;
+
+    void Init();
+    void Shutdown();
 
     void ForwardBeginFrame();
     void ForwardTick(float deltaTime);
@@ -26,9 +29,16 @@ public:
         }
 
         module = new C();
-        m_modules.emplace_back(module);
 
-        static_cast<IEngineModule*>(module)->Init();
+        if (!static_cast<IEngineModule*>(module)->Init())
+        {
+            B2D_TRAPf("Failed to load \"{}\"", module->GetName());
+            delete module;
+            module = nullptr;
+            return nullptr;
+        }
+
+        m_modules.emplace_back(module);
 
         return module;
     }
@@ -66,14 +76,7 @@ private:
         return module;
     }
 
-    void Unload(IEngineModule* module)
-    {
-        module->Shutdown();
-
-        m_modules.erase(std::remove(m_modules.begin(), m_modules.end(), module));
-
-        delete module;
-    }
+    void Unload(IEngineModule* module);
 
 private:
     std::vector<IEngineModule*> m_modules;

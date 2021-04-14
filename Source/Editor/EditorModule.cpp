@@ -1,21 +1,20 @@
 #include "B2D_pch.h"
 #include "EditorModule.h"
 
-#include "View/IEditorView.h"
 #include "GameEngine.h"
+#include "Graphics/GHI/GraphicsHardwareInterface.h"
+#include "Input/Input.h"
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformInterface.h"
 #include "View/GameSystemView.h"
 #include "View/GameSystemProfilerView.h"
+#include "View/IEditorView.h"
 #include "View/SimpleFrameTimeView.h"
 #include "View/WorldEditorView.h"
 
-#include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
-#include "imgui_impl_opengl3.h"
-#include "imgui_impl_glfw.h"
 
-void EditorModule::Init()
+bool EditorModule::Init()
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -39,13 +38,27 @@ void EditorModule::Init()
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
 
-    // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWwindow*>(GameEngine::Instance()->GetMainWindow()->GetGenericContext()), true);
-    ImGui_ImplOpenGL3_Init("#version 410 core");
+    // Setup ImGui on our platform
+    if (!GameEngine::Instance()->GetPAI()->ImGui_Init())
+    {
+        B2D_LOG_ERROR("PAI failed to init ImGui!");
+        ImGui::DestroyContext();
+        return false;
+    }
+
+    // Setup ImGui on our render platform
+    if (!GameEngine::Instance()->GetGHI()->ImGui_Init())
+    {
+        B2D_LOG_ERROR("GHI failed to init ImGui!");
+        ImGui::DestroyContext();
+        return false;
+    }
 
     InitDefaultEditorViews();
 
     GameEngine::Instance()->GetPAI()->AddMessageHandler(this);
+
+    return true;
 }
 
 void EditorModule::InitDefaultEditorViews()
@@ -65,20 +78,25 @@ void EditorModule::Shutdown()
         CloseEditorView(editorView);
     }
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
+    GameEngine::Instance()->GetGHI()->ImGui_Shutdow();
+    GameEngine::Instance()->GetPAI()->ImGui_Shutdow();
     ImGui::DestroyContext();
 }
 
 void EditorModule::BeginFrame()
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
+    GameEngine::Instance()->GetGHI()->ImGui_BeginFrame();
+    GameEngine::Instance()->GetPAI()->ImGui_BeginFrame();
     ImGui::NewFrame();
 }
 
 void EditorModule::Tick(float deltaTime)
 {
+    if (Input::IsKey(EKey::V, EKeyEvent::Press))
+    {
+        CreateEditorView<WorldEditorView>();
+    }
+
     for (IEditorView* const editorView : m_editorViews)
     {
         editorView->Tick(deltaTime);
@@ -95,15 +113,12 @@ void EditorModule::EndFrame()
 void EditorModule::Draw()
 {
     ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    if (true)
-    {
-        GLFWwindow* backup_current_context = glfwGetCurrentContext();
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backup_current_context);
-    }
+    GameEngine::Instance()->GetGHI()->ImGui_Render();
+
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    GameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
 }
 
 void EditorModule::CloseEditorView(IEditorView* editorView)

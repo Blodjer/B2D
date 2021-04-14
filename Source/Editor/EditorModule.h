@@ -7,7 +7,7 @@ class IEditorView;
 class EditorModule final : public IEngineModule, public IPlatformMessageHandlerInterface
 {
 protected:
-    virtual void Init() override;
+    virtual bool Init() override;
     void InitDefaultEditorViews();
 
     virtual void Shutdown() override;
@@ -15,6 +15,9 @@ protected:
     virtual void BeginFrame() override;
     virtual void Tick(float deltaTime) override;
     virtual void EndFrame() override;
+
+public:
+    virtual std::string GetName() { return "EditorModule"; }
 
 public:
     void Draw();

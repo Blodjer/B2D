@@ -95,7 +95,8 @@ project "B2D"
 		"%{prj.location}/Libraries/glew/include/",
 		"%{prj.location}/Libraries/GLFW/include/",
 		"%{prj.location}/Libraries/glm/",
-		"%{prj.location}/Libraries/spdlog/include/"
+		"%{prj.location}/Libraries/spdlog/include/",
+		"$(VULKAN_SDK)/Include/"
 	}
 
 	defines
@@ -111,6 +112,12 @@ project "B2D"
 		"opengl32.lib",
 		"dbghelp.lib"
 	}
+
+	filter "platforms:Win64"
+		links "$(VULKAN_SDK)/Lib/vulkan-1.lib"
+
+	filter "platforms:Win32"
+		links "$(VULKAN_SDK)/Lib32/vulkan-1.lib"
 
 	filter "system:windows"
 		defines "WIN32_LEAN_AND_MEAN"
