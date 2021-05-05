@@ -21,17 +21,22 @@ void Log::Init(std::string const& applicationName)
     m_isInitialized = true;
 }
 
-void Log::Callstack(spdlog::level::level_enum level, STACKLOCATION_SIGNATURE, uint32 framesToSkip)
+void Log::Callstack(spdlog::level::level_enum level, STACKLOCATION_SIGNATURE, uint32 framesToSkip /*= 0*/)
+{
+    Log::Callstack(GetSink(STACKLOCATION_PARAM_FILE), level, STACKLOCATION_PARAMS, framesToSkip + 1);
+}
+
+void Log::Callstack(ESink sink, spdlog::level::level_enum level, STACKLOCATION_SIGNATURE, uint32 framesToSkip)
 {
 #ifdef B2D_BUILD_DEBUG
     std::string stackTrace;
     if (StackTraceHelper::GetStackTrace(stackTrace, framesToSkip + 1))
     {
-        GetLogger(file)->log(level, "Callstack:\n{}", stackTrace);
+        GetLogger(sink)->log(level, "Callstack:\n{}", stackTrace);
     }
     else
 #endif
     {
-        GetLogger(file)->log(level, STACKLOCATION_LOG_FORMAT, STACKLOCATION_PARAMS);
+        GetLogger(sink)->log(level, STACKLOCATION_LOG_FORMAT, STACKLOCATION_PARAMS);
     }
 }

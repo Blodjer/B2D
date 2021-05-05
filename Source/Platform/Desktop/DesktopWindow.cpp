@@ -7,6 +7,11 @@
 
 #include <GLFW/glfw3.h>
 
+#ifdef B2D_PLATFORM_WINDOWS
+	#define GLFW_EXPOSE_NATIVE_WIN32
+#endif
+#include <GLFW/glfw3native.h>
+
 #define CURRENT_CONTEXT_CHECK() B2D_ASSERTf(IsCurrentContext(), "Window is not current context")
 
 DesktopWindow::DesktopWindow(GLFWwindow* context, uint32 width, uint32 height)
@@ -104,6 +109,15 @@ void DesktopWindow::SetShouldClose(bool close)
 bool DesktopWindow::ShouldClose() const
 {
 	return glfwWindowShouldClose(m_context);
+}
+
+void* DesktopWindow::GetNativeHandle() const
+{
+#ifdef GLFW_EXPOSE_NATIVE_WIN32
+    return static_cast<void*>(glfwGetWin32Window(m_context));
+#else
+	B2D_COMPILE_ERROR("Native handle getter not implemented for this platform!");
+#endif
 }
 
 void DesktopWindow::OnGlfwFramebufferSizeCallback(int width, int height)

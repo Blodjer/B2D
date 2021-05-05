@@ -22,6 +22,7 @@ public:
 
 private:
     bool ReadShaderFromFile(ResourcePath const& path, std::string& outCode);
+    bool ReadShaderFromFile(ResourcePath const& path, std::vector<char>& outData);
 
 private:
     GHIShader* m_ghiShader = nullptr;

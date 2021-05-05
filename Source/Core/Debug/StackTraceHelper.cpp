@@ -97,7 +97,7 @@ bool StackTraceHelper::CaptureStackBacktrace(void** backTraceBuffer, uint32 cons
         stk.AddrFrame.Offset = context.Ebp;
         stk.AddrStack.Offset = context.Esp;
 #else
-        B2D_STATIC_ASSERT(false, "Unkown machine");
+        B2D_COMPILE_ERROR("Unkown machine");
 #endif
 
 #ifndef B2D_PLATFORM_WINDOWS_X32

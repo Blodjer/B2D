@@ -50,6 +50,9 @@ public:
 
     uint32 GetFps() const { return m_fps; }
 
+    static char const* GetEngineName() { return "B2D"; }
+    std::string const& GetApplicationName() const { return m_config.name; }
+
 private:
     virtual bool OnKeyEvent(GenericWindow* window, int32 scancode, EKey key, EKeyEvent event) override;
     virtual bool OnMouseMove(GenericWindow* window, TVec2 position) override;

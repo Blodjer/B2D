@@ -1,5 +1,9 @@
 #pragma once
+
+#include "Core/Core.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
+
+#include "VulkanCommon.h"
 
 class VulkanGHI final : public IGraphicsHardwareInterface
 {
@@ -8,6 +12,22 @@ public:
     virtual void Shutdown() override;
 
     EGraphicsAPI GetGraphicsAPI() const override { return EGraphicsAPI::Vulkan; };
+
+private:
+    void SelectInstanceExtensionsAndLayers(std::vector<char const*>& outExtensions, std::vector<char const*>& outLayers) const;
+    void SelectDeviceExtensions(vk::PhysicalDevice const& device, std::vector<char const*>& outExtensions) const;
+    bool FindQueueIndex(vk::PhysicalDevice& physicalDevice, vk::QueueFlagBits flags, uint32& outIndex);
+
+    static std::vector<char const*> GetWantedInstanceExtenstions();
+    static std::vector<char const*> GetWantedInstanceLayers();
+    static std::vector<char const*> GetWantedDeviceExtenstions();
+    static void LogMissing(std::string const& name, std::vector<const char*> const& wanted, std::vector<const char*>& received);
+
+    vk::PhysicalDevice SelectPhysicalDevice(std::vector<vk::PhysicalDevice> const& physicalDevices) const;
+
+    vk::SurfaceFormatKHR SelectSurfacePresentMode(std::vector<vk::SurfaceFormatKHR> const& availableSurfaceFormats);
+    vk::PresentModeKHR SelectSurfacePresentMode(std::vector<vk::PresentModeKHR> const& availablePresentModes);
+    vk::Extent2D SelectSwapExtend(vk::SurfaceCapabilitiesKHR const& surfaceCapabilities);
 
 public:
     virtual void Clear(bool color, bool depth, bool stencil) override;
@@ -20,8 +40,10 @@ public:
 
     // Shader
 
-    virtual GHIShader* CreateVertexShader(char const* code) override;
-    virtual GHIShader* CreatePixelShader(char const* code) override;
+    virtual GHIShader* CreateVertexShader(std::vector<char> const& data) override;
+    virtual GHIShader* CreatePixelShader(std::vector<char> const& data) override;
+
+    GHIShader* CreateShader(std::vector<char> const& data, vk::ShaderStageFlagBits stage);
 
     virtual void DeleteShader(GHIShader*& shader) override;
 
@@ -46,5 +68,18 @@ protected:
     virtual void ImGui_BeginFrame() override;
     virtual void ImGui_Render() override;
 
+private:
+    vk::Instance m_instance;
+    vk::DebugUtilsMessengerEXT m_debugUtilMessenger;
+
+    vk::Device m_device;
+
+    vk::PipelineLayout m_pipelineLayout;
+    vk::Pipeline m_pipeline;
+
+    vk::RenderPass m_renderPass;
+
+    vk::Semaphore m_imageAvailableSemaphore;
+    vk::Semaphore m_renderFinishedSemaphore;
 };
 

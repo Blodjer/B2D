@@ -21,8 +21,8 @@ public:
 	virtual void SetShouldClose(bool close) override;
 	virtual bool ShouldClose() const override;
 
-    virtual void* GetGenericContext() const override { return m_context; }
-    GLFWwindow* GetContext() const { return m_context; }
+    GLFWwindow* GetGLFWHandle() const { return m_context; }
+	virtual void* GetNativeHandle() const override;
 
 public:
     virtual void MakeContextCurrent() override;

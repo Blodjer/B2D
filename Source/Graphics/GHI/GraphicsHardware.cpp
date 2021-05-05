@@ -9,10 +9,8 @@ IGraphicsHardwareInterface* GraphicsHardware::Create(EGraphicsAPI const graphics
     switch (graphicsAPI)
     {
     case EGraphicsAPI::Vulkan:
-        B2D_LOG_INFO("Created Vulkan GHI!");
         return new VulkanGHI();
     case EGraphicsAPI::OpenGL:
-        B2D_LOG_INFO("Created OpenGL GHI!");
         return new OpenGLGHI();
     }
 

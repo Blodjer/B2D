@@ -40,7 +40,7 @@ bool OpenGLGHI::Init()
     B2D_LOG_INFO("Initialize OpenGL...");
     B2D_LOG_INFO("GL Version      {}", glGetString(GL_VERSION));
     B2D_LOG_INFO("GL Vendor       {}", glGetString(GL_VENDOR));
-    B2D_LOG_INFO("GL Renderer     {}\n", glGetString(GL_RENDERER));
+    B2D_LOG_INFO("GL Renderer     {}", glGetString(GL_RENDERER));
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
@@ -239,21 +239,21 @@ bool OpenGLGHI::CompileShader(char const* code, GLuint type, GLuint& outHandle)
     return true;
 }
 
-GHIShader* OpenGLGHI::CreateShader(char const* code, GLuint type)
+GHIShader* OpenGLGHI::CreateShader(std::vector<char> const& data, GLuint type)
 {
     GLuint handle = 0;
-    CompileShader(code, type, handle);
+    CompileShader(data.data(), type, handle);
     return new OpenGLShader(handle);
 }
 
-GHIShader* OpenGLGHI::CreatePixelShader(char const* code)
+GHIShader* OpenGLGHI::CreatePixelShader(std::vector<char> const& data)
 {
-    return CreateShader(code, GL_FRAGMENT_SHADER);
+    return CreateShader(data, GL_FRAGMENT_SHADER);
 }
 
-GHIShader* OpenGLGHI::CreateVertexShader(char const* code)
+GHIShader* OpenGLGHI::CreateVertexShader(std::vector<char> const& data)
 {
-    return CreateShader(code, GL_VERTEX_SHADER);
+    return CreateShader(data, GL_VERTEX_SHADER);
 }
 
 void OpenGLGHI::DeleteShader(GHIShader*& shader)

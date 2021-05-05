@@ -24,9 +24,9 @@ public:
 
     bool CompileShader(char const* code, GLuint type, GLuint& outHandle);
     
-    GHIShader* CreateShader(char const* code, GLuint type);
-    virtual GHIShader* CreateVertexShader(char const* code) override;
-    virtual GHIShader* CreatePixelShader(char const* code) override;
+    GHIShader* CreateShader(std::vector<char> const& data, GLuint type);
+    virtual GHIShader* CreateVertexShader(std::vector<char> const& data) override;
+    virtual GHIShader* CreatePixelShader(std::vector<char> const& data) override;
 
     virtual void DeleteShader(GHIShader*& shader) override;
 

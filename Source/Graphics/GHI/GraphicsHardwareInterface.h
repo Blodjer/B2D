@@ -35,8 +35,8 @@ public:
     virtual void BindTexture(GHITexture const* texture) = 0;
     virtual void FreeTexture(GHITexture*& texture) = 0;
 
-    virtual GHIShader* CreateVertexShader(char const* code) = 0;
-    virtual GHIShader* CreatePixelShader(char const* code) = 0;
+    virtual GHIShader* CreateVertexShader(std::vector<char> const& data) = 0;
+    virtual GHIShader* CreatePixelShader(std::vector<char> const& data) = 0;
     virtual void DeleteShader(GHIShader*& shader) = 0;
 
     virtual GHIMaterial* CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader) = 0;

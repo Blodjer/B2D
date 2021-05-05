@@ -121,4 +121,5 @@ project "B2D"
 
 	filter "system:windows"
 		defines "WIN32_LEAN_AND_MEAN"
+		defines "VK_USE_PLATFORM_WIN32_KHR"
 		buildoptions ("/sdl")

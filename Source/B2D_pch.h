@@ -1,5 +1,7 @@
 #pragma once
 
+#undef GLFW_INCLUDE_VULKAN
+
 #ifdef B2D_PLATFORM_WINDOWS
     #define NOMINMAX
     #include <windows.h>

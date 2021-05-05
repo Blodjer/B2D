@@ -6,8 +6,11 @@
 #include <spdlog/spdlog.h>
 
 #define STACKLOCATION_INPUT __FILE__, __LINE__, __FUNCSIG__
-#define STACKLOCATION_SIGNATURE char const* file, int line, char const* func
-#define STACKLOCATION_PARAMS file, line, func
+#define STACKLOCATION_PARAM_FILE _stacklocation_file
+#define STACKLOCATION_PARAM_LINE _stacklocation_line
+#define STACKLOCATION_PARAM_FUNC _stacklocation_func
+#define STACKLOCATION_PARAMS STACKLOCATION_PARAM_FILE, STACKLOCATION_PARAM_LINE, STACKLOCATION_PARAM_FUNC
+#define STACKLOCATION_SIGNATURE char const* STACKLOCATION_PARAM_FILE, int STACKLOCATION_PARAM_LINE, char const* STACKLOCATION_PARAM_FUNC
 #define STACKLOCATION_LOG_FORMAT "{}:{}\n{}"
 
 class Log
@@ -53,48 +56,54 @@ public:
 
     FORCEINLINE static void Check(STACKLOCATION_SIGNATURE, const char* expr)
     {
-        GetLogger(file)->warn("Check failed: {}", expr);
+        GetLogger(STACKLOCATION_PARAM_FILE)->warn("Check failed: {}", expr);
         Callstack(spdlog::level::level_enum::warn, STACKLOCATION_PARAMS);
     }
 
     template<typename... Args>
     FORCEINLINE static void Checkf(STACKLOCATION_SIGNATURE, const char* expr, const char* message, Args const&... args)
     {
-        GetLogger(file)->warn("Check failed: {}", expr);
-        GetLogger(file)->warn(message, args...);
+        GetLogger(STACKLOCATION_PARAM_FILE)->warn("Check failed: {}", expr);
+        GetLogger(STACKLOCATION_PARAM_FILE)->warn(message, args...);
         Callstack(spdlog::level::level_enum::warn, STACKLOCATION_PARAMS);
     }
 
     template<typename... Args>
     FORCEINLINE static void Break(STACKLOCATION_SIGNATURE, const char* message, Args const&... args)
     {
-        GetLogger(file)->warn(message, args...);
+        GetLogger(STACKLOCATION_PARAM_FILE)->warn(message, args...);
         Callstack(spdlog::level::level_enum::warn, STACKLOCATION_PARAMS);
     }
 
     FORCEINLINE static void Assert(STACKLOCATION_SIGNATURE, const char* expr)
     {
-        GetLogger(file)->critical("Assertion failed: {}", expr);
-        Callstack(spdlog::level::level_enum::critical, STACKLOCATION_PARAMS);
+        Assert(STACKLOCATION_PARAMS, expr, GetSink(STACKLOCATION_PARAM_FILE));
+    }
+
+    FORCEINLINE static void Assert(STACKLOCATION_SIGNATURE, const char* expr, ESink const sink)
+    {
+        GetLogger(sink)->critical("Assertion failed: {}", expr);
+        Callstack(sink, spdlog::level::level_enum::critical, STACKLOCATION_PARAMS);
     }
 
     template<typename... Args>
     FORCEINLINE static void Assertf(STACKLOCATION_SIGNATURE, const char* expr, const char* message, Args const&... args)
     {
-        GetLogger(file)->critical("Assertion failed: {}", expr);
-        GetLogger(file)->critical(message, args...);
+        GetLogger(STACKLOCATION_PARAM_FILE)->critical("Assertion failed: {}", expr);
+        GetLogger(STACKLOCATION_PARAM_FILE)->critical(message, args...);
         Callstack(spdlog::level::level_enum::critical, STACKLOCATION_PARAMS);
     }
 
     template<typename... Args>
     FORCEINLINE static void Trap(STACKLOCATION_SIGNATURE, const char* message, Args const&... args)
     {
-        GetLogger(file)->critical(message, args...);
+        GetLogger(STACKLOCATION_PARAM_FILE)->critical(message, args...);
         Callstack(spdlog::level::level_enum::critical, STACKLOCATION_PARAMS);
     }
 
 private:
     NOINLINE static void Callstack(spdlog::level::level_enum level, STACKLOCATION_SIGNATURE, uint32 framesToSkip = 0);
+    NOINLINE static void Callstack(ESink sink, spdlog::level::level_enum level, STACKLOCATION_SIGNATURE, uint32 framesToSkip = 0);
 
     static constexpr spdlog::logger* GetLogger(ESink const sink)
     {

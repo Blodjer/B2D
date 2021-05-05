@@ -7,6 +7,9 @@
 #include "Platform/Desktop/DesktopWindow.h"
 
 #include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
+#include <vulkan/vulkan.hpp>
 
 #include "imgui/imgui.h"
 #include "Editor/imgui_impl_glfw.h"
@@ -62,7 +65,7 @@ void DesktopPlatformApplication::Shutdown()
 
 IGraphicsHardwareInterface* DesktopPlatformApplication::CreateGHI() const
 {
-    EGraphicsAPI const api = EGraphicsAPI::OpenGL;
+    EGraphicsAPI const api = EGraphicsAPI::Vulkan;
 
     int glfwClientApi = GLFW_NO_API;
     if (api == EGraphicsAPI::OpenGL)
@@ -105,34 +108,12 @@ void DesktopPlatformApplication::DestroyWindow(GenericWindow* window)
     }
 
     DesktopWindow* desktopWindow = static_cast<DesktopWindow*>(window);
-    glfwDestroyWindow(desktopWindow->GetContext());
+    glfwDestroyWindow(desktopWindow->GetGLFWHandle());
 
     m_windows.erase(it);
     //mWindows.shrink_to_fit();
 
     delete window;
-}
-
-GenericWindow* DesktopPlatformApplication::CreateOffscreenRenderContext()
-{
-    /*
-    It should also be noted that window surfaces are an entirely optional component in Vulkan,
-    if you just need off-screen rendering. Vulkan allows you to do that without hacks like creating
-    an invisible window (necessary for OpenGL).
-    */
-
-    GLFWwindow* main = static_cast<GLFWwindow*>(GameEngine::Instance()->GetMainWindow()->GetGenericContext());
-    
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    GLFWwindow* offscreenContext = glfwCreateWindow(100, 100, "", nullptr, main);
-    B2D_ASSERT(offscreenContext);
-
-    DesktopWindow* const window = new DesktopWindow(offscreenContext, 100, 100);
-    m_windows.emplace_back(window);
-
-    GameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
-
-    return window;
 }
 
 void DesktopPlatformApplication::AddMessageHandler(IPlatformMessageHandlerInterface* messageHandler)
@@ -163,27 +144,52 @@ void DesktopPlatformApplication::RemoveMessageHandler(IPlatformMessageHandlerInt
     m_messageHandler.erase(it);
 }
 
+GenericWindow* DesktopPlatformApplication::CreateOffscreenRenderContext()
+{
+    if (GameEngine::Instance()->GetGHI()->GetGraphicsAPI() != EGraphicsAPI::OpenGL)
+    {
+        return nullptr;
+    }
+    /*
+    It should also be noted that window surfaces are an entirely optional component in Vulkan,
+    if you just need off-screen rendering. Vulkan allows you to do that without hacks like creating
+    an invisible window (necessary for OpenGL).
+    */
+
+    DesktopWindow* parentWindow = static_cast<DesktopWindow*>(GameEngine::Instance()->GetMainWindow());
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    GLFWwindow* offscreenContext = glfwCreateWindow(100, 100, "", nullptr, parentWindow->GetGLFWHandle());
+    B2D_ASSERT(offscreenContext);
+
+    DesktopWindow* const window = new DesktopWindow(offscreenContext, 100, 100);
+    m_windows.emplace_back(window);
+
+    GameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
+
+    return window;
+}
+
 bool DesktopPlatformApplication::ImGui_Init()
 {
-    GenericWindow* mainWindow = GameEngine::Instance()->GetMainWindow();
+    DesktopWindow* mainWindow = static_cast<DesktopWindow*>(GameEngine::Instance()->GetMainWindow());
     if (!mainWindow)
     {
         return false;
     }
 
-    GLFWwindow* glfwWindow = static_cast<GLFWwindow*>(mainWindow->GetGenericContext());
-
     switch (GameEngine::Instance()->GetGHI()->GetGraphicsAPI())
     {
     case EGraphicsAPI::OpenGL:
-        ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
+        ImGui_ImplGlfw_InitForOpenGL(mainWindow->GetGLFWHandle(), true);
         //ImGui_ImplOpenGL3_Init("#version 410 core");
         break;
     case EGraphicsAPI::Vulkan:
-        ImGui_ImplGlfw_InitForVulkan(glfwWindow, true);
+        ImGui_ImplGlfw_InitForVulkan(mainWindow->GetGLFWHandle(), true);
         //ImGui_ImplVulkan_Init();
         break;
     default:
+        B2D_NOT_IMPLEMENTED();
         //ImGui_ImplGlfw_InitForOther(glfwWindow, true);
         break;
     }

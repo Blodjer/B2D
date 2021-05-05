@@ -66,17 +66,20 @@ void GameEngine::Init()
     ApplicationConfig::Dump(m_config);
     UMath::RandomInit(static_cast<unsigned int>(time(nullptr)));
 
-    // Platform Initialization
+    // Create Platform Application Interface
     m_PAI = new PlatformApplication();
     B2D_ASSERT(m_PAI->Init());
     m_PAI->AddMessageHandler(this);
+
+    // Create Graphics Hardware Interface
+    m_GHI = m_PAI->CreateGHI();
+    // TODO: Init GHI here and move swapchain to window creation
 
     // Create Main Window
     m_mainWindow = m_PAI->MakeWindow(m_config.windowWidth, m_config.windowHeight, m_config.name);
     B2D_ASSERT(m_mainWindow);
 
-    // Create Graphics Hardware Interface
-    m_GHI = m_PAI->CreateGHI();
+    // Init Graphics Hardware Interface
     if (m_GHI)
     {
         B2D_ASSERT(m_GHI->Init());
@@ -86,6 +89,7 @@ void GameEngine::Init()
         B2D_LOG_WARNING("No GHI was created!");
     }
 
+    // Create Render Manager
     m_renderManager = new RenderManager();
     m_renderManager->Init(m_config.multithread);
 

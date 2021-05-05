@@ -32,5 +32,5 @@ namespace
     }
 }
 #else
-#define HANDLE_LAST_ERROR() B2D_STATIC_ASSERT(false, "Cannot use HANDLE_LAST_ERROR() in non Windows platform!");
+#define HANDLE_LAST_ERROR() B2D_COMPILE_ERROR("Cannot use HANDLE_LAST_ERROR() in non Windows platform!");
 #endif

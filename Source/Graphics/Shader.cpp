@@ -9,32 +9,29 @@
 #include <iostream>
 #include <sstream>
 
-//  GLuint ul = glGetUniformLocation(mID, name);
-// 	if (ul == -1)
-// 	{
-// 		B2D_WARNING("Cannot find shader uniform location: {0}", name);
-// 		return;
-// 	}
-//  glUniform1i(ul, value);
-//  glUniform1f(ul, value);
-//  glUniformMatrix4fv(ul, 1, GL_FALSE, value);
-
 bool Shader::Load(ResourcePath const& path, ShaderType type)
 {
-    std::string code;
-    if (!ReadShaderFromFile(path, code))
+//     std::string code;
+//     if (!ReadShaderFromFile(path, code))
+//     {
+//         return false;
+//     }
+
+    std::vector<char> data;
+    if (!ReadShaderFromFile(path, data))
     {
         return false;
     }
+
 
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
     switch (type)
     {
         case ShaderType::Vertex:
-            m_ghiShader = ghi->CreateVertexShader(code.data());
+            m_ghiShader = ghi->CreateVertexShader(data);
             break;
         case ShaderType::Pixel:
-            m_ghiShader = ghi->CreatePixelShader(code.data());
+            m_ghiShader = ghi->CreatePixelShader(data);
             break;
         default:
             B2D_BREAKf("ShaderType {} not implemented", static_cast<int32>(type));
@@ -74,6 +71,38 @@ bool Shader::ReadShaderFromFile(ResourcePath const& path, std::string& outCode)
 
         outCode = stringStream.str();
         return true;
+    }
+    catch (std::ifstream::failure e)
+    {
+        B2D_LOG_ERROR("Shader Read Error: {0}", path);
+    }
+
+    return false;
+}
+
+bool Shader::ReadShaderFromFile(ResourcePath const& path, std::vector<char>& outData)
+{
+    std::string code;
+
+    std::ifstream fileStream(path, std::ios::in | std::ios::binary);
+    fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    if (fileStream.is_open())
+    {
+        fileStream.seekg(0, std::ios::end);
+        auto size = fileStream.tellg();
+        fileStream.seekg(0, std::ios::beg);
+
+        auto& data = outData;
+        //data.resize(size / sizeof(uint32));
+        data.resize(size);
+        fileStream.read((char*)data.data(), size);
+        return true;
+    }
+
+    try
+    {
+
     }
     catch (std::ifstream::failure e)
     {

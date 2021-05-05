@@ -11,8 +11,6 @@
 #include "RenderThread.h"
 #include "Core/Thread/Thread.h"
 
-#include <GLFW/glfw3.h>
-
 RenderManager::RenderManager()
 {
 
