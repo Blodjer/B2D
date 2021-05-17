@@ -33,7 +33,7 @@ CGameInstance::~CGameInstance()
 
 void CGameInstance::Tick(float deltaTime)
 {
-    if (B2D_CHECKf(m_world == nullptr, "No world loaded!"))
+    if (B2D_CHECK_f(m_world == nullptr, "No world loaded!"))
     {
         return;
     }

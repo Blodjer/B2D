@@ -33,7 +33,7 @@ public:
     template<typename... V>
     FORCEINLINE void Add(V&... values)
     {
-        if (B2D_CHECKf(m_size >= m_capacity, "Cannot add RenderObject. RenderObjectBuffer has reached it's maximum capacity of {} elements", m_capacity))
+        if (B2D_CHECK_f(m_size >= m_capacity, "Cannot add RenderObject. RenderObjectBuffer has reached it's maximum capacity of {} elements", m_capacity))
         {
             return;
         }

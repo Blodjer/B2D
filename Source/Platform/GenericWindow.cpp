@@ -19,6 +19,6 @@ GenericWindow::~GenericWindow()
 
 void GenericWindow::AssignGameInstance(CGameInstance* gameInstance)
 {
-    B2D_CHECKf(m_assignedGameInstance != nullptr, "Window already has a assigned game instance");
+    B2D_CHECK_f(m_assignedGameInstance != nullptr, "Window already has a assigned game instance");
     m_assignedGameInstance = gameInstance;
 }

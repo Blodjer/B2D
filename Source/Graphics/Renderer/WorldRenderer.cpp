@@ -47,7 +47,7 @@ void WorldRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const
 {
     // flag: solid, unlit, wireframe,...
 
-    if (B2D_CHECKf(viewport == nullptr, "Unable to render because the world has no active viewport"))
+    if (B2D_CHECK_f(viewport == nullptr, "Unable to render because the world has no active viewport"))
     {
         return;
     }

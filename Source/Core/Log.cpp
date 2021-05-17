@@ -7,7 +7,7 @@
 
 void Log::Init(std::string const& applicationName)
 {
-    if (B2D_CHECKf(m_isInitialized, "Log is already initialized!"))
+    if (B2D_CHECK_f(m_isInitialized, "Log is already initialized!"))
     {
         return;
     }

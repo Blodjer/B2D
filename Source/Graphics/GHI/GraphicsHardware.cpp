@@ -14,6 +14,6 @@ IGraphicsHardwareInterface* GraphicsHardware::Create(EGraphicsAPI const graphics
         return new OpenGLGHI();
     }
 
-    B2D_TRAPf("Trying to create unknown GHI!");
+    B2D_TRAP_f("Trying to create unknown GHI!");
     return nullptr;
 }

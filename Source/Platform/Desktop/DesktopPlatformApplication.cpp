@@ -117,7 +117,7 @@ void DesktopPlatformApplication::AddMessageHandler(IPlatformMessageHandlerInterf
         return messageHandler == handler;
     });
 
-    if (B2D_CHECKf(it != m_messageHandler.end(), "Message handler was already added to application"))
+    if (B2D_CHECK_f(it != m_messageHandler.end(), "Message handler was already added to application"))
     {
         return;
     }
@@ -131,7 +131,7 @@ void DesktopPlatformApplication::RemoveMessageHandler(IPlatformMessageHandlerInt
         return messageHandler == handler;
     });
 
-    if (B2D_CHECKf(it == m_messageHandler.end(), "Message handler is not used in application"))
+    if (B2D_CHECK_f(it == m_messageHandler.end(), "Message handler is not used in application"))
     {
         return;
     }

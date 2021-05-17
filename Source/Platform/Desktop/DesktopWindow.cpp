@@ -12,7 +12,7 @@
 #endif
 #include <GLFW/glfw3native.h>
 
-#define CURRENT_CONTEXT_CHECK() B2D_ASSERTf(IsCurrentContext(), "Window is not current context")
+#define CURRENT_CONTEXT_CHECK() B2D_ASSERT_f(IsCurrentContext(), "Window is not current context")
 
 DesktopWindow::DesktopWindow(GLFWwindow* context, uint32 width, uint32 height)
     : GenericWindow(width, height)

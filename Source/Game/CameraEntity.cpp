@@ -73,7 +73,7 @@ TMatrix CameraEntity::CreateProjectionMatrix(EProjection const projection, CView
         return TMatrix::Orthographic(width * -0.5f, width * 0.5f, height * -0.5f, height * 0.5f, camera.nearPlane, camera.farPlane);
     }
 
-    B2D_TRAPf("Projection mode {} not implemented", static_cast<uint32>(projection));
+    B2D_TRAP_f("Projection mode {} not implemented", static_cast<uint32>(projection));
     return TMatrix();
 }
 

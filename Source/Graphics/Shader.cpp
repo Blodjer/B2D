@@ -34,7 +34,7 @@ bool Shader::Load(ResourcePath const& path, ShaderType type)
             m_ghiShader = ghi->CreatePixelShader(data);
             break;
         default:
-            B2D_BREAKf("ShaderType {} not implemented", static_cast<int32>(type));
+            B2D_BREAK_f("ShaderType {} not implemented", static_cast<int32>(type));
             break;
     }
 

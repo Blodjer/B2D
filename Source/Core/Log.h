@@ -63,7 +63,7 @@ public:
     }
 
     template<typename... Args>
-    FORCEINLINE static void Checkf(STACKLOCATION_SIGNATURE, const char* expr, const char* message, Args const&... args)
+    FORCEINLINE static void Check(STACKLOCATION_SIGNATURE, const char* expr, const char* message, Args const&... args)
     {
         GetLogger(STACKLOCATION_PARAM_FILE)->warn("Check failed: {}", expr);
         GetLogger(STACKLOCATION_PARAM_FILE)->warn(message, args...);
@@ -82,7 +82,7 @@ public:
     }
 
     template<typename... Args>
-    FORCEINLINE static void Assertf(STACKLOCATION_SIGNATURE, const char* expr, const char* message, Args const&... args)
+    FORCEINLINE static void Assert(STACKLOCATION_SIGNATURE, const char* expr, const char* message, Args const&... args)
     {
         GetLogger(STACKLOCATION_PARAM_FILE)->critical("Assertion failed: {}", expr);
         GetLogger(STACKLOCATION_PARAM_FILE)->critical(message, args...);
@@ -119,7 +119,7 @@ private:
             break;
         }
 
-        B2D_TRAPf("Trying to log to a non-existing sink!");
+        B2D_TRAP_f("Trying to log to a non-existing sink!");
         return nullptr;
     }
 

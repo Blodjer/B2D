@@ -129,7 +129,7 @@ bool VulkanGHI::Init()
     vk::Result const createInstanceResult = vk::createInstance(&instanceCreateInfo, nullptr, &m_instance);
     if (createInstanceResult != vk::Result::eSuccess)
     {
-        B2D_TRAPf("Failed to create Vulkan instance! ({})", vk::to_string(createInstanceResult), createInstanceResult);
+        B2D_TRAP_f("Failed to create Vulkan instance! ({})", vk::to_string(createInstanceResult), createInstanceResult);
         return false;
     }
     VULKAN_HPP_DEFAULT_DISPATCHER.init(m_instance);

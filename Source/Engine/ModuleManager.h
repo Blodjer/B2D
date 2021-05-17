@@ -32,7 +32,7 @@ public:
 
         if (!static_cast<IEngineModule*>(module)->Init())
         {
-            B2D_TRAPf("Failed to load \"{}\"", module->GetName());
+            B2D_TRAP_f("Failed to load \"{}\"", module->GetName());
             delete module;
             module = nullptr;
             return nullptr;

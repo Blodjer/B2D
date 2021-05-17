@@ -47,7 +47,7 @@ public:
 
     void RemoveChangeCallback(TResourceChangedDelegate const& callback)
     {
-        B2D_BREAK();
+        B2D_NOT_IMPLEMENTED();
     }
 
 private:
@@ -232,7 +232,7 @@ static bool IResourceManager::Reload(ResourcePtr<T> const resourcePtr)
     _CrtMemCheckpoint(&memAfter);
 
     _CrtMemState memDiff;
-    if (B2D_CHECKf(_CrtMemDifference(&memDiff, &memBefore, &memAfter), "Memory increased during reload of resource: {0}", path))
+    if (B2D_CHECK_f(_CrtMemDifference(&memDiff, &memBefore, &memAfter), "Memory increased during reload of resource: {0}", path))
     {
         _CrtMemDumpStatistics(&memDiff);
     }
