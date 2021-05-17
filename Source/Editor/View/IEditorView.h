@@ -1,6 +1,6 @@
 #pragma once
 
-#include "imgui/imgui.h"
+#include "Editor/ImGuiCommon.h"
 
 class IEditorView
 {

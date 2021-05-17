@@ -10,6 +10,8 @@ class VulkanGHI final : public IGraphicsHardwareInterface
 public:
     virtual bool Init() override;
     virtual void Shutdown() override;
+    virtual void BeginRenderPass() override;
+    virtual void EndRenderPass() override;
 
     EGraphicsAPI GetGraphicsAPI() const override { return EGraphicsAPI::Vulkan; };
 
@@ -30,35 +32,26 @@ private:
     vk::Extent2D SelectSwapExtend(vk::SurfaceCapabilitiesKHR const& surfaceCapabilities);
 
 public:
-    virtual void Clear(bool color, bool depth, bool stencil) override;
-
-    // Texture
-
     virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) override;
-    virtual void BindTexture(GHITexture const* texture) override;
     virtual void FreeTexture(GHITexture*& texture) override;
-
-    // Shader
 
     virtual GHIShader* CreateVertexShader(std::vector<char> const& data) override;
     virtual GHIShader* CreatePixelShader(std::vector<char> const& data) override;
-
     GHIShader* CreateShader(std::vector<char> const& data, vk::ShaderStageFlagBits stage);
-
     virtual void DeleteShader(GHIShader*& shader) override;
-
-    // Material
 
     virtual GHIMaterial* CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader) override;
     virtual void FreeMaterial(GHIMaterial*& material) override;
-    virtual void BindMaterial(GHIMaterial* material) override;
-
-    // RenderTarget
 
     virtual GHIRenderTarget* CreateRenderTarget() override;
     virtual GHIRenderTarget* CreateRenderTarget(GHITexture* texture) override;
     virtual void ResizeRenderTarget(GHIRenderTarget*& renderTarget, uint32 width, uint32 height);
     virtual void DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeTexture) override;
+
+public:
+    virtual void Clear(bool color, bool depth, bool stencil) override;
+    virtual void BindTexture(GHITexture const* texture) override;
+    virtual void BindMaterial(GHIMaterial* material) override;
     virtual void BindRenderTarget(GHIRenderTarget* renderTarget) override;
     virtual void BindRenderTargetAndClear(GHIRenderTarget* renderTarget) override;
 
@@ -72,14 +65,25 @@ private:
     vk::Instance m_instance;
     vk::DebugUtilsMessengerEXT m_debugUtilMessenger;
 
+    vk::PhysicalDevice m_physicalDevice;
     vk::Device m_device;
 
     vk::PipelineLayout m_pipelineLayout;
     vk::Pipeline m_pipeline;
 
+    vk::SwapchainKHR m_swapchain;
+    vk::Extent2D m_extent;
+    std::vector<vk::Framebuffer> m_framebuffers;
+    std::vector<vk::CommandBuffer> m_commandBuffers;
+
     vk::RenderPass m_renderPass;
+
+    vk::Queue m_graphicsQueue;
+    vk::Queue m_presentationQueue;
 
     vk::Semaphore m_imageAvailableSemaphore;
     vk::Semaphore m_renderFinishedSemaphore;
+
+    uint32 m_currentImageIndex = 0; // TMP
 };
 

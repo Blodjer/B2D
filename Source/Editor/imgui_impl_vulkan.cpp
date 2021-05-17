@@ -30,7 +30,7 @@
 //  2016-08-27: Vulkan: Fix Vulkan example for use when a depth buffer is active.
 
 #include "B2D_pch.h"
-#include "imgui/imgui.h"
+#include "ImGuiCommon.h"
 #include "imgui_impl_vulkan.h"
 #include <stdio.h>
 

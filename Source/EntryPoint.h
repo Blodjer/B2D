@@ -17,8 +17,11 @@ int main(int argc, const char*[])
 	GameEngine::Create(config);
 
 	World* const world = GameEngine::Instance()->GetGameInstance()->GetWorld();
-    B2D::PopulateWorld(world);
+    //B2D::PopulateWorld(world);
+	B2D_LOG_WARNING("Disabled loading of world!");
 
     GameEngine::Instance()->Run();
     GameEngine::Shutdown();
+
+	return 0;
 }

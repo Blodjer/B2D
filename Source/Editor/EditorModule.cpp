@@ -12,13 +12,17 @@
 #include "View/SimpleFrameTimeView.h"
 #include "View/WorldEditorView.h"
 
-#include <imgui/imgui.h>
+#include "ImGuiCommon.h"
 
 bool EditorModule::Init()
 {
     IMGUI_CHECKVERSION();
+
+    B2D_LOG_INFO("Initialize ImGui...");
+    B2D_LOG_INFO("ImGui version\t{}", IMGUI_VERSION);
+
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
@@ -64,7 +68,7 @@ bool EditorModule::Init()
 void EditorModule::InitDefaultEditorViews()
 {
     CreateEditorView<SimpleFrameTimeView>();
-    CreateEditorView<WorldEditorView>();
+    //CreateEditorView<WorldEditorView>();
     CreateEditorView<GameSystemView>();
     CreateEditorView<GameSystemProfilerView>();
 }

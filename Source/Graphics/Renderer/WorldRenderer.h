@@ -20,7 +20,6 @@ protected:
 
 private:
     void RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const target, WorldRenderDataInterface const* wrdi, CViewport const* const viewport);
-    void PostProcessPass(GHIRenderTarget* source, GHIRenderTarget* target, GHIMaterial* material);
 
 private:
     WorldRenderDataInterface const* m_wrdi = nullptr;

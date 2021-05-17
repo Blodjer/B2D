@@ -8,6 +8,8 @@ class OpenGLGHI final : public IGraphicsHardwareInterface
 public:
     virtual bool Init() override;
     virtual void Shutdown() override;
+    virtual void BeginRenderPass() override { B2D_NOT_IMPLEMENTED(); };
+    virtual void EndRenderPass() override { B2D_NOT_IMPLEMENTED(); };
 
     EGraphicsAPI GetGraphicsAPI() const override { return EGraphicsAPI::OpenGL; }
 

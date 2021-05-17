@@ -7,14 +7,9 @@
 #include "Platform/Desktop/DesktopWindow.h"
 
 #include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
 
-#include <vulkan/vulkan.hpp>
-
-#include "imgui/imgui.h"
+#include "Editor/ImGuiCommon.h"
 #include "Editor/imgui_impl_glfw.h"
-#include "Editor/imgui_impl_opengl3.h"
-#include "Editor/imgui_impl_vulkan.h"
 
 #define DISPATCH_PLATFORM_MESSAGE(func, ...) \
     for (IPlatformMessageHandlerInterface* const handler : DesktopPlatformApplication::ms_instance->m_messageHandler) \
@@ -40,7 +35,7 @@ bool DesktopPlatformApplication::Init()
     
     B2D_ASSERT(glfwInit() == GLFW_TRUE)
 
-    B2D_LOG_INFO("GLFW version    {}.{}.{}\n", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
+    B2D_LOG_INFO("GLFW version\t{}.{}.{}", GLFW_VERSION_MAJOR, GLFW_VERSION_MINOR, GLFW_VERSION_REVISION);
 
     glfwSetErrorCallback(OnGlfwErrorCallback);
     glfwSetJoystickCallback(OnGlfwJoystickCallback);
@@ -182,15 +177,13 @@ bool DesktopPlatformApplication::ImGui_Init()
     {
     case EGraphicsAPI::OpenGL:
         ImGui_ImplGlfw_InitForOpenGL(mainWindow->GetGLFWHandle(), true);
-        //ImGui_ImplOpenGL3_Init("#version 410 core");
         break;
     case EGraphicsAPI::Vulkan:
         ImGui_ImplGlfw_InitForVulkan(mainWindow->GetGLFWHandle(), true);
-        //ImGui_ImplVulkan_Init();
         break;
     default:
-        B2D_NOT_IMPLEMENTED();
-        //ImGui_ImplGlfw_InitForOther(glfwWindow, true);
+        B2D_LOG_WARNING("Unknown graphics API used for ImGui initialization!");
+        ImGui_ImplGlfw_InitForOther(mainWindow->GetGLFWHandle(), true);
         break;
     }
 

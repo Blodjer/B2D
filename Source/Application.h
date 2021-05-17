@@ -9,7 +9,7 @@ struct ApplicationConfig
     std::string name = "Game";
     uint32 windowWidth = 1600;
     uint32 windowHeight = 900;
-    bool multithread = true;
+    bool multithread = false;
 
     static void Dump(ApplicationConfig const& config)
     {

@@ -55,7 +55,7 @@ void DesktopWindow::SetVsync(bool enable)
 {
     if (glfwGetWindowAttrib(m_context, GLFW_CLIENT_API) == GLFW_NO_API)
     {
-		B2D_NOT_IMPLEMENTED();
+		B2D_LOG_ERROR("VSync option not implemented for used client API!");
         return;
     }
 
@@ -98,6 +98,13 @@ void DesktopWindow::MakeContextCurrent()
 
 void DesktopWindow::Swap()
 {
+	// TODO: Swap in GHI?
+
+    if (glfwGetWindowAttrib(m_context, GLFW_CLIENT_API) == GLFW_NO_API)
+    {
+        return;
+    }
+
 	glfwSwapBuffers(m_context);
 }
 

@@ -11,8 +11,8 @@
 
 #include "VulkanShader.h"
 
-#include <imgui/imgui.h>
-#include <Editor/imgui_impl_vulkan.h>
+#include "Editor/ImGuiCommon.h"
+#include "Editor/imgui_impl_vulkan.h"
 
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
@@ -26,21 +26,22 @@ namespace
         VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
         void* pUserData)
     {
+        // TODO: Add custom sink?
         switch (messageSeverity)
         {
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            B2D_LOG_INFO(pCallbackData->pMessage);
+            B2D_LOG_INFO_s(Log::ESink::External, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            B2D_LOG_WARNING(pCallbackData->pMessage);
+            B2D_LOG_WARNING_s(Log::ESink::External, pCallbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            B2D_LOG_ERROR(pCallbackData->pMessage);
+            B2D_LOG_ERROR_s(Log::ESink::External, pCallbackData->pMessage);
             break;
         default:
-            B2D_BREAKf("Unkown message severity!");
-            B2D_LOG_WARNING(pCallbackData->pMessage);
+            B2D_BREAK_f("Unkown Vulkan message severity!");
+            B2D_LOG_WARNING_s(Log::ESink::External, pCallbackData->pMessage);
             break;
         }
 
@@ -163,13 +164,13 @@ bool VulkanGHI::Init()
     std::vector<vk::PhysicalDevice> physicalDevices = m_instance.enumeratePhysicalDevices();
     B2D_ASSERT(!physicalDevices.empty());
 
-    vk::PhysicalDevice physicalDevice = SelectPhysicalDevice(physicalDevices);
+    m_physicalDevice = SelectPhysicalDevice(physicalDevices);
 
     std::vector<char const*> deviceExtensionsToEnable;
-    SelectDeviceExtensions(physicalDevice, deviceExtensionsToEnable);
+    SelectDeviceExtensions(m_physicalDevice, deviceExtensionsToEnable);
 
     uint32 graphicsQueueIndex;
-    B2D_ASSERT(FindQueueIndex(physicalDevice, vk::QueueFlagBits::eGraphics, graphicsQueueIndex));
+    B2D_ASSERT(FindQueueIndex(m_physicalDevice, vk::QueueFlagBits::eGraphics, graphicsQueueIndex));
 
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 
@@ -184,24 +185,26 @@ bool VulkanGHI::Init()
     deviceCreateInfo.setPEnabledExtensionNames(deviceExtensionsToEnable);
     deviceCreateInfo.setQueueCreateInfos(queueCreateInfos);
 
-    m_device = physicalDevice.createDevice(deviceCreateInfo);
+    m_device = m_physicalDevice.createDevice(deviceCreateInfo);
     VULKAN_HPP_DEFAULT_DISPATCHER.init(m_device);
 
-    vk::Queue graphicsQueue = m_device.getQueue(graphicsQueueIndex, 0);
+    m_graphicsQueue = m_device.getQueue(graphicsQueueIndex, 0);
 
-    // TODO: Retrieve the correct presentation queue
-    vk::Bool32 isPresentationQueueSupported = physicalDevice.getSurfaceSupportKHR(graphicsQueueIndex, surface);
+    vk::Bool32 isPresentationQueueSupported = m_physicalDevice.getSurfaceSupportKHR(graphicsQueueIndex, surface);
     B2D_ASSERT(isPresentationQueueSupported);
 
-    vk::SurfaceCapabilitiesKHR surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
-    vk::Extent2D extent = SelectSwapExtend(surfaceCapabilities);
+    uint32 presentationQueueIndex = graphicsQueueIndex;
+    m_presentationQueue = m_device.getQueue(presentationQueueIndex, 0);
+    
+    vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_physicalDevice.getSurfaceCapabilitiesKHR(surface);
+    m_extent = SelectSwapExtend(surfaceCapabilities);
 
-    std::vector<vk::SurfaceFormatKHR> surfaceFormats = physicalDevice.getSurfaceFormatsKHR(surface);
+    std::vector<vk::SurfaceFormatKHR> surfaceFormats = m_physicalDevice.getSurfaceFormatsKHR(surface);
     B2D_ASSERT(!surfaceFormats.empty());
 
     vk::SurfaceFormatKHR surfaceFormat = SelectSurfacePresentMode(surfaceFormats);
 
-    std::vector<vk::PresentModeKHR> surfacePresentModes = physicalDevice.getSurfacePresentModesKHR(surface);
+    std::vector<vk::PresentModeKHR> surfacePresentModes = m_physicalDevice.getSurfacePresentModesKHR(surface);
     B2D_ASSERT(!surfacePresentModes.empty());
 
     vk::PresentModeKHR surfacePresentMode = SelectSurfacePresentMode(surfacePresentModes);
@@ -218,7 +221,7 @@ bool VulkanGHI::Init()
     swapchainCreateInfo.minImageCount = imageCount;
     swapchainCreateInfo.imageFormat = surfaceFormat.format;
     swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
-    swapchainCreateInfo.imageExtent = extent;
+    swapchainCreateInfo.imageExtent = m_extent;
     swapchainCreateInfo.imageArrayLayers = 1;
     swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
     swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
@@ -241,9 +244,9 @@ bool VulkanGHI::Init()
         //swapchainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
     }
 
-    vk::SwapchainKHR swapchain = m_device.createSwapchainKHR(swapchainCreateInfo);
+    m_swapchain = m_device.createSwapchainKHR(swapchainCreateInfo);
 
-    std::vector<vk::Image> swapchainImages = m_device.getSwapchainImagesKHR(swapchain);
+    std::vector<vk::Image> swapchainImages = m_device.getSwapchainImagesKHR(m_swapchain);
 
     std::vector<vk::ImageView> swapchainImageViews;
     swapchainImageViews.reserve(swapchainImages.size());
@@ -283,14 +286,14 @@ bool VulkanGHI::Init()
     vk::Viewport viewport;
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(extent.width);
-    viewport.height = static_cast<float>(extent.height);
+    viewport.width = static_cast<float>(m_extent.width);
+    viewport.height = static_cast<float>(m_extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     vk::Rect2D scissor;
     scissor.offset = vk::Offset2D({0, 0});
-    scissor.extent = extent;
+    scissor.extent = m_extent;
 
     vk::PipelineViewportStateCreateInfo viewportStateCreateInfo;
     viewportStateCreateInfo.viewportCount = 1;
@@ -428,8 +431,7 @@ bool VulkanGHI::Init()
 
     m_pipeline = m_device.createGraphicsPipeline(nullptr, pipelineInfo).value;
     
-    std::vector<vk::Framebuffer> swapchainFramebuffers;
-    swapchainFramebuffers.reserve(swapchainImageViews.size());
+    m_framebuffers.reserve(swapchainImageViews.size());
 
     for (vk::ImageView& imageView : swapchainImageViews)
     {
@@ -437,66 +439,73 @@ bool VulkanGHI::Init()
         framebufferInfo.renderPass = m_renderPass;
         framebufferInfo.attachmentCount = 1;
         framebufferInfo.pAttachments = &imageView;
-        framebufferInfo.width = extent.width;
-        framebufferInfo.height = extent.height;
+        framebufferInfo.width = m_extent.width;
+        framebufferInfo.height = m_extent.height;
         framebufferInfo.layers = 1;
 
-        swapchainFramebuffers.emplace_back(m_device.createFramebuffer(framebufferInfo));
+        m_framebuffers.emplace_back(m_device.createFramebuffer(framebufferInfo));
     }
 
     // Could be created after creating the queues
     vk::CommandPoolCreateInfo commandPoolInfo;
     commandPoolInfo.queueFamilyIndex = graphicsQueueIndex;
-    commandPoolInfo.flags = vk::CommandPoolCreateFlags(0); // Optional
+    commandPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer; // Optional
 
     vk::CommandPool commandPool = m_device.createCommandPool(commandPoolInfo);
 
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
     commandBufferAllocateInfo.commandPool = commandPool;
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
-    commandBufferAllocateInfo.commandBufferCount = static_cast<uint32>(swapchainFramebuffers.size());
+    commandBufferAllocateInfo.commandBufferCount = static_cast<uint32>(m_framebuffers.size());
 
-    std::vector<vk::CommandBuffer> commandBuffers = m_device.allocateCommandBuffers(commandBufferAllocateInfo);
-
-    uint32 i = 0;
-    for (vk::CommandBuffer& commandBuffer : commandBuffers)
-    {
-        vk::CommandBufferBeginInfo commandBufferBeginInfo;
-        commandBufferBeginInfo.flags = vk::CommandBufferUsageFlags(0);
-        commandBufferBeginInfo.pInheritanceInfo = nullptr;
-
-        vk::ClearColorValue clearColorValue;
-        clearColorValue.setFloat32({ 1.0f, 1.0f, 0.0f, 1.0f });
-        vk::ClearValue clearColor(clearColorValue);
-
-        vk::RenderPassBeginInfo renderPassBeginInfo;
-        renderPassBeginInfo.renderPass = m_renderPass;
-        renderPassBeginInfo.framebuffer = swapchainFramebuffers[i];
-        renderPassBeginInfo.renderArea.offset = vk::Offset2D({ 0, 0 });
-        renderPassBeginInfo.renderArea.extent = extent;
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clearColor;
-
-        commandBuffer.begin(commandBufferBeginInfo);
-
-        commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
-
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline);
-
-        commandBuffer.draw(3, 1, 0, 0);
-
-        commandBuffer.endRenderPass();
-
-        commandBuffer.end();
-
-        ++i;
-    }
+    m_commandBuffers = m_device.allocateCommandBuffers(commandBufferAllocateInfo);
 
     vk::SemaphoreCreateInfo semaphoreInfo;
     m_imageAvailableSemaphore = m_device.createSemaphore(semaphoreInfo);
     m_renderFinishedSemaphore = m_device.createSemaphore(semaphoreInfo);
 
-    uint32 imageIndex = m_device.acquireNextImageKHR(swapchain, UINT64_MAX, m_imageAvailableSemaphore).value;
+    return true;
+}
+
+void VulkanGHI::BeginRenderPass()
+{
+    uint32 imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, m_imageAvailableSemaphore).value;
+    m_currentImageIndex = imageIndex;
+
+    vk::CommandBufferBeginInfo commandBufferBeginInfo;
+    commandBufferBeginInfo.flags = vk::CommandBufferUsageFlags(0);
+    commandBufferBeginInfo.pInheritanceInfo = nullptr;
+
+    vk::ClearColorValue clearColorValue;
+    clearColorValue.setFloat32({ 0.5f, 0.5f, 0.5f, 1.0f });
+    vk::ClearValue clearColor(clearColorValue);
+
+    vk::RenderPassBeginInfo renderPassBeginInfo;
+    renderPassBeginInfo.renderPass = m_renderPass;
+    renderPassBeginInfo.framebuffer = m_framebuffers[m_currentImageIndex];
+    renderPassBeginInfo.renderArea.offset = vk::Offset2D({ 0, 0 });
+    renderPassBeginInfo.renderArea.extent = m_extent;
+    renderPassBeginInfo.clearValueCount = 1;
+    renderPassBeginInfo.pClearValues = &clearColor;
+
+    vk::CommandBuffer& commandBuffer = m_commandBuffers[m_currentImageIndex];
+
+    commandBuffer.begin(commandBufferBeginInfo);
+
+    commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline);
+
+    commandBuffer.draw(3, 1, 0, 0);
+}
+
+void VulkanGHI::EndRenderPass()
+{
+    vk::CommandBuffer& commandBuffer = m_commandBuffers[m_currentImageIndex];
+
+    commandBuffer.endRenderPass();
+
+    commandBuffer.end();
 
     vk::Semaphore waitSemaphores[] = { m_imageAvailableSemaphore };
     vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
@@ -508,23 +517,22 @@ bool VulkanGHI::Init()
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+    submitInfo.pCommandBuffers = &m_commandBuffers[m_currentImageIndex];
 
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    graphicsQueue.submit(1, &submitInfo, nullptr);
+    m_graphicsQueue.submit(1, &submitInfo, nullptr);
 
     vk::PresentInfoKHR presentInfo;
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &swapchain;
-    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pSwapchains = &m_swapchain;
+    presentInfo.pImageIndices = &m_currentImageIndex;
 
-    graphicsQueue.presentKHR(presentInfo);
-
-    return true;
+    m_presentationQueue.presentKHR(presentInfo);
+    m_presentationQueue.waitIdle();
 }
 
 void VulkanGHI::Shutdown()
@@ -728,7 +736,8 @@ vk::SurfaceFormatKHR VulkanGHI::SelectSurfacePresentMode(std::vector<vk::Surface
 {
     for (vk::SurfaceFormatKHR const& surfaceFormat : availableSurfaceFormats)
     {
-        if (surfaceFormat.format == vk::Format::eB8G8R8A8Srgb && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
+        //if (surfaceFormat.format == vk::Format::eB8G8R8A8Srgb && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
+        if (surfaceFormat.format == vk::Format::eB8G8R8A8Unorm && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) // TODO: To be compatible with ImGui
         {
             return surfaceFormat;
         }
@@ -875,21 +884,73 @@ void VulkanGHI::BindRenderTargetAndClear(GHIRenderTarget* renderTarget)
 
 bool VulkanGHI::ImGui_Init()
 {
-    B2D_NOT_IMPLEMENTED();
+    if (B2D_CHECK(!m_instance))
+    {
+        return false;
+    }
 
-    B2D_ASSERT(m_instance);
+    VkDescriptorPool pool;
+
+    VkDescriptorPoolSize pool_sizes[] =
+    {
+        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+    };
+    VkDescriptorPoolCreateInfo pool_info = {};
+    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
+    pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+    pool_info.pPoolSizes = pool_sizes;
+    VkResult err = vkCreateDescriptorPool(m_device, &pool_info, nullptr, &pool);
 
     ImGui_ImplVulkan_InitInfo initInfo = {};
-//     initInfo.Instance = m_instance;
-//     initInfo.PhysicalDevice = ;
-//     initInfo.Device = m_device;
-//     initInfo.QueueFamily;
-//     initInfo.Queue;
-//     initInfo.PipelineCache;
-//     initInfo.DescriptorPool;
+    initInfo.Instance = m_instance;
+    initInfo.PhysicalDevice = m_physicalDevice;
+    initInfo.Device = m_device;
+    initInfo.QueueFamily = 0; // TMP
+    initInfo.Queue = m_graphicsQueue;
+    initInfo.DescriptorPool = pool;
+    //initInfo.PipelineCache; // Optional
 
-    //ImGui_ImplVulkan_Init(&initInfo, );
-    return false;
+    ImGui_ImplVulkan_Init(&initInfo, m_renderPass);
+
+    //vk::CommandPool commandPool = m_commandBuffers[0];
+    vk::CommandBuffer commandBuffer = m_commandBuffers[0];
+
+    commandBuffer.reset();
+
+    //m_device.resetCommandPool(commandPool);
+
+    vk::CommandBufferBeginInfo begin_info;
+    begin_info.flags |= vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+
+    commandBuffer.begin(begin_info);
+
+    ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+
+    vk::SubmitInfo submitInfo;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    commandBuffer.end();
+
+    m_graphicsQueue.submit(1, &submitInfo, nullptr);
+
+    m_device.waitIdle();
+
+    ImGui_ImplVulkan_InvalidateFontUploadObjects();
+
+    return true;
 }
 
 void VulkanGHI::ImGui_Shutdow()
@@ -904,6 +965,5 @@ void VulkanGHI::ImGui_BeginFrame()
 
 void VulkanGHI::ImGui_Render()
 {
-    B2D_NOT_IMPLEMENTED();
-    //ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_commandBuffers[m_currentImageIndex]);
 }

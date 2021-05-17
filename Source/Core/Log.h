@@ -19,7 +19,8 @@ public:
     enum class ESink
     {
         Core,
-        App
+        App,
+        External
     };
 
     static constexpr ESink GetSink(char const* file)
@@ -32,6 +33,7 @@ private:
 
     INLINE static std::shared_ptr<spdlog::logger> m_loggerCore;
     INLINE static std::shared_ptr<spdlog::logger> m_loggerApp;
+    INLINE static std::shared_ptr<spdlog::logger> m_loggerExternal;
 
 public:
 	static void Init(std::string const& applicationName);
@@ -68,22 +70,15 @@ public:
         Callstack(spdlog::level::level_enum::warn, STACKLOCATION_PARAMS);
     }
 
-    template<typename... Args>
-    FORCEINLINE static void Break(STACKLOCATION_SIGNATURE, const char* message, Args const&... args)
-    {
-        GetLogger(STACKLOCATION_PARAM_FILE)->warn(message, args...);
-        Callstack(spdlog::level::level_enum::warn, STACKLOCATION_PARAMS);
-    }
-
     FORCEINLINE static void Assert(STACKLOCATION_SIGNATURE, const char* expr)
     {
         Assert(STACKLOCATION_PARAMS, expr, GetSink(STACKLOCATION_PARAM_FILE));
     }
 
-    FORCEINLINE static void Assert(STACKLOCATION_SIGNATURE, const char* expr, ESink const sink)
+    FORCEINLINE static void Assert(STACKLOCATION_SIGNATURE, const char* expr, ESink const sink, uint32 framesToSkip = 0)
     {
         GetLogger(sink)->critical("Assertion failed: {}", expr);
-        Callstack(sink, spdlog::level::level_enum::critical, STACKLOCATION_PARAMS);
+        Callstack(sink, spdlog::level::level_enum::critical, STACKLOCATION_PARAMS, framesToSkip);
     }
 
     template<typename... Args>
@@ -101,6 +96,11 @@ public:
         Callstack(spdlog::level::level_enum::critical, STACKLOCATION_PARAMS);
     }
 
+    FORCEINLINE static void MissingImplementation(STACKLOCATION_SIGNATURE)
+    {
+        GetLogger(STACKLOCATION_PARAM_FILE)->critical("Missing implementation: {}", STACKLOCATION_PARAM_FUNC);
+    }
+
 private:
     NOINLINE static void Callstack(spdlog::level::level_enum level, STACKLOCATION_SIGNATURE, uint32 framesToSkip = 0);
     NOINLINE static void Callstack(ESink sink, spdlog::level::level_enum level, STACKLOCATION_SIGNATURE, uint32 framesToSkip = 0);
@@ -113,6 +113,8 @@ private:
             return m_loggerCore.get();
         case ESink::App:
             return m_loggerApp.get();
+        case ESink::External:
+            return m_loggerExternal.get();
         default:
             break;
         }
@@ -136,14 +138,22 @@ private:
 
 #ifndef B2D_NO_LOGGING
 
-#define B2D_LOG_INFO(message, ...)		Log::Info(Log::GetSink(__FILE__), message, __VA_ARGS__)
-#define B2D_LOG_WARNING(message, ...)	Log::Warning(Log::GetSink(__FILE__), message, __VA_ARGS__)
-#define B2D_LOG_ERROR(message, ...)		Log::Error(Log::GetSink(__FILE__), message, __VA_ARGS__)
+#define B2D_LOG_INFO(_message, ...)		        Log::Info(Log::GetSink(__FILE__), _message, __VA_ARGS__)
+#define B2D_LOG_WARNING(_message, ...)	        Log::Warning(Log::GetSink(__FILE__), _message, __VA_ARGS__)
+#define B2D_LOG_ERROR(_message, ...)	        Log::Error(Log::GetSink(__FILE__), _message, __VA_ARGS__)
+
+#define B2D_LOG_INFO_s(_sink, _message, ...)	Log::Info(_sink, _message, __VA_ARGS__)
+#define B2D_LOG_WARNING_s(_sink, _message, ...)	Log::Warning(_sink, _message, __VA_ARGS__)
+#define B2D_LOG_ERROR_s(_sink, _message, ...)	Log::Error(_sink, _message, __VA_ARGS__)
 
 #else
 
-#define B2D_LOG_INFO(message, ...)
-#define B2D_LOG_WARNING(message, ...)
-#define B2D_LOG_ERROR(message, ...)
+#define B2D_LOG_INFO(_message, ...)
+#define B2D_LOG_WARNING(_message, ...)
+#define B2D_LOG_ERROR(_message, ...)
+
+#define B2D_LOG_INFO_s(_sink, _message, ...)
+#define B2D_LOG_WARNING_s(_sink, _message, ...)
+#define B2D_LOG_ERROR_s(_sink, _message, ...)
 
 #endif

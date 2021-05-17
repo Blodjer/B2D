@@ -44,7 +44,7 @@
 
 #include "B2D_pch.h"
 
-#include "imgui/imgui.h"
+#include "ImGuiCommon.h"
 #include "imgui_impl_glfw.h"
 
 // GLFW

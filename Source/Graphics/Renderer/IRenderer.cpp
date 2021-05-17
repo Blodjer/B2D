@@ -3,29 +3,23 @@
 
 #include "GameEngine.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
-
-#include <GL/glew.h>
-#include "Graphics/OpenGL/OpenGLTexture.h"
-#include "Graphics/OpenGL/OpenGLRenderTarget.h"
-#include "imgui/imgui.h"
-#include "../Viewport.h"
+#include "Graphics/Viewport.h"
 
 void IRenderer::Init()
 {
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
     GHITexture* renderTexture1 = ghi->CreateTexture(nullptr, 1, 1, 3);
     GHITexture* renderTexture2 = ghi->CreateTexture(nullptr, 1, 1, 3);
-    m_renderTarget1 = ghi->CreateRenderTarget(renderTexture1);
-    m_renderTarget2 = ghi->CreateRenderTarget(renderTexture2);
+
+    // Add viewport
+    // 
 
     m_isInit = true;
 }
 
 void IRenderer::Shutdown()
 {
-    IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-    ghi->DeleteRenderTarget(m_renderTarget1, true);
-    ghi->DeleteRenderTarget(m_renderTarget2, true);
+    // Clear viewport/images
 }
 
 void IRenderer::Render()
@@ -37,16 +31,17 @@ void IRenderer::Render()
 
         std::chrono::time_point<clock> start = clock::now();
 
-        GHIRenderTarget*& target = m_renderSwtich ? m_renderTarget1 : m_renderTarget2;
+        // TODO: Get Render Target
+        B2D_NOT_IMPLEMENTED();
 
-        if (target->GetWidth() != m_viewport->GetWidth() || target->GetHeight() != m_viewport->GetHeight())
-        {
-            GameEngine::Instance()->GetGHI()->ResizeRenderTarget(target, m_viewport->GetWidth(), m_viewport->GetHeight());
-        }
+        //if (target->GetWidth() != m_viewport->GetWidth() || target->GetHeight() != m_viewport->GetHeight())
+        //{
+        //    GameEngine::Instance()->GetGHI()->ResizeRenderTarget(target, m_viewport->GetWidth(), m_viewport->GetHeight());
+        //}
 
-        PreRender();
-        RenderInternal(target);
-        PostRender();
+        //PreRender();
+        //RenderInternal(target);
+        //PostRender();
 
         duration ChronoTick = clock::now() - start;
         m_renderTime = ChronoTick.count();
@@ -60,10 +55,8 @@ void IRenderer::PreRender()
 
 void IRenderer::PostRender()
 {
-    glFinish();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    m_renderSwtich.store(!m_renderSwtich);
+    //glFinish();
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GHITexture const* IRenderer::GetRenderOutput() const
@@ -73,5 +66,7 @@ GHITexture const* IRenderer::GetRenderOutput() const
         return nullptr;
     }
 
-    return m_renderSwtich ? m_renderTarget2->GetTexture() : m_renderTarget1->GetTexture();
+    B2D_NOT_IMPLEMENTED();
+
+    //return m_renderSwtich ? m_renderTarget2->GetTexture() : m_renderTarget1->GetTexture();
 }

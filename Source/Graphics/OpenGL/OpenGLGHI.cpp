@@ -5,8 +5,8 @@
 #include "OpenGLShader.h"
 #include "OpenGLTexture.h"
 
-#include <imgui/imgui.h>
-#include <Editor/imgui_impl_opengl3.h>
+#include "Editor/ImGuiCommon.h"
+#include "Editor/imgui_impl_opengl3.h"
 
 bool OpenGLGHI::Init()
 {

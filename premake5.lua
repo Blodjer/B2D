@@ -66,14 +66,12 @@ end
 	filter "system:Windows"
 		defines "B2D_PLATFORM_DESKTOP"
 		defines "B2D_PLATFORM_WINDOWS"
-	
 
 group "Libraries"
 	include "Libraries/glew"
 	include "Libraries/GLFW"
 	include "Libraries/imgui"
 group ""
-
 
 project "B2D"
 	language "C++"
@@ -123,3 +121,6 @@ project "B2D"
 		defines "WIN32_LEAN_AND_MEAN"
 		defines "VK_USE_PLATFORM_WIN32_KHR"
 		buildoptions ("/sdl")
+
+	project "ImGui"
+		defines "IMGUI_USER_CONFIG=\"%{wks.location}/B2D/Source/Editor/ImGuiConfig.h\""

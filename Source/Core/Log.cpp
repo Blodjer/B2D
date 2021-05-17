@@ -16,7 +16,9 @@ void Log::Init(std::string const& applicationName)
 
 	m_loggerCore = spdlog::stdout_color_mt("Core");
 
-	m_loggerApp = spdlog::stdout_color_mt(applicationName);
+    m_loggerApp = spdlog::stdout_color_mt(applicationName);
+
+    m_loggerExternal = spdlog::stdout_color_mt("External");
 
     m_isInitialized = true;
 }

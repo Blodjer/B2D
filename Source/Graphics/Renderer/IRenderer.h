@@ -29,9 +29,5 @@ public:
 
 private:
     std::atomic<bool> m_isInit = false;
-    std::atomic<bool> m_renderSwtich = true; // true = 1, false = 2
     std::atomic<float> m_renderTime = 0.0f;
-
-    GHIRenderTarget* m_renderTarget1 = nullptr;
-    GHIRenderTarget* m_renderTarget2 = nullptr;
 };
