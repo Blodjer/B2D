@@ -7,6 +7,7 @@
 #include "Game/GameInstance.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Graphics/RenderManager.h"
+#include "Graphics/ShaderLibrary.h"
 #include "Input/Input.h"
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformApplication.h"
@@ -82,6 +83,7 @@ void GameEngine::Init()
     // Init Graphics Hardware Interface
     if (m_GHI)
     {
+        ShaderLibrary::PreloadAll();
         B2D_ASSERT(m_GHI->Init());
     }
     else

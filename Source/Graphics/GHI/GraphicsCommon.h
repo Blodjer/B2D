@@ -3,5 +3,7 @@
 enum class EGraphicsAPI
 {
     OpenGL,
-    Vulkan
+    Vulkan,
+
+    _Size
 };

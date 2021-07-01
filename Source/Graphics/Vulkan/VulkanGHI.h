@@ -35,9 +35,9 @@ public:
     virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) override;
     virtual void FreeTexture(GHITexture*& texture) override;
 
-    virtual GHIShader* CreateVertexShader(std::vector<char> const& data) override;
-    virtual GHIShader* CreatePixelShader(std::vector<char> const& data) override;
-    GHIShader* CreateShader(std::vector<char> const& data, vk::ShaderStageFlagBits stage);
+    virtual GHIShader* CreateVertexShader(std::vector<uint32> const& data) override;
+    virtual GHIShader* CreatePixelShader(std::vector<uint32> const& data) override;
+    GHIShader* CreateShader(std::vector<uint32> const& data, vk::ShaderStageFlagBits stage);
     virtual void DeleteShader(GHIShader*& shader) override;
 
     virtual GHIMaterial* CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader) override;

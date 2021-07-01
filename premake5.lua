@@ -14,6 +14,7 @@ workspace "B2D"
 end
 	cppdialect "C++17"
 	systemversion "latest"
+	runtime "Release"
 
 	targetdir "%{wks.location}/Bin/%{cfg.buildcfg}/%{cfg.system}-%{cfg.architecture}"
 	objdir "%{wks.location}/Tmp/%{cfg.buildcfg}/%{cfg.system}-%{cfg.architecture}/%{prj.name}"
@@ -76,7 +77,6 @@ group ""
 project "B2D"
 	language "C++"
 	kind "StaticLib"
-	staticruntime "On"
 
 	pchheader "B2D_pch.h"
 	pchsource "%{prj.location}/Source/B2D_pch.cpp"
@@ -113,6 +113,9 @@ project "B2D"
 
 	filter "platforms:Win64"
 		links "$(VULKAN_SDK)/Lib/vulkan-1.lib"
+		links "$(VULKAN_SDK)/Lib/shaderc_shared.lib"
+		links "$(VULKAN_SDK)/Lib/spirv-cross-core.lib"
+		links "$(VULKAN_SDK)/Lib/spirv-cross-glsl.lib"
 
 	filter "platforms:Win32"
 		links "$(VULKAN_SDK)/Lib32/vulkan-1.lib"
@@ -123,4 +126,4 @@ project "B2D"
 		buildoptions ("/sdl")
 
 	project "ImGui"
-		defines "IMGUI_USER_CONFIG=\"%{wks.location}/B2D/Source/Editor/ImGuiConfig.h\""
+		defines "IMGUI_USER_CONFIG=\"../../../B2D/Source/Editor/ImGuiConfig.h\""

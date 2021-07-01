@@ -27,8 +27,8 @@ public:
     virtual EGraphicsAPI GetGraphicsAPI() const = 0;
 
 public:
-    virtual GHIShader* CreateVertexShader(std::vector<char> const& data) = 0;
-    virtual GHIShader* CreatePixelShader(std::vector<char> const& data) = 0;
+    virtual GHIShader* CreateVertexShader(std::vector<uint32> const& data) = 0;
+    virtual GHIShader* CreatePixelShader(std::vector<uint32> const& data) = 0;
     virtual void DeleteShader(GHIShader*& shader) = 0;
 
     virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) = 0;

@@ -6,7 +6,7 @@
 
 // TMP
 #include "Core/Resource.h"
-#include "../Shader.h"
+#include "Graphics/Shader.h"
 // TMP
 
 #include "VulkanShader.h"
@@ -270,8 +270,8 @@ bool VulkanGHI::Init()
         swapchainImageViews.emplace_back(m_device.createImageView(createInfo));
     }
 
-    PixelShaderRef ps = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan_PS.spv");
-    VertexShaderRef vs = IResourceManager::Get<VertexShader>("Content/Shader/Vulkan_VS.spv");
+    PixelShaderRef ps = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan.fs.glsl");
+    VertexShaderRef vs = IResourceManager::Get<VertexShader>("Content/Shader/Vulkan.vs.glsl");
     
     vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
     vertexInputCreateInfo.vertexBindingDescriptionCount = 0;
@@ -404,33 +404,36 @@ bool VulkanGHI::Init()
 
     m_renderPass = m_device.createRenderPass(renderPassInfo);
 
-    VulkanShader* v_ps = static_cast<VulkanShader*>(ps->GetGHIShader());
-    VulkanShader* v_vs = static_cast<VulkanShader*>(vs->GetGHIShader());
-
     std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
-    shaderStages.emplace_back(v_ps->GetPipelineInfo());
-    shaderStages.emplace_back(v_vs->GetPipelineInfo());
+    if (ps.IsValid() && vs.IsValid())
+    {
+        VulkanShader* v_ps = static_cast<VulkanShader*>(ps->GetGHIShader());
+        VulkanShader* v_vs = static_cast<VulkanShader*>(vs->GetGHIShader());
 
-    vk::GraphicsPipelineCreateInfo pipelineInfo;
-    pipelineInfo.setStages(shaderStages);
-    pipelineInfo.pVertexInputState = &vertexInputCreateInfo;
-    pipelineInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
-    pipelineInfo.pViewportState = &viewportStateCreateInfo;
-    pipelineInfo.pRasterizationState = &rasterizationStateCreateInfo;
-    pipelineInfo.pMultisampleState = &multisampleStateCreateInfo;
-    pipelineInfo.pDepthStencilState = nullptr; // Optional
-    pipelineInfo.pColorBlendState = &colorBlendState;
-    pipelineInfo.pDynamicState = &dynamicState; // Optional
+        shaderStages.emplace_back(v_ps->GetPipelineInfo());
+        shaderStages.emplace_back(v_vs->GetPipelineInfo());
 
-    pipelineInfo.layout = m_pipelineLayout;
-    pipelineInfo.renderPass = m_renderPass;
-    pipelineInfo.subpass = 0;
+        vk::GraphicsPipelineCreateInfo pipelineInfo;
+        pipelineInfo.setStages(shaderStages);
+        pipelineInfo.pVertexInputState = &vertexInputCreateInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
+        pipelineInfo.pViewportState = &viewportStateCreateInfo;
+        pipelineInfo.pRasterizationState = &rasterizationStateCreateInfo;
+        pipelineInfo.pMultisampleState = &multisampleStateCreateInfo;
+        pipelineInfo.pDepthStencilState = nullptr; // Optional
+        pipelineInfo.pColorBlendState = &colorBlendState;
+        pipelineInfo.pDynamicState = &dynamicState; // Optional
 
-    pipelineInfo.basePipelineHandle = nullptr; // Optional
-    pipelineInfo.basePipelineIndex = -1; // Optional
+        pipelineInfo.layout = m_pipelineLayout;
+        pipelineInfo.renderPass = m_renderPass;
+        pipelineInfo.subpass = 0;
 
-    m_pipeline = m_device.createGraphicsPipeline(nullptr, pipelineInfo).value;
-    
+        pipelineInfo.basePipelineHandle = nullptr; // Optional
+        pipelineInfo.basePipelineIndex = -1; // Optional
+
+        m_pipeline = m_device.createGraphicsPipeline(nullptr, pipelineInfo).value;
+    }
+
     m_framebuffers.reserve(swapchainImageViews.size());
 
     for (vk::ImageView& imageView : swapchainImageViews)
@@ -494,9 +497,11 @@ void VulkanGHI::BeginRenderPass()
 
     commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline);
-
-    commandBuffer.draw(3, 1, 0, 0);
+    if (m_pipeline)
+    {
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline);
+        commandBuffer.draw(3, 1, 0, 0);
+    }
 }
 
 void VulkanGHI::EndRenderPass()
@@ -794,17 +799,17 @@ void VulkanGHI::FreeTexture(GHITexture*& texture)
     B2D_NOT_IMPLEMENTED();
 }
 
-GHIShader* VulkanGHI::CreateVertexShader(std::vector<char> const& data)
+GHIShader* VulkanGHI::CreateVertexShader(std::vector<uint32> const& data)
 {
     return CreateShader(data, vk::ShaderStageFlagBits::eVertex);
 }
 
-GHIShader* VulkanGHI::CreatePixelShader(std::vector<char> const& data)
+GHIShader* VulkanGHI::CreatePixelShader(std::vector<uint32> const& data)
 {
     return CreateShader(data, vk::ShaderStageFlagBits::eFragment);
 }
 
-GHIShader* VulkanGHI::CreateShader(std::vector<char> const& data, vk::ShaderStageFlagBits stage)
+GHIShader* VulkanGHI::CreateShader(std::vector<uint32> const& data, vk::ShaderStageFlagBits stage)
 {
     // Compile Project/Content/Shaders/ to intermediate directory Project/Intermediate/Shaders/
     // 
@@ -815,8 +820,8 @@ GHIShader* VulkanGHI::CreateShader(std::vector<char> const& data, vk::ShaderStag
     // (optional) Access shaders by key, Preload creates key
 
     vk::ShaderModuleCreateInfo shaderCreateInfo;
-    shaderCreateInfo.codeSize = data.size();
-    shaderCreateInfo.pCode = reinterpret_cast<uint32 const*>(data.data());
+    shaderCreateInfo.codeSize = data.size() * sizeof(uint32);
+    shaderCreateInfo.pCode = data.data();
 
     vk::ShaderModule shaderModule = m_device.createShaderModule(shaderCreateInfo);
 
@@ -891,7 +896,7 @@ bool VulkanGHI::ImGui_Init()
 
     VkDescriptorPool pool;
 
-    VkDescriptorPoolSize pool_sizes[] =
+    VkDescriptorPoolSize poolSizes[] =
     {
         { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -905,22 +910,27 @@ bool VulkanGHI::ImGui_Init()
         { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
         { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
     };
-    VkDescriptorPoolCreateInfo pool_info = {};
-    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
-    pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
-    pool_info.pPoolSizes = pool_sizes;
-    VkResult err = vkCreateDescriptorPool(m_device, &pool_info, nullptr, &pool);
+    VkDescriptorPoolCreateInfo poolInfo = {};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    poolInfo.maxSets = 1000 * IM_ARRAYSIZE(poolSizes);
+
+    vk::PhysicalDeviceProperties pp = m_physicalDevice.getProperties();
+    vk::DeviceSize limits = pp.limits.nonCoherentAtomSize;
+
+    poolInfo.poolSizeCount = (uint32_t)IM_ARRAYSIZE(poolSizes);
+    poolInfo.pPoolSizes = poolSizes;
+    VkResult err = vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &pool);
 
     ImGui_ImplVulkan_InitInfo initInfo = {};
     initInfo.Instance = m_instance;
     initInfo.PhysicalDevice = m_physicalDevice;
     initInfo.Device = m_device;
-    initInfo.QueueFamily = 0; // TMP
+    initInfo.QueueFamily = 0; // TODO
     initInfo.Queue = m_graphicsQueue;
     initInfo.DescriptorPool = pool;
-    //initInfo.PipelineCache; // Optional
+    initInfo.MinImageCount = 2; // TODO
+    initInfo.ImageCount = initInfo.MinImageCount;
 
     ImGui_ImplVulkan_Init(&initInfo, m_renderPass);
 
@@ -947,8 +957,6 @@ bool VulkanGHI::ImGui_Init()
     m_graphicsQueue.submit(1, &submitInfo, nullptr);
 
     m_device.waitIdle();
-
-    ImGui_ImplVulkan_InvalidateFontUploadObjects();
 
     return true;
 }

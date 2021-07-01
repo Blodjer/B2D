@@ -1,5 +1,6 @@
 #pragma once
 
+using uint = std::size_t;
 using uint8	 = unsigned char;
 using uint16 = unsigned short int;
 using uint32 = unsigned int;

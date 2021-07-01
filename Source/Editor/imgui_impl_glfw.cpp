@@ -43,8 +43,6 @@
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
 
 #include "B2D_pch.h"
-
-#include "ImGuiCommon.h"
 #include "imgui_impl_glfw.h"
 
 // GLFW
@@ -61,7 +59,7 @@
 #define GLFW_HAS_VULKAN               (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3200) // 3.2+ glfwCreateWindowSurface
 #define GLFW_HAS_FOCUS_WINDOW         (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3200) // 3.2+ glfwFocusWindow
 #define GLFW_HAS_FOCUS_ON_SHOW        (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3300) // 3.3+ GLFW_FOCUS_ON_SHOW
-#define GLFW_HAS_MONITOR_WORK_AREA    0//(GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3300) // 3.3+ glfwGetMonitorWorkarea
+#define GLFW_HAS_MONITOR_WORK_AREA    (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3300) // 3.3+ glfwGetMonitorWorkarea
 #define GLFW_HAS_OSX_WINDOW_POS_FIX   (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 + GLFW_VERSION_REVISION * 10 >= 3310) // 3.3.1+ Fixed: Resizing window repositions it on MacOS #1553
 #ifdef GLFW_RESIZE_NESW_CURSOR        // Let's be nice to people who pulled GLFW between 2019-04-16 (3.4 define) and 2019-11-29 (cursors defines) // FIXME: Remove when GLFW 3.4 is released?
 #define GLFW_HAS_NEW_CURSORS          (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3400) // 3.4+ GLFW_RESIZE_ALL_CURSOR, GLFW_RESIZE_NESW_CURSOR, GLFW_RESIZE_NWSE_CURSOR, GLFW_NOT_ALLOWED_CURSOR
@@ -137,15 +135,18 @@ void ImGui_ImplGlfw_KeyCallback(GLFWwindow* window, int key, int scancode, int a
         g_PrevUserCallbackKey(window, key, scancode, action, mods);
 
     ImGuiIO& io = ImGui::GetIO();
-    if (action == GLFW_PRESS)
+    if (key >= 0 && key < IM_ARRAYSIZE(io.KeysDown))
     {
-        io.KeysDown[key] = true;
-        g_KeyOwnerWindows[key] = window;
-    }
-    if (action == GLFW_RELEASE)
-    {
-        io.KeysDown[key] = false;
-        g_KeyOwnerWindows[key] = NULL;
+        if (action == GLFW_PRESS)
+        {
+            io.KeysDown[key] = true;
+            g_KeyOwnerWindows[key] = window;
+        }
+        if (action == GLFW_RELEASE)
+        {
+            io.KeysDown[key] = false;
+            g_KeyOwnerWindows[key] = NULL;
+        }
     }
 
     // Modifiers are not reliable across systems

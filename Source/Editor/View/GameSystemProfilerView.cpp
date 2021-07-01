@@ -74,8 +74,8 @@ void GameSystemProfilerView::Tick(float deltaTime)
         ImGui::Text("Max Delta: %.3fms", maxFrameDuration);
         ImGui::NewLine();
 
-        static std::unordered_map<std::thread::id, uint32> threadSet;
-        uint32 threadCount = threadSet.size();
+        static std::unordered_map<std::thread::id, uint> threadSet;
+        uint threadCount = threadSet.size();
 
         ImVec2 const cursorPos = ImGui::GetCursorPos();
         float const maxWidth = ImGui::GetContentRegionAvailWidth();
@@ -86,7 +86,7 @@ void GameSystemProfilerView::Tick(float deltaTime)
         {
             float duration = std::chrono::duration<float, std::milli>(data.duration).count();
 
-            uint32 threadIndex;
+            uint threadIndex;
 
             auto const it = threadSet.find(data.thread);
             if (it != threadSet.end())

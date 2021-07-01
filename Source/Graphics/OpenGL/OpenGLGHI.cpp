@@ -118,7 +118,7 @@ GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
 void OpenGLGHI::ResizeRenderTarget(GHIRenderTarget*& renderTarget, uint32 width, uint32 height)
 {
     OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
-    
+
     OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(rt->GetTexture());
 
     DeleteRenderTarget(renderTarget, true);
@@ -212,12 +212,12 @@ void OpenGLGHI::FreeTexture(GHITexture*& texture)
     texture = nullptr;
 }
 
-bool OpenGLGHI::CompileShader(char const* code, GLuint type, GLuint& outHandle)
+GHIShader* OpenGLGHI::CreateShader(std::vector<uint32> const& data, GLuint type)
 {
     GLuint handle = glCreateShader(type);
 
-    glShaderSource(handle, 1, &code, nullptr);
-    glCompileShader(handle);
+    glShaderBinary(1, &handle, GL_SHADER_BINARY_FORMAT_SPIR_V, data.data(), data.size() * sizeof(uint32));
+    glSpecializeShader(handle, "main", 0, nullptr, nullptr);
 
     int success;
     glGetShaderiv(handle, GL_COMPILE_STATUS, &success);
@@ -231,27 +231,19 @@ bool OpenGLGHI::CompileShader(char const* code, GLuint type, GLuint& outHandle)
 
         glDeleteShader(handle);
 
-        B2D_LOG_ERROR("Shader Compile Error: {0}", message);
+        B2D_LOG_ERROR("Shader compilation error:\n{0}", message);
         return false;
     }
 
-    outHandle = handle;
-    return true;
-}
-
-GHIShader* OpenGLGHI::CreateShader(std::vector<char> const& data, GLuint type)
-{
-    GLuint handle = 0;
-    CompileShader(data.data(), type, handle);
     return new OpenGLShader(handle);
 }
 
-GHIShader* OpenGLGHI::CreatePixelShader(std::vector<char> const& data)
+GHIShader* OpenGLGHI::CreatePixelShader(std::vector<uint32> const& data)
 {
     return CreateShader(data, GL_FRAGMENT_SHADER);
 }
 
-GHIShader* OpenGLGHI::CreateVertexShader(std::vector<char> const& data)
+GHIShader* OpenGLGHI::CreateVertexShader(std::vector<uint32> const& data)
 {
     return CreateShader(data, GL_VERTEX_SHADER);
 }
@@ -280,7 +272,7 @@ GHIMaterial* OpenGLGHI::CreateMaterial(GHIShader* vertexShader, GHIShader* pixel
     glDetachShader(handle, vs->GetHandle());
     glDetachShader(handle, ps->GetHandle());
 
-    return new OpenGLMaterial(handle); 
+    return new OpenGLMaterial(handle);
 }
 
 
