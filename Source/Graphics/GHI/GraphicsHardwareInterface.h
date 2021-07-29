@@ -7,6 +7,7 @@ class GHIShader;
 class GHIMaterial;
 class GHIRenderTarget;
 class GHITexture;
+class GHISurface;
 
 class IGraphicsHardwareInterface
 {
@@ -25,6 +26,9 @@ public:
     /*TMP*/ virtual void EndRenderPass() = 0;
 
     virtual EGraphicsAPI GetGraphicsAPI() const = 0;
+
+public:
+    virtual GHISurface* CreateSurface(void* nativeWindowHandle, uint32 width, uint32 height) = 0;
 
 public:
     virtual GHIShader* CreateVertexShader(std::vector<uint32> const& data) = 0;

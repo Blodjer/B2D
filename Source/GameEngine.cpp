@@ -74,11 +74,6 @@ void GameEngine::Init()
 
     // Create Graphics Hardware Interface
     m_GHI = m_PAI->CreateGHI();
-    // TODO: Init GHI here and move swapchain to window creation
-
-    // Create Main Window
-    m_mainWindow = m_PAI->MakeWindow(m_config.windowWidth, m_config.windowHeight, m_config.name);
-    B2D_ASSERT(m_mainWindow);
 
     // Init Graphics Hardware Interface
     if (m_GHI)
@@ -90,6 +85,10 @@ void GameEngine::Init()
     {
         B2D_LOG_WARNING("No GHI was created!");
     }
+
+    // Create Main Window
+    m_mainWindow = m_PAI->MakeWindow(m_config.windowWidth, m_config.windowHeight, m_config.name);
+    B2D_ASSERT(m_mainWindow);
 
     // Create Render Manager
     m_renderManager = new RenderManager();

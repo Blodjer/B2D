@@ -24,10 +24,10 @@ public:
     GLFWwindow* GetGLFWHandle() const { return m_context; }
 	virtual void* GetNativeHandle() const override;
 
-public:
     virtual void MakeContextCurrent() override;
-	virtual void Swap() override;
+	virtual void Present() override;
 
+private:
 	void OnGlfwFramebufferSizeCallback(int width, int height);
 
 private:

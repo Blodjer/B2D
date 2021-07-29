@@ -15,7 +15,7 @@
 #define CURRENT_CONTEXT_CHECK() B2D_ASSERT_f(IsCurrentContext(), "Window is not current context")
 
 DesktopWindow::DesktopWindow(GLFWwindow* context, uint32 width, uint32 height)
-    : GenericWindow(width, height)
+    : GenericWindow(static_cast<void*>(glfwGetWin32Window(context)), width, height)
 {
 	m_context = context;
     m_width = width;
@@ -44,11 +44,9 @@ bool DesktopWindow::IsCurrentContext() const
 
 void DesktopWindow::SetSize(uint32 width, uint32 height)
 {
-	glfwSetWindowSize(m_context, width, height);
+	//GenericWindow::SetSize(width, height);
 
-	m_width = width;
-	m_height = height;
-	GetViewport()->SetSize(width, height);
+	glfwSetWindowSize(m_context, width, height);
 }
 
 void DesktopWindow::SetVsync(bool enable)
@@ -96,12 +94,11 @@ void DesktopWindow::MakeContextCurrent()
 	glfwMakeContextCurrent(m_context);
 }
 
-void DesktopWindow::Swap()
+void DesktopWindow::Present()
 {
-	// TODO: Swap in GHI?
-
     if (glfwGetWindowAttrib(m_context, GLFW_CLIENT_API) == GLFW_NO_API)
     {
+		GenericWindow::Present();
         return;
     }
 
@@ -129,7 +126,8 @@ void* DesktopWindow::GetNativeHandle() const
 
 void DesktopWindow::OnGlfwFramebufferSizeCallback(int width, int height)
 {
-	m_width = width;
-	m_height = height;
+    m_width = width;
+    m_height = height;
     GetViewport()->SetSize(width, height);
+    //GetSurface()->Resize(m_width, m_height); // TODO
 }

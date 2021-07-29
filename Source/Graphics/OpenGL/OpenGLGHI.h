@@ -14,6 +14,8 @@ public:
     EGraphicsAPI GetGraphicsAPI() const override { return EGraphicsAPI::OpenGL; }
 
 public:
+    virtual GHISurface* CreateSurface(void* nativeWindowHandle, uint32 width, uint32 height) override;
+
     virtual void Clear(bool color, bool depth, bool stencil) override;
 
     // Texture
@@ -50,5 +52,6 @@ protected:
     virtual void ImGui_Shutdow() override;
     virtual void ImGui_BeginFrame() override;
     virtual void ImGui_Render() override;
+
 };
 

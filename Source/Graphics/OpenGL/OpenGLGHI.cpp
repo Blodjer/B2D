@@ -57,6 +57,11 @@ void OpenGLGHI::Shutdown()
 
 }
 
+GHISurface* OpenGLGHI::CreateSurface(void* nativeWindowHandle, uint32 width, uint32 height)
+{
+    B2D_NOT_IMPLEMENTED();
+}
+
 void OpenGLGHI::Clear(bool color, bool depth, bool stencil)
 {
     GLbitfield clearFlags = 0;

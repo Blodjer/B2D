@@ -7,9 +7,12 @@
 // TMP
 #include "Core/Resource.h"
 #include "Graphics/Shader.h"
+#include "Graphics/Viewport.h"
 // TMP
 
+#include "VulkanDevice.h"
 #include "VulkanShader.h"
+#include "VulkanSurface.h"
 
 #include "Editor/ImGuiCommon.h"
 #include "Editor/imgui_impl_vulkan.h"
@@ -77,22 +80,6 @@ namespace
             }
         }
     }
-
-//     template<class T, class R>
-//     void FindMatches(std::vector<T> const& available, R T::* N, std::vector<const char*> const& wanted, std::vector<const char*>& out)
-//     {
-//         for (char const* const& w : wanted)
-//         {
-//             for (T const& a : available)
-//             {
-//                 if (strcmp(a.*N, w) == 0)
-//                 {
-//                     out.emplace_back(w);
-//                     break;
-//                 }
-//             }
-//         }
-//     }
 }
 
 bool VulkanGHI::Init()
@@ -147,132 +134,27 @@ bool VulkanGHI::Init()
 
     m_debugUtilMessenger = m_instance.createDebugUtilsMessengerEXT(createDebugInfo);
 
-    vk::SurfaceKHR surface;
-    {
-        void* nativeWindowHandle = engine->GetMainWindow()->GetNativeHandle();
-
-#ifdef B2D_PLATFORM_WINDOWS
-        vk::Win32SurfaceCreateInfoKHR surfaceCreateInfo;
-        surfaceCreateInfo.hwnd = static_cast<HWND>(nativeWindowHandle);
-        surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-        surface = m_instance.createWin32SurfaceKHR(surfaceCreateInfo);
-#else
-        B2D_COMPILE_ERROR("Surface creation not implemented for this platform!");
-#endif
-    }
 
     std::vector<vk::PhysicalDevice> physicalDevices = m_instance.enumeratePhysicalDevices();
     B2D_ASSERT(!physicalDevices.empty());
 
-    m_physicalDevice = SelectPhysicalDevice(physicalDevices);
+    vk::PhysicalDevice physicalDevice = SelectPhysicalDevice(physicalDevices);
 
     std::vector<char const*> deviceExtensionsToEnable;
-    SelectDeviceExtensions(m_physicalDevice, deviceExtensionsToEnable);
+    SelectDeviceExtensions(physicalDevice, deviceExtensionsToEnable);
 
-    uint32 graphicsQueueIndex;
-    B2D_ASSERT(FindQueueIndex(m_physicalDevice, vk::QueueFlagBits::eGraphics, graphicsQueueIndex));
+    m_device = new VulkanDevice(m_instance, physicalDevice, deviceExtensionsToEnable);
 
-    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
+    CreateBasePipeline();
 
-    float const queuePriority = 1.0f;
-    vk::DeviceQueueCreateInfo graphicsQueueCreateInfo;
-    graphicsQueueCreateInfo.queueFamilyIndex = graphicsQueueIndex;
-    graphicsQueueCreateInfo.queueCount = 1;
-    graphicsQueueCreateInfo.pQueuePriorities = &queuePriority;
-    queueCreateInfos.emplace_back(graphicsQueueCreateInfo);
+    return true;
+}
 
-    vk::DeviceCreateInfo deviceCreateInfo;
-    deviceCreateInfo.setPEnabledExtensionNames(deviceExtensionsToEnable);
-    deviceCreateInfo.setQueueCreateInfos(queueCreateInfos);
-
-    m_device = m_physicalDevice.createDevice(deviceCreateInfo);
-    VULKAN_HPP_DEFAULT_DISPATCHER.init(m_device);
-
-    m_graphicsQueue = m_device.getQueue(graphicsQueueIndex, 0);
-
-    vk::Bool32 isPresentationQueueSupported = m_physicalDevice.getSurfaceSupportKHR(graphicsQueueIndex, surface);
-    B2D_ASSERT(isPresentationQueueSupported);
-
-    uint32 presentationQueueIndex = graphicsQueueIndex;
-    m_presentationQueue = m_device.getQueue(presentationQueueIndex, 0);
-    
-    vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_physicalDevice.getSurfaceCapabilitiesKHR(surface);
-    m_extent = SelectSwapExtend(surfaceCapabilities);
-
-    std::vector<vk::SurfaceFormatKHR> surfaceFormats = m_physicalDevice.getSurfaceFormatsKHR(surface);
-    B2D_ASSERT(!surfaceFormats.empty());
-
-    vk::SurfaceFormatKHR surfaceFormat = SelectSurfacePresentMode(surfaceFormats);
-
-    std::vector<vk::PresentModeKHR> surfacePresentModes = m_physicalDevice.getSurfacePresentModesKHR(surface);
-    B2D_ASSERT(!surfacePresentModes.empty());
-
-    vk::PresentModeKHR surfacePresentMode = SelectSurfacePresentMode(surfacePresentModes);
-
-    uint32 imageCount = surfaceCapabilities.minImageCount + 1;
-    if (surfaceCapabilities.maxImageCount != 0)
-    {
-        imageCount = UMath::Min(imageCount, surfaceCapabilities.maxImageCount);
-    }
-
-    vk::SwapchainCreateInfoKHR swapchainCreateInfo;
-    swapchainCreateInfo.surface = surface;
-    swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
-    swapchainCreateInfo.minImageCount = imageCount;
-    swapchainCreateInfo.imageFormat = surfaceFormat.format;
-    swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
-    swapchainCreateInfo.imageExtent = m_extent;
-    swapchainCreateInfo.imageArrayLayers = 1;
-    swapchainCreateInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
-    swapchainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-    swapchainCreateInfo.presentMode = surfacePresentMode;
-    swapchainCreateInfo.clipped = VK_TRUE;
-    swapchainCreateInfo.oldSwapchain = nullptr;
-
-    if (isPresentationQueueSupported)
-    {
-        swapchainCreateInfo.imageSharingMode = vk::SharingMode::eExclusive;
-        swapchainCreateInfo.queueFamilyIndexCount = 0;
-        swapchainCreateInfo.pQueueFamilyIndices = nullptr;
-    }
-    else
-    {
-        B2D_NOT_IMPLEMENTED();
-        swapchainCreateInfo.imageSharingMode = vk::SharingMode::eConcurrent;
-        //swapchainCreateInfo.setQueueFamilyIndices();
-        //swapchainCreateInfo.queueFamilyIndexCount = 2;
-        //swapchainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
-    }
-
-    m_swapchain = m_device.createSwapchainKHR(swapchainCreateInfo);
-
-    std::vector<vk::Image> swapchainImages = m_device.getSwapchainImagesKHR(m_swapchain);
-
-    std::vector<vk::ImageView> swapchainImageViews;
-    swapchainImageViews.reserve(swapchainImages.size());
-
-    for (vk::Image const& image : swapchainImages)
-    {
-        vk::ImageViewCreateInfo createInfo;
-        createInfo.image = image;
-        createInfo.viewType = vk::ImageViewType::e2D;
-        createInfo.format = swapchainCreateInfo.imageFormat;
-        createInfo.components.r = vk::ComponentSwizzle::eIdentity;
-        createInfo.components.g = vk::ComponentSwizzle::eIdentity;
-        createInfo.components.b = vk::ComponentSwizzle::eIdentity;
-        createInfo.components.a = vk::ComponentSwizzle::eIdentity;
-        createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-        createInfo.subresourceRange.baseMipLevel = 0;
-        createInfo.subresourceRange.levelCount = 1;
-        createInfo.subresourceRange.baseArrayLayer = 0;
-        createInfo.subresourceRange.layerCount = 1;
-
-        swapchainImageViews.emplace_back(m_device.createImageView(createInfo));
-    }
-
+void VulkanGHI::CreateBasePipeline()
+{
     PixelShaderRef ps = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan.fs.glsl");
     VertexShaderRef vs = IResourceManager::Get<VertexShader>("Content/Shader/Vulkan.vs.glsl");
-    
+
     vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
     vertexInputCreateInfo.vertexBindingDescriptionCount = 0;
     vertexInputCreateInfo.pVertexBindingDescriptions = nullptr;
@@ -283,23 +165,9 @@ bool VulkanGHI::Init()
     inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
     inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
 
-    vk::Viewport viewport;
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(m_extent.width);
-    viewport.height = static_cast<float>(m_extent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    vk::Rect2D scissor;
-    scissor.offset = vk::Offset2D({0, 0});
-    scissor.extent = m_extent;
-
     vk::PipelineViewportStateCreateInfo viewportStateCreateInfo;
     viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.pViewports = &viewport;
     viewportStateCreateInfo.scissorCount = 1;
-    viewportStateCreateInfo.pScissors = &scissor;
 
     vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
     rasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
@@ -355,27 +223,28 @@ bool VulkanGHI::Init()
     finalColor = finalColor & colorWriteMask;
     */
 
+    std::array<vk::DynamicState, 2> dynamicStates = {
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor,
+    };
+
+    // RenderPass
+    //      Layout (Contains render targets)
+    //          
+
     vk::PipelineDynamicStateCreateInfo dynamicState;
-    dynamicState.dynamicStateCount = 0;
-    dynamicState.pDynamicStates = nullptr;
-
-    vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-    pipelineLayoutInfo.setLayoutCount = 0; // Optional
-    pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
-    pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-    pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-
-    m_pipelineLayout = m_device.createPipelineLayout(pipelineLayoutInfo);
+    dynamicState.dynamicStateCount = dynamicStates.size();
+    dynamicState.pDynamicStates = dynamicStates.data();
 
     vk::AttachmentDescription colorAttachment;
-    colorAttachment.format = swapchainCreateInfo.imageFormat;
+    colorAttachment.format = vk::Format::eB8G8R8A8Unorm; // TMP
     colorAttachment.samples = vk::SampleCountFlagBits::e1;
     colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
     colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
     colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
     colorAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
     colorAttachment.initialLayout = vk::ImageLayout::eUndefined;
-    colorAttachment.finalLayout = vk::ImageLayout::ePresentSrcKHR;
+    colorAttachment.finalLayout = vk::ImageLayout::eTransferSrcOptimal;
 
     vk::AttachmentReference colorAttachmentRef;
     colorAttachmentRef.attachment = 0;
@@ -402,7 +271,15 @@ bool VulkanGHI::Init()
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &subpassDependency;
 
-    m_renderPass = m_device.createRenderPass(renderPassInfo);
+    m_renderPass = m_device->GetLogical().createRenderPass(renderPassInfo);
+
+    vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
+    pipelineLayoutInfo.setLayoutCount = 0; // Optional
+    pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
+    pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
+    pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+
+    m_pipelineLayout = m_device->GetLogical().createPipelineLayout(pipelineLayoutInfo);
 
     std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
     if (ps.IsValid() && vs.IsValid())
@@ -431,12 +308,71 @@ bool VulkanGHI::Init()
         pipelineInfo.basePipelineHandle = nullptr; // Optional
         pipelineInfo.basePipelineIndex = -1; // Optional
 
-        m_pipeline = m_device.createGraphicsPipeline(nullptr, pipelineInfo).value;
+        m_pipeline = m_device->GetLogical().createGraphicsPipeline(nullptr, pipelineInfo).value;
     }
 
-    m_framebuffers.reserve(swapchainImageViews.size());
+    //m_framebuffers.reserve(swapchainImageViews.size());
+    m_framebuffers.reserve(1);
 
-    for (vk::ImageView& imageView : swapchainImageViews)
+    std::vector<vk::Image> images;
+
+    m_extent.width = 1600;
+    m_extent.height = 900;
+
+    vk::Extent3D ex;
+    ex.width = m_extent.width;
+    ex.height = m_extent.height;
+    ex.depth = 1;
+
+    vk::ImageCreateInfo imageCreateInfo;
+    imageCreateInfo.extent = ex;
+    imageCreateInfo.imageType = vk::ImageType::e2D;
+    imageCreateInfo.format = colorAttachment.format;
+    imageCreateInfo.usage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferSrc;
+    imageCreateInfo.mipLevels = 1;
+    imageCreateInfo.arrayLayers = 1;
+    //imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    //imageCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+
+    images.emplace_back(m_device->GetLogical().createImage(imageCreateInfo));
+    m_targetImage = images[0];
+
+    vk::MemoryAllocateInfo memAlloc;
+    vk::MemoryRequirements memReqs;
+
+    m_device->GetLogical().getImageMemoryRequirements(images[0], &memReqs);
+
+    memAlloc.allocationSize = memReqs.size;
+    memAlloc.memoryTypeIndex = 0;
+    vk::DeviceMemory dMemory = m_device->GetLogical().allocateMemory(memAlloc);
+    m_device->GetLogical().bindImageMemory(images[0], dMemory, 0);
+    //m_device->GetPhysical().getMemoryProperties() :;
+
+    std::vector<vk::ImageView> imageViews;
+    imageViews.reserve(1);
+    {
+        for (vk::Image const& image : images)
+        {
+            vk::ImageViewCreateInfo createInfo;
+            createInfo.image = image;
+            createInfo.viewType = vk::ImageViewType::e2D;
+            createInfo.format = colorAttachment.format;
+            createInfo.components.r = vk::ComponentSwizzle::eIdentity;
+            createInfo.components.g = vk::ComponentSwizzle::eIdentity;
+            createInfo.components.b = vk::ComponentSwizzle::eIdentity;
+            createInfo.components.a = vk::ComponentSwizzle::eIdentity;
+            createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+            createInfo.subresourceRange.baseMipLevel = 0;
+            createInfo.subresourceRange.levelCount = 1;
+            createInfo.subresourceRange.baseArrayLayer = 0;
+            createInfo.subresourceRange.layerCount = 1;
+
+            imageViews.emplace_back(m_device->GetLogical().createImageView(createInfo));
+        }
+    }
+
+    // UE4: Set the format from outside. Check VulkanViewport.h:116
+    for (vk::ImageView& imageView : imageViews)
     {
         vk::FramebufferCreateInfo framebufferInfo;
         framebufferInfo.renderPass = m_renderPass;
@@ -446,35 +382,28 @@ bool VulkanGHI::Init()
         framebufferInfo.height = m_extent.height;
         framebufferInfo.layers = 1;
 
-        m_framebuffers.emplace_back(m_device.createFramebuffer(framebufferInfo));
+        m_framebuffers.emplace_back(m_device->GetLogical().createFramebuffer(framebufferInfo));
     }
 
-    // Could be created after creating the queues
     vk::CommandPoolCreateInfo commandPoolInfo;
-    commandPoolInfo.queueFamilyIndex = graphicsQueueIndex;
+    commandPoolInfo.queueFamilyIndex = m_device->GetGraphicsQueue().GetFamilyIndex();
     commandPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer; // Optional
 
-    vk::CommandPool commandPool = m_device.createCommandPool(commandPoolInfo);
+    vk::CommandPool commandPool = m_device->GetLogical().createCommandPool(commandPoolInfo);
 
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
     commandBufferAllocateInfo.commandPool = commandPool;
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
     commandBufferAllocateInfo.commandBufferCount = static_cast<uint32>(m_framebuffers.size());
 
-    m_commandBuffers = m_device.allocateCommandBuffers(commandBufferAllocateInfo);
+    m_commandBuffers = m_device->GetLogical().allocateCommandBuffers(commandBufferAllocateInfo);
 
     vk::SemaphoreCreateInfo semaphoreInfo;
-    m_imageAvailableSemaphore = m_device.createSemaphore(semaphoreInfo);
-    m_renderFinishedSemaphore = m_device.createSemaphore(semaphoreInfo);
-
-    return true;
+    m_renderFinishedSemaphore = m_device->GetLogical().createSemaphore(semaphoreInfo);
 }
 
 void VulkanGHI::BeginRenderPass()
 {
-    uint32 imageIndex = m_device.acquireNextImageKHR(m_swapchain, UINT64_MAX, m_imageAvailableSemaphore).value;
-    m_currentImageIndex = imageIndex;
-
     vk::CommandBufferBeginInfo commandBufferBeginInfo;
     commandBufferBeginInfo.flags = vk::CommandBufferUsageFlags(0);
     commandBufferBeginInfo.pInheritanceInfo = nullptr;
@@ -485,17 +414,38 @@ void VulkanGHI::BeginRenderPass()
 
     vk::RenderPassBeginInfo renderPassBeginInfo;
     renderPassBeginInfo.renderPass = m_renderPass;
-    renderPassBeginInfo.framebuffer = m_framebuffers[m_currentImageIndex];
+    //renderPassBeginInfo.framebuffer = m_framebuffers[m_currentImageIndex];
+    renderPassBeginInfo.framebuffer = m_framebuffers[0];
     renderPassBeginInfo.renderArea.offset = vk::Offset2D({ 0, 0 });
     renderPassBeginInfo.renderArea.extent = m_extent;
     renderPassBeginInfo.clearValueCount = 1;
     renderPassBeginInfo.pClearValues = &clearColor;
 
-    vk::CommandBuffer& commandBuffer = m_commandBuffers[m_currentImageIndex];
+    //vk::CommandBuffer& commandBuffer = m_commandBuffers[m_currentImageIndex];
+    vk::CommandBuffer& commandBuffer = m_commandBuffers[0];
 
     commandBuffer.begin(commandBufferBeginInfo);
 
     commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+
+    CViewport* v = GameEngine::Instance()->GetMainWindow()->GetViewport();
+
+    m_extent.width = v->GetWidth();
+    m_extent.height = v->GetHeight();
+
+    vk::Viewport viewport;
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(m_extent.width);
+    viewport.height = static_cast<float>(m_extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    commandBuffer.setViewport(0, 1, &viewport);
+
+    vk::Rect2D scissor;
+    scissor.offset = vk::Offset2D({ 0, 0 });
+    scissor.extent = m_extent;
+    commandBuffer.setScissor(0, 1, &scissor);
 
     if (m_pipeline)
     {
@@ -506,56 +456,43 @@ void VulkanGHI::BeginRenderPass()
 
 void VulkanGHI::EndRenderPass()
 {
-    vk::CommandBuffer& commandBuffer = m_commandBuffers[m_currentImageIndex];
+    //vk::CommandBuffer& commandBuffer = m_commandBuffers[m_currentImageIndex];
+    vk::CommandBuffer& commandBuffer = m_commandBuffers[0];
 
     commandBuffer.endRenderPass();
 
     commandBuffer.end();
 
-    vk::Semaphore waitSemaphores[] = { m_imageAvailableSemaphore };
-    vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+    std::array<vk::Semaphore, 1> waitSemaphores = { m_primarySurface->m_imageAvailableSemaphore };
+    std::array<vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 
     vk::Semaphore signalSemaphores[] = { m_renderFinishedSemaphore };
 
     vk::SubmitInfo submitInfo;
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &m_commandBuffers[m_currentImageIndex];
+    submitInfo.setWaitSemaphores(waitSemaphores);
+    submitInfo.setWaitDstStageMask(waitStages);
+    submitInfo.setCommandBuffers(m_commandBuffers[0]);
 
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
-
-    m_graphicsQueue.submit(1, &submitInfo, nullptr);
-
-    vk::PresentInfoKHR presentInfo;
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &m_swapchain;
-    presentInfo.pImageIndices = &m_currentImageIndex;
-
-    m_presentationQueue.presentKHR(presentInfo);
-    m_presentationQueue.waitIdle();
+    m_device->GetGraphicsQueue().GetHandle().submit(1, &submitInfo, nullptr);
+    m_device->GetGraphicsQueue().GetHandle().waitIdle();
 }
 
 void VulkanGHI::Shutdown()
 {
-    m_device.waitIdle();
+    m_device->GetLogical().waitIdle();
+
+    delete m_device;
+    m_device = nullptr;
 
     B2D_LOG_WARNING("TODO: Destroy Command Pool");
     B2D_LOG_WARNING("TODO: Destroy Framebuffers");
-
     B2D_LOG_WARNING("TODO: Destroy Surfaces");
-    //m_instance.destroySurfaceKHR();
 
-    m_device.destroySemaphore(m_imageAvailableSemaphore);
-    m_device.destroySemaphore(m_renderFinishedSemaphore);
+    m_device->GetLogical().destroySemaphore(m_renderFinishedSemaphore);
 
-    m_device.destroyPipeline(m_pipeline);
-    m_device.destroyPipelineLayout(m_pipelineLayout);
-    m_device.destroyRenderPass(m_renderPass);
+    m_device->GetLogical().destroyPipeline(m_pipeline);
+    m_device->GetLogical().destroyPipelineLayout(m_pipelineLayout);
+    m_device->GetLogical().destroyRenderPass(m_renderPass);
 
     m_instance.destroyDebugUtilsMessengerEXT(m_debugUtilMessenger);
     m_debugUtilMessenger = nullptr;
@@ -616,23 +553,6 @@ void VulkanGHI::SelectDeviceExtensions(vk::PhysicalDevice const& device, std::ve
     FindMatchingExtensions(availableExtensions, wantedExtensions, outExtensions);
     LogMissing("Device extensions not available...", wantedExtensions, outExtensions);
     B2D_ASSERT(wantedExtensions.size() == outExtensions.size());
-}
-
-bool VulkanGHI::FindQueueIndex(vk::PhysicalDevice& physicalDevice, vk::QueueFlagBits flags, uint32& outIndex)
-{
-    std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
-    B2D_ASSERT(!queueFamilyProperties.empty());
-
-    for (size_t i = 0; i < queueFamilyProperties.size(); ++i)
-    {
-        if (queueFamilyProperties[i].queueFlags & flags)
-        {
-            outIndex = static_cast<uint32>(i);
-            return true;
-        }
-    }
-
-    return false;
 }
 
 std::vector<char const*> VulkanGHI::GetWantedInstanceExtenstions()
@@ -737,48 +657,6 @@ vk::PhysicalDevice VulkanGHI::SelectPhysicalDevice(std::vector<vk::PhysicalDevic
     return physicalDevices[0];
 }
 
-vk::SurfaceFormatKHR VulkanGHI::SelectSurfacePresentMode(std::vector<vk::SurfaceFormatKHR> const& availableSurfaceFormats)
-{
-    for (vk::SurfaceFormatKHR const& surfaceFormat : availableSurfaceFormats)
-    {
-        //if (surfaceFormat.format == vk::Format::eB8G8R8A8Srgb && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
-        if (surfaceFormat.format == vk::Format::eB8G8R8A8Unorm && surfaceFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) // TODO: To be compatible with ImGui
-        {
-            return surfaceFormat;
-        }
-    }
-
-    // Fallback
-    return availableSurfaceFormats[0];
-}
-
-vk::PresentModeKHR VulkanGHI::SelectSurfacePresentMode(std::vector<vk::PresentModeKHR> const& availablePresentModes)
-{
-    for (vk::PresentModeKHR const& presentMode : availablePresentModes)
-    {
-        if (presentMode == vk::PresentModeKHR::eMailbox)
-        {
-            return presentMode;
-        }
-    }
-
-    return vk::PresentModeKHR::eFifo;
-}
-
-vk::Extent2D VulkanGHI::SelectSwapExtend(vk::SurfaceCapabilitiesKHR const& surfaceCapabilities)
-{
-    if (surfaceCapabilities.currentExtent.width != 0xFFFFFFFF)
-    {
-        return surfaceCapabilities.currentExtent;
-    }
-
-    vk::Extent2D extend;
-    extend.width = UMath::Clamp(100u, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
-    extend.height = UMath::Clamp(100u, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
-
-    return extend;
-}
-
 void VulkanGHI::Clear(bool color, bool depth, bool stencil)
 {
     B2D_NOT_IMPLEMENTED();
@@ -797,6 +675,11 @@ void VulkanGHI::BindTexture(GHITexture const* texture)
 void VulkanGHI::FreeTexture(GHITexture*& texture)
 {
     B2D_NOT_IMPLEMENTED();
+}
+
+GHISurface* VulkanGHI::CreateSurface(void* nativeWindowHandle, uint32 width, uint32 height)
+{
+    return m_primarySurface = new VulkanSurface(m_instance, *m_device, nativeWindowHandle);
 }
 
 GHIShader* VulkanGHI::CreateVertexShader(std::vector<uint32> const& data)
@@ -823,7 +706,7 @@ GHIShader* VulkanGHI::CreateShader(std::vector<uint32> const& data, vk::ShaderSt
     shaderCreateInfo.codeSize = data.size() * sizeof(uint32);
     shaderCreateInfo.pCode = data.data();
 
-    vk::ShaderModule shaderModule = m_device.createShaderModule(shaderCreateInfo);
+    vk::ShaderModule shaderModule = m_device->GetLogical().createShaderModule(shaderCreateInfo);
 
     vk::PipelineShaderStageCreateInfo pipelineCreateInfo;
     pipelineCreateInfo.stage = stage;
@@ -836,7 +719,7 @@ GHIShader* VulkanGHI::CreateShader(std::vector<uint32> const& data, vk::ShaderSt
 void VulkanGHI::DeleteShader(GHIShader*& ghiShader)
 {
     VulkanShader* shader = static_cast<VulkanShader*>(ghiShader);
-    m_device.destroyShaderModule(shader->GetShaderModule());
+    m_device->GetLogical().destroyShaderModule(shader->GetShaderModule());
 
     delete shader;
     ghiShader = nullptr;
@@ -915,19 +798,19 @@ bool VulkanGHI::ImGui_Init()
     poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
     poolInfo.maxSets = 1000 * IM_ARRAYSIZE(poolSizes);
 
-    vk::PhysicalDeviceProperties pp = m_physicalDevice.getProperties();
+    vk::PhysicalDeviceProperties pp = m_device->GetPhysical().getProperties();
     vk::DeviceSize limits = pp.limits.nonCoherentAtomSize;
 
     poolInfo.poolSizeCount = (uint32_t)IM_ARRAYSIZE(poolSizes);
     poolInfo.pPoolSizes = poolSizes;
-    VkResult err = vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &pool);
+    VkResult err = vkCreateDescriptorPool(m_device->GetLogical(), &poolInfo, nullptr, &pool);
 
     ImGui_ImplVulkan_InitInfo initInfo = {};
     initInfo.Instance = m_instance;
-    initInfo.PhysicalDevice = m_physicalDevice;
-    initInfo.Device = m_device;
-    initInfo.QueueFamily = 0; // TODO
-    initInfo.Queue = m_graphicsQueue;
+    initInfo.PhysicalDevice = m_device->GetPhysical();
+    initInfo.Device = m_device->GetLogical();
+    initInfo.QueueFamily = m_device->GetGraphicsQueue().GetFamilyIndex();
+    initInfo.Queue = m_device->GetGraphicsQueue().GetHandle();
     initInfo.DescriptorPool = pool;
     initInfo.MinImageCount = 2; // TODO
     initInfo.ImageCount = initInfo.MinImageCount;
@@ -954,9 +837,9 @@ bool VulkanGHI::ImGui_Init()
 
     commandBuffer.end();
 
-    m_graphicsQueue.submit(1, &submitInfo, nullptr);
+    m_device->GetGraphicsQueue().GetHandle().submit(1, &submitInfo, nullptr);
 
-    m_device.waitIdle();
+    m_device->GetLogical().waitIdle();
 
     return true;
 }
@@ -973,5 +856,5 @@ void VulkanGHI::ImGui_BeginFrame()
 
 void VulkanGHI::ImGui_Render()
 {
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_commandBuffers[m_currentImageIndex]);
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_commandBuffers[0]);
 }

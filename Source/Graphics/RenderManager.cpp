@@ -70,5 +70,5 @@ void RenderManager::Draw()
 
     ghi->EndRenderPass();
 
-    GameEngine::Instance()->GetMainWindow()->Swap();
+    GameEngine::Instance()->GetMainWindow()->Present();
 }
