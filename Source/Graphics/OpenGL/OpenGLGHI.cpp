@@ -62,29 +62,77 @@ GHISurface* OpenGLGHI::CreateSurface(void* nativeWindowHandle, uint32 width, uin
     B2D_NOT_IMPLEMENTED();
 }
 
-void OpenGLGHI::Clear(bool color, bool depth, bool stencil)
+GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 height, uint8 components)
 {
-    GLbitfield clearFlags = 0;
-    if (color)
+    GLenum format;
+    switch (components)
     {
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-        clearFlags |= GL_COLOR_BUFFER_BIT;
-    }
-    if (depth)
-    {
-        clearFlags |= GL_DEPTH_BUFFER_BIT;
-    }
-    if (stencil)
-    {
-        clearFlags |= GL_STENCIL_BUFFER_BIT;
+    case 1:
+        format = GL_RED;
+    case 3:
+        format = GL_RGB;
+        break;
+    case 4:
+        format = GL_RGBA;
+        break;
+    default:
+        B2D_LOG_ERROR("Cannot create texture with {} components", components);
+        return nullptr;
     }
 
-    glClear(clearFlags);
+    GLuint handle;
+    glGenTextures(1, &handle);
+    glBindTexture(GL_TEXTURE_2D, handle);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    B2D_ASSERT(handle != GL_INVALID_VALUE);
+
+    return new OpenGLTexture(handle, width, height);
 }
 
-GHIRenderTarget* OpenGLGHI::CreateRenderTarget()
+//void OpenGLGHI::BindTexture(GHITexture const* texture)
+//{
+//    OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(texture);
+//    glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
+//}
+
+void OpenGLGHI::FreeTexture(GHITexture*& texture)
 {
-    GHITexture* ghiTexture = CreateTexture(nullptr, 1920, 1080, 3);
+    OpenGLTexture const* tex = static_cast<OpenGLTexture*>(texture);
+    GLuint handle = tex->GetHandle();
+    glDeleteTextures(1, &handle);
+
+    delete texture;
+    texture = nullptr;
+}
+
+//void OpenGLGHI::Clear(bool color, bool depth, bool stencil)
+//{
+//    GLbitfield clearFlags = 0;
+//    if (color)
+//    {
+//        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+//        clearFlags |= GL_COLOR_BUFFER_BIT;
+//    }
+//    if (depth)
+//    {
+//        clearFlags |= GL_DEPTH_BUFFER_BIT;
+//    }
+//    if (stencil)
+//    {
+//        clearFlags |= GL_STENCIL_BUFFER_BIT;
+//    }
+//
+//    glClear(clearFlags);
+//}
+
+GHIRenderTarget* OpenGLGHI::CreateRenderTarget(uint32 width, uint32 height)
+{
+    GHITexture* ghiTexture = CreateTexture(nullptr, width, height, 3);
     return CreateRenderTarget(ghiTexture);
 }
 
@@ -120,19 +168,10 @@ GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
     return new OpenGLRenderTarget(fb, renderTexture, depthTexture);
 }
 
-void OpenGLGHI::ResizeRenderTarget(GHIRenderTarget*& renderTarget, uint32 width, uint32 height)
+void OpenGLGHI::DestroyRenderTarget(GHIRenderTarget* renderTarget)
 {
-    OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
+    B2D_NOT_IMPLEMENTED();
 
-    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(rt->GetTexture());
-
-    DeleteRenderTarget(renderTarget, true);
-    GHITexture* t = CreateTexture(nullptr, width, height, 3);
-    renderTarget = CreateRenderTarget(t);
-}
-
-void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeTexture)
-{
     OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
     GLuint handle = rt->GetHandle();
 
@@ -141,81 +180,42 @@ void OpenGLGHI::DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeText
     GHITexture* dtexture = const_cast<GHITexture*>(rt->GetDepthTexture());
     FreeTexture(dtexture);
 
-    if (freeTexture)
+    if (true)
     {
         GHITexture* texture = const_cast<GHITexture*>(rt->GetTexture());
         FreeTexture(texture);
     }
 
     delete rt;
-    renderTarget = nullptr;
 }
 
-void OpenGLGHI::BindRenderTarget(GHIRenderTarget* renderTarget)
+GHIRenderPass* OpenGLGHI::CreateRenderPass(std::vector<GHIRenderTarget*> const& renderTargets)
 {
-    OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, rt->GetHandle());
-
-    glViewport(0, 0, rt->GetWidth(), rt->GetHeight());
-    glClear(GL_DEPTH_BUFFER_BIT);
+    B2D_NOT_IMPLEMENTED();
 }
 
-void OpenGLGHI::BindRenderTargetAndClear(GHIRenderTarget* renderTarget)
+void OpenGLGHI::DestroyRenderPass(GHIRenderPass* renderPass)
 {
-    BindRenderTarget(renderTarget);
-
-    glClearColor(0.5f, 0.1f, 0.5f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    B2D_NOT_IMPLEMENTED();
 }
 
-GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 height, uint8 components)
-{
-    GLenum format;
-    switch (components)
-    {
-        case 1:
-            format = GL_RED;
-        case 3:
-            format = GL_RGB;
-            break;
-        case 4:
-            format = GL_RGBA;
-            break;
-        default:
-            B2D_LOG_ERROR("Cannot create texture with {} components", components);
-            return nullptr;
-    }
+//void OpenGLGHI::BindRenderTarget(GHIRenderTarget* renderTarget)
+//{
+//    OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
+//
+//    glBindFramebuffer(GL_FRAMEBUFFER, rt->GetHandle());
+//
+//    glViewport(0, 0, rt->GetWidth(), rt->GetHeight());
+//    glClear(GL_DEPTH_BUFFER_BIT);
+//}
 
-    GLuint handle;
-    glGenTextures(1, &handle);
-    glBindTexture(GL_TEXTURE_2D, handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    B2D_ASSERT(handle != GL_INVALID_VALUE);
-
-    return new OpenGLTexture(handle, width, height);
-}
-
-void OpenGLGHI::BindTexture(GHITexture const* texture)
-{
-    OpenGLTexture const* tex = static_cast<OpenGLTexture const*>(texture);
-    glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
-}
-
-void OpenGLGHI::FreeTexture(GHITexture*& texture)
-{
-    OpenGLTexture const* tex = static_cast<OpenGLTexture*>(texture);
-    GLuint handle = tex->GetHandle();
-    glDeleteTextures(1, &handle);
-
-    delete texture;
-    texture = nullptr;
-}
+//void OpenGLGHI::BindRenderTargetAndClear(GHIRenderTarget* renderTarget)
+//{
+//    BindRenderTarget(renderTarget);
+//
+//    glClearColor(0.5f, 0.1f, 0.5f, 0.0f);
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//}
 
 GHIShader* OpenGLGHI::CreateShader(std::vector<uint32> const& data, GLuint type)
 {
@@ -253,7 +253,7 @@ GHIShader* OpenGLGHI::CreateVertexShader(std::vector<uint32> const& data)
     return CreateShader(data, GL_VERTEX_SHADER);
 }
 
-void OpenGLGHI::DeleteShader(GHIShader*& shader)
+void OpenGLGHI::DestroyShader(GHIShader*& shader)
 {
     OpenGLShader* sh = static_cast<OpenGLShader*>(shader);
     glDeleteShader(sh->GetHandle());
@@ -262,41 +262,40 @@ void OpenGLGHI::DeleteShader(GHIShader*& shader)
     shader = nullptr;
 }
 
-GHIMaterial* OpenGLGHI::CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader)
-{
-    OpenGLShader* vs = static_cast<OpenGLShader*>(vertexShader);
-    OpenGLShader* ps = static_cast<OpenGLShader*>(pixelShader);
+//GHIMaterial* OpenGLGHI::CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader)
+//{
+//    OpenGLShader* vs = static_cast<OpenGLShader*>(vertexShader);
+//    OpenGLShader* ps = static_cast<OpenGLShader*>(pixelShader);
+//
+//    GLuint handle = glCreateProgram();
+//
+//    glAttachShader(handle, vs->GetHandle());
+//    glAttachShader(handle, ps->GetHandle());
+//    glLinkProgram(handle);
+//    glValidateProgram(handle);
+//
+//    glDetachShader(handle, vs->GetHandle());
+//    glDetachShader(handle, ps->GetHandle());
+//
+//    return new OpenGLMaterial(handle);
+//}
 
-    GLuint handle = glCreateProgram();
+//void OpenGLGHI::FreeMaterial(GHIMaterial*& material)
+//{
+//    OpenGLMaterial* m = static_cast<OpenGLMaterial*>(material);
+//
+//    glDeleteProgram(m->GetHandle());
+//
+//    delete material;
+//    material = nullptr;
+//}
 
-    glAttachShader(handle, vs->GetHandle());
-    glAttachShader(handle, ps->GetHandle());
-    glLinkProgram(handle);
-    glValidateProgram(handle);
-
-    glDetachShader(handle, vs->GetHandle());
-    glDetachShader(handle, ps->GetHandle());
-
-    return new OpenGLMaterial(handle);
-}
-
-
-void OpenGLGHI::FreeMaterial(GHIMaterial*& material)
-{
-    OpenGLMaterial* m = static_cast<OpenGLMaterial*>(material);
-
-    glDeleteProgram(m->GetHandle());
-
-    delete material;
-    material = nullptr;
-}
-
-void OpenGLGHI::BindMaterial(GHIMaterial* material)
-{
-    OpenGLMaterial* openglMaterial = static_cast<OpenGLMaterial*>(material);
-
-    glUseProgram(openglMaterial->GetHandle());
-}
+//void OpenGLGHI::BindMaterial(GHIMaterial* material)
+//{
+//    OpenGLMaterial* openglMaterial = static_cast<OpenGLMaterial*>(material);
+//
+//    glUseProgram(openglMaterial->GetHandle());
+//}
 
 bool OpenGLGHI::ImGui_Init()
 {
@@ -314,7 +313,7 @@ void OpenGLGHI::ImGui_BeginFrame()
     ImGui_ImplOpenGL3_NewFrame();
 }
 
-void OpenGLGHI::ImGui_Render()
+void OpenGLGHI::ImGui_Render(GHICommandList* commandList)
 {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

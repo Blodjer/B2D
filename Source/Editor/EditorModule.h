@@ -3,6 +3,7 @@
 #include "Platform/PlatformMessageHandlerInterface.h"
 
 class IEditorView;
+class GHICommandList;
 
 class EditorModule final : public IEngineModule, public IPlatformMessageHandlerInterface
 {
@@ -20,7 +21,7 @@ public:
     virtual std::string GetName() { return "EditorModule"; }
 
 public:
-    void Draw();
+    void Draw(GHICommandList& commandList);
 
 public:
     template<class C>

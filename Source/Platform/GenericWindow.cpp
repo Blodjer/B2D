@@ -14,6 +14,7 @@ GenericWindow::GenericWindow(void* nativeHandle, uint32 width, uint32 height)
 
 GenericWindow::~GenericWindow()
 {
+    // TODO: Destroy surface
     delete m_viewport;
 }
 
@@ -25,5 +26,6 @@ void GenericWindow::AssignGameInstance(CGameInstance* gameInstance)
 
 void GenericWindow::Present()
 {
-    m_surface->Present();
+    //m_surface->Present(TODO);
+    B2D_NOT_IMPLEMENTED();
 }

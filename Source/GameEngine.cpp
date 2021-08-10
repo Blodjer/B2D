@@ -35,18 +35,18 @@ GameEngine::~GameEngine()
     {
         m_renderManager->Shutdown();
     }
-    if (m_GHI)
-    {
-        m_GHI->Shutdown();
-    }
     if (m_PAI)
     {
         m_PAI->Shutdown();
     }
+    if (m_GHI)
+    {
+        m_GHI->Shutdown();
+    }
 
     delete m_renderManager;
-    delete m_GHI;
     delete m_PAI;
+    delete m_GHI;
 }
 
 void GameEngine::Create(ApplicationConfig const& config)

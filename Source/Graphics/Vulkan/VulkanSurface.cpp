@@ -1,9 +1,8 @@
 #include "B2D_pch.h"
 #include "VulkanSurface.h"
-#include "VulkanDevice.h"
 
-#include "GameEngine.h" // TMP
-#include "VulkanGHI.h" // TMP
+#include "VulkanDevice.h"
+#include "VulkanRenderTarget.h"
 
 VulkanSurface::VulkanSurface(vk::Instance instance, VulkanDevice const& device, void* nativeWindowHandle)
     : m_instance(instance)
@@ -28,10 +27,10 @@ VulkanSurface::VulkanSurface(vk::Instance instance, VulkanDevice const& device, 
     commandPoolInfo.queueFamilyIndex = m_device.GetGraphicsQueue().GetFamilyIndex();
     commandPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer; // Optional
 
-    vk::CommandPool commandPool = m_device.GetLogical().createCommandPool(commandPoolInfo);
+    m_graphicsCommandPool = m_device.GetLogical().createCommandPool(commandPoolInfo);
 
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
-    commandBufferAllocateInfo.commandPool = commandPool;
+    commandBufferAllocateInfo.commandPool = m_graphicsCommandPool;
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
     commandBufferAllocateInfo.commandBufferCount = 1;
 
@@ -42,7 +41,8 @@ VulkanSurface::~VulkanSurface()
 {
     CleanupSwapchain();
 
-    // destroy command pool/buffer
+    m_device.GetLogical().freeCommandBuffers(m_graphicsCommandPool, m_graphicsCommandBuffer);
+    m_device.GetLogical().destroyCommandPool(m_graphicsCommandPool);
 
     m_instance.destroySurfaceKHR(m_surface);
     m_surface = nullptr;
@@ -136,14 +136,14 @@ void VulkanSurface::CreateSwapchain(vk::SwapchainKHR oldSwapchain)
 
 void VulkanSurface::CleanupSwapchain()
 {
-    m_device.GetLogical().destroySwapchainKHR(m_swapchain);
-    m_swapchain = nullptr;
-
     m_swapchainImages.clear();
     m_currentImage = nullptr;
 
     m_device.GetLogical().destroySemaphore(m_imageAvailableSemaphore);
     m_imageAvailableSemaphore = nullptr;
+
+    m_device.GetLogical().destroySwapchainKHR(m_swapchain);
+    m_swapchain = nullptr;
 }
 
 void VulkanSurface::RecreateSwapchain()
@@ -182,13 +182,13 @@ void Transition(vk::CommandBuffer& cb,
     cb.pipelineBarrier(srcStageMask, dstStageMask, vk::DependencyFlags(0), nullptr, nullptr, imageMemoryBarrier);
 }
 
-void VulkanSurface::Present()
+void VulkanSurface::Present(GHIRenderTarget const* renderTarget)
 {
     uint32 const maxAttempts = 1;
     
     for (uint32 attempts = 0; ; ++attempts)
     {
-        EPresentResult presentResult = TryPresent();
+        EPresentResult presentResult = TryPresent(static_cast<VulkanRenderTarget const*>(renderTarget));
         if (presentResult == EPresentResult::Success)
         {
             break;
@@ -205,8 +205,14 @@ void VulkanSurface::Present()
     }
 }
 
-VulkanSurface::EPresentResult VulkanSurface::TryPresent()
+VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanRenderTarget const* renderTarget)
 {
+    if (renderTarget->m_width != m_extent.width || renderTarget->m_height != m_extent.height)
+    {
+        // Maybe the window was resized and we just need to recreate the swapchain
+        return EPresentResult::RecreateSwapchain;
+    }
+
     vk::ResultValue<uint32> acquireImageResult = m_device.GetLogical().acquireNextImageKHR(m_swapchain, UINT64_MAX, m_imageAvailableSemaphore);
     if (acquireImageResult.result == vk::Result::eErrorOutOfDateKHR || acquireImageResult.result == vk::Result::eSuboptimalKHR)
     {
@@ -237,16 +243,15 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent()
             m_currentImage);
 
         vk::ImageCopy copy;
-        copy.extent.width = m_extent.width;
-        copy.extent.height = m_extent.height;
+        copy.extent.width = renderTarget->m_width;
+        copy.extent.height = renderTarget->m_height;
         copy.extent.depth = 1;
         copy.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         copy.srcSubresource.layerCount = 1;
         copy.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         copy.dstSubresource.layerCount = 1;
 
-        VulkanGHI* ghi = static_cast<VulkanGHI*>(GameEngine::Instance()->GetGHI()); // TMP
-        m_graphicsCommandBuffer.copyImage(ghi->m_targetImage, vk::ImageLayout::eTransferSrcOptimal, m_currentImage, vk::ImageLayout::eTransferDstOptimal, copy);
+        m_graphicsCommandBuffer.copyImage(renderTarget->m_image, vk::ImageLayout::eTransferSrcOptimal, m_currentImage, vk::ImageLayout::eTransferDstOptimal, copy);
 
         Transition(m_graphicsCommandBuffer,
             vk::PipelineStageFlagBits::eTransfer,
@@ -267,6 +272,8 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent()
     graphicsQueue.submit(submitInfo);
     graphicsQueue.waitIdle();
 
+    vk::Queue presentQueue = m_device.GetPresentQueue().GetHandle();
+
     vk::PresentInfoKHR presentInfo;
     presentInfo.waitSemaphoreCount = 0;
     //presentInfo.pWaitSemaphores = signalSemaphores;
@@ -274,10 +281,8 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent()
     presentInfo.pSwapchains = &m_swapchain;
     presentInfo.pImageIndices = &m_currentImageIndex;
 
-    VkPresentInfoKHR vkPresentInfo = presentInfo;
-
-    vk::Queue presentQueue = m_device.GetPresentQueue().GetHandle();
-    vk::Result presentResult = static_cast<vk::Result>(vkQueuePresentKHR(presentQueue, &vkPresentInfo)); // Try disable hpp exceptions
+    VkPresentInfoKHR const vkPresentInfo = presentInfo;
+    vk::Result presentResult = static_cast<vk::Result>(vkQueuePresentKHR(presentQueue, &vkPresentInfo)); // Use C implementation to prevent an assert on error
     if (presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR)
     {
         return EPresentResult::RecreateSwapchain;

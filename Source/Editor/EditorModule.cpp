@@ -114,14 +114,14 @@ void EditorModule::EndFrame()
     ImGui::EndFrame();
 }
 
-void EditorModule::Draw()
+void EditorModule::Draw(GHICommandList& commandList)
 {
     ImGui::Render();
-
-    GameEngine::Instance()->GetGHI()->ImGui_Render();
+    GameEngine::Instance()->GetGHI()->ImGui_Render(&commandList);
 
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();
+
     GameEngine::Instance()->GetMainWindow()->MakeContextCurrent();
 }
 

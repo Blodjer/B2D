@@ -1,5 +1,6 @@
 #include "B2D_pch.h"
 #include "VulkanDevice.h"
+
 #include <set>
 
 VulkanDevice::VulkanDevice(vk::Instance instance, vk::PhysicalDevice physicalDevice, std::vector<char const*>& extensionsToEnable)
@@ -49,6 +50,7 @@ VulkanDevice::VulkanDevice(vk::Instance instance, vk::PhysicalDevice physicalDev
 
 VulkanDevice::~VulkanDevice()
 {
+    m_logicalDevice.destroy();
 }
 
 bool VulkanDevice::FindQueueIndex(vk::PhysicalDevice const& physicalDevice, vk::QueueFlagBits flags, uint32& outIndex)

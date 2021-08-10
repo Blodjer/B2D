@@ -10,11 +10,8 @@
 #include "Graphics/RenderObject.h"
 #include "Graphics/Material.h"
 #include "Graphics/Texture.h"
-#include "Graphics/OpenGL/OpenGLTexture.h"
-#include "Graphics/OpenGL/OpenGLMaterial.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Graphics/GHI/GHIRenderTarget.h"
-#include "Platform/GenericWindow.h"
 
 void WorldRenderer::Init()
 {
@@ -45,6 +42,7 @@ void WorldRenderer::RenderInternal(GHIRenderTarget* const renderTarget)
 
 void WorldRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const target, WorldRenderDataInterface const* wrdi, CViewport const* const viewport)
 {
+    /*
     // flag: solid, unlit, wireframe,...
 
     if (B2D_CHECK_f(viewport == nullptr, "Unable to render because the world has no active viewport"))
@@ -108,6 +106,7 @@ void WorldRenderer::RenderWorldFromViewportToRenderTarget(GHIRenderTarget* const
 
     m_renderedFrame.store(wrdi->GetPreparedFrame());
     wrdi->StopRead();
+    */
 }
 
 // void WorldRenderer::PostProcessPass(GHIRenderTarget* source, GHIRenderTarget* target, GHIMaterial* material)

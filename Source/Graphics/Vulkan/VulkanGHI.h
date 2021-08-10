@@ -7,16 +7,13 @@
 
 class VulkanDevice;
 class VulkanSurface;
+class VulkanRenderPass;
 
 class VulkanGHI final : public IGraphicsHardwareInterface
 {
 public:
     virtual bool Init() override;
     virtual void Shutdown() override;
-
-    virtual void BeginRenderPass() override;
-    virtual void EndRenderPass() override;
-    INLINE static vk::Image m_targetImage; // TMP
 
     EGraphicsAPI GetGraphicsAPI() const override { return EGraphicsAPI::Vulkan; };
 
@@ -31,41 +28,40 @@ private:
 
     vk::PhysicalDevice SelectPhysicalDevice(std::vector<vk::PhysicalDevice> const& physicalDevices) const;
 
-    // TMP
-    void CreateBasePipeline();
-
 public:
     virtual GHISurface* CreateSurface(void* nativeWindowHandle, uint32 width, uint32 height);
 
 public:
-    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) override;
-    virtual void FreeTexture(GHITexture*& texture) override;
+    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) override { B2D_NOT_IMPLEMENTED(); }
+    virtual void FreeTexture(GHITexture*& texture) override { B2D_NOT_IMPLEMENTED(); }
 
     virtual GHIShader* CreateVertexShader(std::vector<uint32> const& data) override;
     virtual GHIShader* CreatePixelShader(std::vector<uint32> const& data) override;
     GHIShader* CreateShader(std::vector<uint32> const& data, vk::ShaderStageFlagBits stage);
-    virtual void DeleteShader(GHIShader*& shader) override;
+    virtual void DestroyShader(GHIShader*& shader) override;
 
-    virtual GHIMaterial* CreateMaterial(GHIShader* vertexShader, GHIShader* pixelShader) override;
-    virtual void FreeMaterial(GHIMaterial*& material) override;
+    virtual GHIRenderTarget* CreateRenderTarget(uint32 width, uint32 height) override;
+    virtual void DestroyRenderTarget(GHIRenderTarget* renderTarget) override;
 
-    virtual GHIRenderTarget* CreateRenderTarget() override;
-    virtual GHIRenderTarget* CreateRenderTarget(GHITexture* texture) override;
-    virtual void ResizeRenderTarget(GHIRenderTarget*& renderTarget, uint32 width, uint32 height);
-    virtual void DeleteRenderTarget(GHIRenderTarget*& renderTarget, bool freeTexture) override;
+    vk::RenderPass CreateRenderPass();
+    virtual GHIRenderPass* CreateRenderPass(std::vector<GHIRenderTarget*> const& renderTargets) override;
+    virtual void DestroyRenderPass(GHIRenderPass* renderPass) override;
+    /* TMP */ void CreateBasePipeline(GHIRenderPass const* renderPass);
 
-public:
-    virtual void Clear(bool color, bool depth, bool stencil) override;
-    virtual void BindTexture(GHITexture const* texture) override;
-    virtual void BindMaterial(GHIMaterial* material) override;
-    virtual void BindRenderTarget(GHIRenderTarget* renderTarget) override;
-    virtual void BindRenderTargetAndClear(GHIRenderTarget* renderTarget) override;
+    virtual void BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer) override;
+    virtual void EndRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer) override;
+
+    virtual GHICommandList* AllocateCommandBuffer();
+    virtual void FreeCommandBuffer(GHICommandList* commandBuffer) override;
+
+    virtual void Submit(std::vector<GHICommandList*>& commandLists) override;
 
 protected:
     virtual bool ImGui_Init() override;
     virtual void ImGui_Shutdow() override;
     virtual void ImGui_BeginFrame() override;
-    virtual void ImGui_Render() override;
+    virtual void ImGui_Render(GHICommandList* commandBuffer) override;
+    vk::DescriptorPool m_imguiDescriptorpool;
 
 private:
     vk::Instance m_instance;
@@ -73,16 +69,11 @@ private:
 
     vk::DebugUtilsMessengerEXT m_debugUtilMessenger;
 
+    vk::CommandPool m_commandPool;
+
     vk::PipelineLayout m_pipelineLayout;
     vk::Pipeline m_pipeline;
-
-    vk::Extent2D m_extent;
-    std::vector<vk::Framebuffer> m_framebuffers;
-    std::vector<vk::CommandBuffer> m_commandBuffers;
-
-    vk::RenderPass m_renderPass;
-
-    vk::Semaphore m_renderFinishedSemaphore;
+    
     VulkanSurface* m_primarySurface = nullptr;
 };
 

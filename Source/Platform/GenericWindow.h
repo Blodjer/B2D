@@ -19,6 +19,9 @@ public:
     CViewport* GetViewport() const { return m_viewport; }
 
     virtual void SetSize(uint32 width, uint32 height) = 0; // TODO: Rename to "request"?
+
+    virtual bool IsMinimized() const = 0;
+
     virtual void SetVsync(bool enable) = 0;
 
     virtual void SetShouldClose(bool close) = 0;

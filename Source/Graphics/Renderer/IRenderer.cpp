@@ -31,13 +31,7 @@ void IRenderer::Render()
 
         std::chrono::time_point<clock> start = clock::now();
 
-        // TODO: Get Render Target
         B2D_NOT_IMPLEMENTED();
-
-        //if (target->GetWidth() != m_viewport->GetWidth() || target->GetHeight() != m_viewport->GetHeight())
-        //{
-        //    GameEngine::Instance()->GetGHI()->ResizeRenderTarget(target, m_viewport->GetWidth(), m_viewport->GetHeight());
-        //}
 
         //PreRender();
         //RenderInternal(target);

@@ -30,6 +30,11 @@ DesktopWindow::DesktopWindow(GLFWwindow* context, uint32 width, uint32 height)
 		DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
 		userPointer->OnGlfwFramebufferSizeCallback(width, height);
 	});
+
+    glfwSetWindowIconifyCallback(m_context, [](GLFWwindow* window, int iconified) {
+        DesktopWindow* const userPointer = static_cast<DesktopWindow*>(glfwGetWindowUserPointer(window));
+        userPointer->OnGlfwWindowIconifyCallback(iconified);
+    });
 }
 
 DesktopWindow::~DesktopWindow()
@@ -126,8 +131,18 @@ void* DesktopWindow::GetNativeHandle() const
 
 void DesktopWindow::OnGlfwFramebufferSizeCallback(int width, int height)
 {
+    if (width <= 0 || height <= 0)
+    {
+        return;
+    }
+
     m_width = width;
     m_height = height;
     GetViewport()->SetSize(width, height);
-    //GetSurface()->Resize(m_width, m_height); // TODO
+    GetSurface()->Resize(m_width, m_height);
+}
+
+void DesktopWindow::OnGlfwWindowIconifyCallback(int iconified)
+{
+    m_isMinimized = iconified;
 }

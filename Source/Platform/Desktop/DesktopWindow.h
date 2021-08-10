@@ -15,6 +15,8 @@ public:
 	virtual void SetSize(uint32 width, uint32 height) override;
 	virtual void SetVsync(bool enable) override;
 
+	virtual bool IsMinimized() const override { return m_isMinimized; }
+
     bool IsFocused() const;
     void Focus();
 
@@ -29,10 +31,12 @@ public:
 
 private:
 	void OnGlfwFramebufferSizeCallback(int width, int height);
+	void OnGlfwWindowIconifyCallback(int iconified);
 
 private:
-	uint32 m_width;
-	uint32 m_height;
+	uint32 m_width = 0;
+	uint32 m_height = 0;
+	bool m_isMinimized = false;
 
     GLFWwindow* m_context = nullptr;
 

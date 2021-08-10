@@ -44,6 +44,6 @@ bool Shader::Load(ResourcePath const& path, EShaderType type)
 void Shader::Free()
 {
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-    ghi->DeleteShader(m_ghiShader);
+    ghi->DestroyShader(m_ghiShader);
     m_ghiShader = nullptr;
 }

@@ -3,8 +3,8 @@
 
 #include "VulkanCommon.h"
 
-class GenericWindow;
 class VulkanDevice;
+class VulkanRenderTarget;
 
 class VulkanSurface : public GHISurface
 {
@@ -27,11 +27,11 @@ private:
 
 public:
     virtual void Resize(uint32 width, uint32 height) override;
-    virtual void Present() override;
+    virtual void Present(GHIRenderTarget const* renderTarget) override;
     vk::Semaphore m_imageAvailableSemaphore; // TMP
 
 private:
-    EPresentResult TryPresent();
+    EPresentResult TryPresent(VulkanRenderTarget const* renderTarget);
 
 private:
     vk::SurfaceFormatKHR SelectSurfaceFormat(std::vector<vk::SurfaceFormatKHR> const& availableSurfaceFormats);
@@ -51,5 +51,6 @@ private:
     uint32 m_currentImageIndex = 0;
     vk::Image m_currentImage;
 
+    vk::CommandPool m_graphicsCommandPool;
     vk::CommandBuffer m_graphicsCommandBuffer;
 };
