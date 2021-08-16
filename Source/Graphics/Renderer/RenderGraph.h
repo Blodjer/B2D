@@ -3,7 +3,8 @@
 class IGraphicsHardwareInterface;
 class GHIRenderPass;
 class GHICommandList;
-class GHIRenderTarget;
+class GHITexture;
+enum class EGHITextureFormat;
 
 class RenderResourcePtr
 {
@@ -11,12 +12,26 @@ class RenderResourcePtr
 
 private:
     using TPtrType = uint;
+    static const TPtrType INVALID = -1;
+
+public:
+    RenderResourcePtr() : m_virtualId(INVALID) {}
+
+private:
     RenderResourcePtr(TPtrType const virtualId) : m_virtualId(virtualId) {}
 
 public:
+    bool IsValid() const { return m_virtualId != INVALID; }
+
     bool operator==(RenderResourcePtr const& other)
     {
         return other.m_virtualId == m_virtualId;
+    }
+
+    RenderResourcePtr& operator=(RenderResourcePtr const& other)
+    {
+        m_virtualId = other.m_virtualId;
+        return *this;
     }
 
 private:
@@ -30,9 +45,12 @@ class RenderGraphPassBuilder
 private:
     std::vector<RenderResourcePtr> output;
     std::vector<RenderResourcePtr> input;
+    RenderResourcePtr depthStencil;
 
 public:
     void AddOutput(RenderResourcePtr const& ptr) { output.emplace_back(ptr); }
+    void AddDepthStencil(RenderResourcePtr const& ptr) { depthStencil = ptr; }
+
     void AddInput(RenderResourcePtr const& ptr) { input.emplace_back(ptr); }
 };
 
@@ -40,12 +58,13 @@ struct RenderTargetDesc
 {
     uint32 width;
     uint32 height;
-    // format
+    EGHITextureFormat format;
 
     bool operator==(RenderTargetDesc const& other) const
     {
         return width == other.width
-            && height == other.height;
+            && height == other.height
+            && format == other.format;
     }
 };
 
@@ -82,7 +101,7 @@ private:
     void Prepare();
     void Execute();
 
-    GHIRenderTarget const* GetRenderTarget(RenderResourcePtr const& ptr); // TMP
+    GHITexture const* GetRenderTarget(RenderResourcePtr const& ptr); // TMP
 
 private:
     IGraphicsHardwareInterface& m_ghi;
@@ -90,7 +109,7 @@ private:
     std::vector<RenderPassDesc> m_renderPassDescs;
     std::vector<RenderTargetDesc> m_renderTargetDescs;
 
-    std::vector<GHIRenderTarget*> m_ghiRenderTargets;
+    std::vector<GHITexture*> m_ghiRenderTargets;
 
     std::vector<RenderGraphPass> m_compiledRenderPasses;
 };

@@ -11,7 +11,6 @@
 #include "Graphics/Material.h"
 #include "Graphics/Texture.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
-#include "Graphics/GHI/GHIRenderTarget.h"
 
 void WorldRenderer::Init()
 {

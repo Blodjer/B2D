@@ -14,7 +14,7 @@ GenericWindow::GenericWindow(void* nativeHandle, uint32 width, uint32 height)
 
 GenericWindow::~GenericWindow()
 {
-    // TODO: Destroy surface
+    GameEngine::Instance()->GetGHI()->DestroySurface(m_surface);
     delete m_viewport;
 }
 

@@ -3,13 +3,14 @@
 
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Graphics/GHI/GHICommandList.h"
+#include "Graphics/GHI/GHITexture.h"
 
 namespace std
 {
     template <>
-    struct hash<std::vector<GHIRenderTarget*>>
+    struct hash<std::vector<GHITexture*>>
     {
-        std::size_t operator()(std::vector<GHIRenderTarget*> const& vec) const
+        std::size_t operator()(std::vector<GHITexture*> const& vec) const
         {
             std::size_t seed = vec.size();
             for (auto& i : vec)
@@ -25,7 +26,10 @@ namespace std
     {
         std::size_t operator()(RenderTargetDesc const& k) const
         {
-            return ((std::hash<uint32>()(k.height) ^ (std::hash<uint32>()(k.width) << 1)) >> 1);
+            std::size_t seed = std::hash<uint32>()(k.height);
+            seed ^= std::hash<uint32>()(k.width) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            seed ^= std::hash<uint32>()(static_cast<uint32>(k.format)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            return seed;
         }
     };
 }
@@ -53,8 +57,8 @@ RenderResourcePtr const RenderGraph::CreateRenderTarget(RenderTargetDesc const& 
 
 void RenderGraph::Prepare()
 {
-    static std::unordered_map<RenderTargetDesc, std::queue<GHIRenderTarget*>> s_ghiRenderTargetCache;
-    static std::unordered_map<std::vector<GHIRenderTarget*>, GHIRenderPass*> s_ghiRenderPassCache;
+    static std::unordered_map<RenderTargetDesc, std::queue<GHITexture*>> s_ghiRenderTargetCache;
+    static std::unordered_map<std::vector<GHITexture*>, GHIRenderPass*> s_ghiRenderPassCache;
 
     // Setup
 
@@ -81,8 +85,11 @@ void RenderGraph::Prepare()
         }
         else
         {
+            // TODO: determine usage
+            EGHITextureUsageFlags usage = (desc.format == EGHITextureFormat::Depth24 || desc.format == EGHITextureFormat::Depth24Stencil8) ? EGHITextureUsageFlags::DepthStencilAttachment : EGHITextureUsageFlags::ColorAttachment;
+
             m_ghiRenderTargets.emplace_back(
-                m_ghi.CreateRenderTarget(desc.width, desc.height)
+                m_ghi.CreateTexture(desc.width, desc.height, desc.format, usage)
             );
         }
     }
@@ -91,7 +98,7 @@ void RenderGraph::Prepare()
 
     for (uint i = 0; i < passBuilders.size(); ++i)
     {
-        std::vector<GHIRenderTarget*> outputRenderTargets;
+        std::vector<GHITexture*> outputRenderTargets;
         outputRenderTargets.reserve(passBuilders[i].output.size());
 
         for (RenderResourcePtr const& output : passBuilders[i].output)
@@ -99,17 +106,29 @@ void RenderGraph::Prepare()
             outputRenderTargets.emplace_back(m_ghiRenderTargets[output.m_virtualId]);
         }
 
+        GHITexture* depthRenderTarget = nullptr;
+        if (passBuilders[i].depthStencil.IsValid())
+        {
+            depthRenderTarget = m_ghiRenderTargets[passBuilders[i].depthStencil.m_virtualId];
+        }
+
         GHIRenderPass* ghiRenderPass = nullptr;
 
-        auto it = s_ghiRenderPassCache.find(outputRenderTargets);
+        auto key = outputRenderTargets;
+        if (depthRenderTarget)
+        {
+            key.emplace_back(depthRenderTarget);
+        }
+
+        auto it = s_ghiRenderPassCache.find(key);
         if (it != s_ghiRenderPassCache.end())
         {
             ghiRenderPass = it->second;
         }
         else
         {
-            ghiRenderPass = m_ghi.CreateRenderPass(outputRenderTargets);
-            s_ghiRenderPassCache.insert_or_assign(outputRenderTargets, ghiRenderPass);
+            ghiRenderPass = m_ghi.CreateRenderPass(outputRenderTargets, depthRenderTarget);
+            s_ghiRenderPassCache.insert_or_assign(key, ghiRenderPass);
         }
 
         RenderGraphPass graphPass;
@@ -125,16 +144,16 @@ void RenderGraph::Prepare()
     {
         while (!itRenderTargetCache.second.empty())
         {
-            GHIRenderTarget* const renderTarget = itRenderTargetCache.second.front();
+            GHITexture* const renderTarget = itRenderTargetCache.second.front();
             itRenderTargetCache.second.pop();
             
-            m_ghi.DestroyRenderTarget(renderTarget);
+            m_ghi.DestroyTexture(renderTarget);
 
             // Destroy all render passes using this render target
             for (auto itRenderPassCache = s_ghiRenderPassCache.begin(); itRenderPassCache != s_ghiRenderPassCache.end();)
             {
                 bool erased = false;
-                for (GHIRenderTarget* const passRenderTarget : itRenderPassCache->first)
+                for (GHITexture* const passRenderTarget : itRenderPassCache->first)
                 {
                     if (passRenderTarget == renderTarget)
                     {
@@ -193,7 +212,7 @@ void RenderGraph::Execute()
     m_ghi.Submit(commandLists);
 }
 
-GHIRenderTarget const* RenderGraph::GetRenderTarget(RenderResourcePtr const& ptr)
+GHITexture const* RenderGraph::GetRenderTarget(RenderResourcePtr const& ptr)
 {
     return m_ghiRenderTargets[ptr.m_virtualId];
 }

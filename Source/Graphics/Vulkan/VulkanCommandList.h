@@ -12,5 +12,9 @@ public:
     virtual void Begin() override;
     virtual void End() override;
 
-    virtual void DrawTest() override;
+    virtual void BindVertexBuffer(GHIBuffer const* buffer) override;
+
+    virtual void SetShaderParameter(uint32 bytes, void const* ptr) override;
+
+    virtual void Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance) override;
 };

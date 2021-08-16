@@ -4,7 +4,6 @@
 #include "RenderThread.h"
 
 class GenericWindow;
-class GHIRenderTarget;
 class Thread;
 
 class RenderManager

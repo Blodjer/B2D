@@ -37,5 +37,5 @@ bool CTexture::Load(ResourcePath const& path)
 
 void CTexture::Free()
 {
-    GameEngine::Instance()->GetGHI()->FreeTexture(m_ghiTexture);
+    GameEngine::Instance()->GetGHI()->DestroyTexture(m_ghiTexture);
 }

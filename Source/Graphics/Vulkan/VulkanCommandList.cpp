@@ -1,6 +1,10 @@
 #include "B2D_pch.h"
 #include "VulkanCommandList.h"
 
+#include "VulkanBuffer.h"
+#include "GameEngine.h" // TMP
+#include "VulkanGHI.h" // TMP
+
 void VulkanCommandList::Begin()
 {
     vk::CommandBufferBeginInfo commandBufferBeginInfo;
@@ -15,7 +19,20 @@ void VulkanCommandList::End()
     m_commandBuffer.end();
 }
 
-void VulkanCommandList::DrawTest()
+void VulkanCommandList::BindVertexBuffer(GHIBuffer const* buffer)
 {
-    m_commandBuffer.draw(3, 1, 0, 0);
+    VulkanBuffer const* vkBuffer = static_cast<VulkanBuffer const*>(buffer);
+    vk::DeviceSize offset = 0;
+
+    m_commandBuffer.bindVertexBuffers(0, vkBuffer->buffer, offset);
+}
+
+void VulkanCommandList::SetShaderParameter(uint32 bytes, void const* ptr)
+{
+    m_commandBuffer.pushConstants(static_cast<VulkanGHI*>(GameEngine::Instance()->GetGHI())->m_pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, bytes, ptr);
+}
+
+void VulkanCommandList::Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance)
+{
+    m_commandBuffer.draw(vertexCount, instanceCount, firstVertex, firstInstance);
 }

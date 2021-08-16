@@ -4,4 +4,4 @@
 const TVec3 TVec3::Zero(0, 0, 0);
 const TVec3 TVec3::One(1, 1, 1);
 
-const TVec3 TVec3::Up(0, 1, 0);
+const TVec3 TVec3::Up(0, 0, 1);

@@ -57,11 +57,6 @@ void OpenGLGHI::Shutdown()
 
 }
 
-GHISurface* OpenGLGHI::CreateSurface(void* nativeWindowHandle, uint32 width, uint32 height)
-{
-    B2D_NOT_IMPLEMENTED();
-}
-
 GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 height, uint8 components)
 {
     GLenum format;
@@ -100,7 +95,7 @@ GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 heig
 //    glBindTexture(GL_TEXTURE_2D, tex->GetHandle());
 //}
 
-void OpenGLGHI::FreeTexture(GHITexture*& texture)
+void OpenGLGHI::DestroyTexture(GHITexture* texture)
 {
     OpenGLTexture const* tex = static_cast<OpenGLTexture*>(texture);
     GLuint handle = tex->GetHandle();
@@ -130,74 +125,64 @@ void OpenGLGHI::FreeTexture(GHITexture*& texture)
 //    glClear(clearFlags);
 //}
 
-GHIRenderTarget* OpenGLGHI::CreateRenderTarget(uint32 width, uint32 height)
-{
-    GHITexture* ghiTexture = CreateTexture(nullptr, width, height, 3);
-    return CreateRenderTarget(ghiTexture);
-}
+//GHIRenderTarget* OpenGLGHI::CreateRenderTarget(uint32 width, uint32 height)
+//{
+//    GHITexture* ghiTexture = CreateTexture(nullptr, width, height, 3);
+//    return CreateRenderTarget(ghiTexture);
+//}
 
-GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
-{
-    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(texture);
+//GHIRenderTarget* OpenGLGHI::CreateRenderTarget(GHITexture* texture)
+//{
+//    OpenGLTexture* renderTexture = static_cast<OpenGLTexture*>(texture);
+//
+//    GLuint depthrenderbuffer;
+//    glGenTextures(1, &depthrenderbuffer);
+//    glBindTexture(GL_TEXTURE_2D, depthrenderbuffer);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, renderTexture->GetWidth(), renderTexture->GetHeight(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//    OpenGLTexture* depthTexture = new OpenGLTexture(depthrenderbuffer, renderTexture->GetWidth(), renderTexture->GetHeight(), GHITexture::EFormat::Depth24);
+//
+//    glBindTexture(GL_TEXTURE_2D, 0);
+//
+//    GLuint fb;
+//    glGenFramebuffers(1, &fb);
+//
+//    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+//
+//    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTexture->GetHandle(), 0);
+//    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthrenderbuffer, 0);
+//
+//    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+//    glDrawBuffers(1, DrawBuffers);
+//
+//    B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+//
+//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//
+//    return new OpenGLRenderTarget(fb, renderTexture, depthTexture);
+//}
 
-    GLuint depthrenderbuffer;
-    glGenTextures(1, &depthrenderbuffer);
-    glBindTexture(GL_TEXTURE_2D, depthrenderbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, renderTexture->GetWidth(), renderTexture->GetHeight(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    OpenGLTexture* depthTexture = new OpenGLTexture(depthrenderbuffer, renderTexture->GetWidth(), renderTexture->GetHeight());
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    GLuint fb;
-    glGenFramebuffers(1, &fb);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, fb);
-
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderTexture->GetHandle(), 0);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthrenderbuffer, 0);
-
-    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, DrawBuffers);
-
-    B2D_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    return new OpenGLRenderTarget(fb, renderTexture, depthTexture);
-}
-
-void OpenGLGHI::DestroyRenderTarget(GHIRenderTarget* renderTarget)
-{
-    B2D_NOT_IMPLEMENTED();
-
-    OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
-    GLuint handle = rt->GetHandle();
-
-    glDeleteFramebuffers(1, &handle);
-
-    GHITexture* dtexture = const_cast<GHITexture*>(rt->GetDepthTexture());
-    FreeTexture(dtexture);
-
-    if (true)
-    {
-        GHITexture* texture = const_cast<GHITexture*>(rt->GetTexture());
-        FreeTexture(texture);
-    }
-
-    delete rt;
-}
-
-GHIRenderPass* OpenGLGHI::CreateRenderPass(std::vector<GHIRenderTarget*> const& renderTargets)
-{
-    B2D_NOT_IMPLEMENTED();
-}
-
-void OpenGLGHI::DestroyRenderPass(GHIRenderPass* renderPass)
-{
-    B2D_NOT_IMPLEMENTED();
-}
+//void OpenGLGHI::DestroyRenderTarget(GHIRenderTarget* renderTarget)
+//{
+//    B2D_NOT_IMPLEMENTED();
+//
+//    OpenGLRenderTarget* rt = static_cast<OpenGLRenderTarget*>(renderTarget);
+//    GLuint handle = rt->GetHandle();
+//
+//    glDeleteFramebuffers(1, &handle);
+//
+//    GHITexture* dtexture = const_cast<GHITexture*>(rt->GetDepthTexture());
+//    DestroyTexture(dtexture);
+//
+//    if (true)
+//    {
+//        GHITexture* texture = const_cast<GHITexture*>(rt->GetTexture());
+//        DestroyTexture(texture);
+//    }
+//
+//    delete rt;
+//}
 
 //void OpenGLGHI::BindRenderTarget(GHIRenderTarget* renderTarget)
 //{

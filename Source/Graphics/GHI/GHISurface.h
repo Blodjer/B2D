@@ -1,11 +1,12 @@
 #pragma once
 
-class GHIRenderTarget;
+class GHITexture;
 
 class GHISurface
 {
 public:
-    virtual void Resize(uint32 width, uint32 height) = 0;
+    virtual ~GHISurface() = default;
 
-    virtual void Present(GHIRenderTarget const* renderTarget) = 0;
+    virtual void Resize(uint32 width, uint32 height) = 0;
+    virtual void Present(GHITexture const* renderTarget) = 0;
 };

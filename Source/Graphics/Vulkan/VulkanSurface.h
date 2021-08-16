@@ -4,7 +4,7 @@
 #include "VulkanCommon.h"
 
 class VulkanDevice;
-class VulkanRenderTarget;
+class VulkanTexture;
 
 class VulkanSurface : public GHISurface
 {
@@ -18,7 +18,7 @@ private:
 
 public:
     VulkanSurface(vk::Instance instance, VulkanDevice const& device, void* nativeWindowHandle);
-    ~VulkanSurface();
+    virtual ~VulkanSurface();
     
 private:
     void CreateSwapchain(vk::SwapchainKHR oldSwapchain = nullptr);
@@ -27,11 +27,11 @@ private:
 
 public:
     virtual void Resize(uint32 width, uint32 height) override;
-    virtual void Present(GHIRenderTarget const* renderTarget) override;
+    virtual void Present(GHITexture const* renderTarget) override;
     vk::Semaphore m_imageAvailableSemaphore; // TMP
 
 private:
-    EPresentResult TryPresent(VulkanRenderTarget const* renderTarget);
+    EPresentResult TryPresent(VulkanTexture const* renderTarget);
 
 private:
     vk::SurfaceFormatKHR SelectSurfaceFormat(std::vector<vk::SurfaceFormatKHR> const& availableSurfaceFormats);

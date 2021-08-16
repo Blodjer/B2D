@@ -12,6 +12,10 @@
 #include "RenderThread.h"
 #include "Core/Thread/Thread.h"
 #include "Viewport.h"
+#include "GHI/GHITexture.h"
+
+#include "Core/Resource.h" // TMP
+#include "Mesh.h" // TMP
 
 RenderManager::RenderManager()
 {
@@ -61,6 +65,8 @@ void RenderManager::Draw()
     IGraphicsHardwareInterface* const ghi = GameEngine::Instance()->GetGHI();
     B2D_ASSERT(ghi);
 
+    static auto meshPtr = IResourceManager::Get<Mesh>("Content/Mesh/viking_room.obj");
+
     RenderGraph rg = RenderGraph(*ghi);
 
     uint32 targetWidth = GameEngine::Instance()->GetMainWindow()->GetViewport()->GetWidth();
@@ -69,37 +75,54 @@ void RenderManager::Draw()
     RenderTargetDesc desc;
     desc.width = targetWidth;
     desc.height = targetHeight;
+    desc.format = EGHITextureFormat::BGRA8;
+
+    RenderTargetDesc depthDesc;
+    depthDesc.width = targetWidth;
+    depthDesc.height = targetHeight;
+    depthDesc.format = EGHITextureFormat::Depth24Stencil8;
 
     RenderTargetDesc desc2;
     desc2.width = 200;
     desc2.height = 200;
+    desc2.format = EGHITextureFormat::BGRA8;
+
+    RenderTargetDesc desc3;
+    desc3.width = targetWidth;
+    desc3.height = targetHeight;
+    desc3.format = EGHITextureFormat::RGBA8;
 
     RenderResourcePtr const rt0 = rg.CreateRenderTarget(desc);
+    RenderResourcePtr const rt3 = rg.CreateRenderTarget(desc3);
     RenderResourcePtr const rt1 = rg.CreateRenderTarget(desc2);
     RenderResourcePtr const rt2 = rg.CreateRenderTarget(desc2);
-    RenderResourcePtr const rt3 = rg.CreateRenderTarget(desc2);
+    RenderResourcePtr const depth = rg.CreateRenderTarget(depthDesc);
     // TODO: Define clear, input,...
 
-    static bool ii = false;
-    if (ii)
+    struct MeshPushConstants
     {
-        rg.AddPass(
-            [=](RenderGraphPassBuilder& rgb)
-            {
-                rgb.AddOutput(rt1);
-            },
-            [](GHICommandList& cb)
-            {
-                cb.DrawTest();
-            }
-            );
+        glm::vec4 data;
+        TMatrix render_matrix;
+    } constants;
 
-        ii = false;
-    }
-    else
+    if (!GameEngine::Instance()->GetMainWindow()->GetViewport()->GetViewProjectionMatrix(constants.render_matrix))
     {
-        ii = true;
+        constants.render_matrix = TMatrix::Identity;
     }
+
+    rg.AddPass(
+        [=](RenderGraphPassBuilder& rgb)
+        {
+            rgb.AddOutput(rt0);
+            rgb.AddDepthStencil(depth);
+        },
+        [&constants](GHICommandList& cb)
+        {
+            cb.BindVertexBuffer(meshPtr->GetVertexBuffer());
+            cb.SetShaderParameter(sizeof(constants), &constants);
+            cb.Draw(meshPtr->GetVertices().size(), 1, 0, 0);
+        }
+    );
 
     if (EditorModule* const editor = GameEngine::Instance()->GetModuleManager()->Get<EditorModule>())
     {
@@ -110,8 +133,6 @@ void RenderManager::Draw()
             },
             [editor](GHICommandList& cb)
             {
-                cb.DrawTest();
-
                 // TODO: ImGui tries to access the render outputs from the renderers. This draw is called from the main thread but the render thread might have already cleared the render output
                 // S1 Change ImGUI to always lookup the latest render output
                 // S2 Change render manager to lock all needed textures before drawing. This way the renderer would have to wait for editor to be finish drawing.

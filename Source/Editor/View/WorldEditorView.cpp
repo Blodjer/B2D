@@ -2,7 +2,6 @@
 #include "WorldEditorView.h"
 
 #include "GameEngine.h"
-#include "Graphics/GHI/GHIRenderTarget.h"
 #include "Graphics/OpenGL/OpenGLTexture.h"
 #include "Graphics/Renderer/WorldRenderer.h"
 #include "Graphics/RenderManager.h"

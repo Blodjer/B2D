@@ -5,7 +5,7 @@
 void CameraEntity::Initialize()
 {
     TransformComponent& transform = GetComponent<TransformComponent>();
-    transform.position.z = -10.0f;
+    transform.position.z = 1.5f;
 }
 
 void CameraEntity::Update(float deltaTime)
@@ -20,6 +20,14 @@ void CameraEntity::Update(float deltaTime)
             camera.projection = camera.targetProjection;
         }
     }
+
+    TransformComponent& transform = GetComponent<TransformComponent>();
+
+    static float time = 0.0f;
+    time += deltaTime;
+
+    transform.position.x = UMath::Sin(time) * 2.0f;
+    transform.position.y = UMath::Cos(time) * 2.0f;
 }
 
 void CameraEntity::SetProjection(EProjection const projection)
@@ -80,5 +88,5 @@ TMatrix CameraEntity::CreateProjectionMatrix(EProjection const projection, CView
 TMatrix CameraEntity::GetViewMatrix() const
 {
     TransformComponent& transform = GetComponent<TransformComponent>();
-    return TMatrix::LookAt(transform.position, TVec3::Zero, TVec3::Up);
+    return TMatrix::LookAt(transform.position, TVec3::Zero, -TVec3::Up);
 }

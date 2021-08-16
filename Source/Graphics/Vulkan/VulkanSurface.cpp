@@ -2,7 +2,7 @@
 #include "VulkanSurface.h"
 
 #include "VulkanDevice.h"
-#include "VulkanRenderTarget.h"
+#include "VulkanTexture.h"
 
 VulkanSurface::VulkanSurface(vk::Instance instance, VulkanDevice const& device, void* nativeWindowHandle)
     : m_instance(instance)
@@ -43,9 +43,6 @@ VulkanSurface::~VulkanSurface()
 
     m_device.GetLogical().freeCommandBuffers(m_graphicsCommandPool, m_graphicsCommandBuffer);
     m_device.GetLogical().destroyCommandPool(m_graphicsCommandPool);
-
-    m_instance.destroySurfaceKHR(m_surface);
-    m_surface = nullptr;
 }
 
 void VulkanSurface::CreateSwapchain(vk::SwapchainKHR oldSwapchain)
@@ -182,13 +179,13 @@ void Transition(vk::CommandBuffer& cb,
     cb.pipelineBarrier(srcStageMask, dstStageMask, vk::DependencyFlags(0), nullptr, nullptr, imageMemoryBarrier);
 }
 
-void VulkanSurface::Present(GHIRenderTarget const* renderTarget)
+void VulkanSurface::Present(GHITexture const* renderTarget)
 {
     uint32 const maxAttempts = 1;
     
     for (uint32 attempts = 0; ; ++attempts)
     {
-        EPresentResult presentResult = TryPresent(static_cast<VulkanRenderTarget const*>(renderTarget));
+        EPresentResult presentResult = TryPresent(static_cast<VulkanTexture const*>(renderTarget));
         if (presentResult == EPresentResult::Success)
         {
             break;
@@ -205,11 +202,12 @@ void VulkanSurface::Present(GHIRenderTarget const* renderTarget)
     }
 }
 
-VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanRenderTarget const* renderTarget)
+VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* renderTarget)
 {
-    if (renderTarget->m_width != m_extent.width || renderTarget->m_height != m_extent.height)
+    if (renderTarget->GetWidth() > m_extent.width || renderTarget->GetHeight() > m_extent.height)
     {
         // Maybe the window was resized and we just need to recreate the swapchain
+        B2D_LOG_WARNING("Render target is larger the swapchain. Presenting might fail!");
         return EPresentResult::RecreateSwapchain;
     }
 
@@ -243,8 +241,8 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanRenderTarget const
             m_currentImage);
 
         vk::ImageCopy copy;
-        copy.extent.width = renderTarget->m_width;
-        copy.extent.height = renderTarget->m_height;
+        copy.extent.width = renderTarget->GetWidth();
+        copy.extent.height = renderTarget->GetHeight();
         copy.extent.depth = 1;
         copy.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         copy.srcSubresource.layerCount = 1;
