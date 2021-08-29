@@ -1,20 +1,17 @@
 #include "B2D_pch.h"
 #include "Shader.h"
 
+#include "GameEngine.h"
 #include "Core/Core.h"
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Graphics/ShaderLibrary.h"
-#include "GameEngine.h"
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
+#include "GHI/GHIShader.h"
 
 bool Shader::Load(ResourcePath const& path, EShaderType type)
 {
     IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
 
-    std::vector<uint32>* data = nullptr;
+    ShaderBinaryData* data = nullptr;
     if (!ShaderLibrary::GetShaderBinaries(ghi->GetGraphicsAPI(), path, data))
     {
         return false;
@@ -37,6 +34,8 @@ bool Shader::Load(ResourcePath const& path, EShaderType type)
     {
         return false;
     }
+
+    m_shaderLayout = ShaderLibrary::GetShaderLayout(*data);
 
     return true;
 }

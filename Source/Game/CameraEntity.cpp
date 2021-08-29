@@ -76,7 +76,7 @@ TMatrix CameraEntity::CreateProjectionMatrix(EProjection const projection, CView
     else if (projection == EProjection::Orthographic)
     {
         float aspect = static_cast<float>(viewport->GetHeight()) / static_cast<float>(viewport->GetWidth());
-        float width = camera.orthoWidth; UMath::Max(0.001f, camera.orthoWidth);
+        float width = camera.orthoWidth; UMath::Max(0.001f, camera.orthoWidth); // TODO
         float height = width * aspect;
         return TMatrix::Orthographic(width * -0.5f, width * 0.5f, height * -0.5f, height * 0.5f, camera.nearPlane, camera.farPlane);
     }

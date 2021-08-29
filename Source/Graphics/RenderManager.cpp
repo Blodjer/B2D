@@ -2,6 +2,7 @@
 #include "RenderManager.h"
 
 #include "GameEngine.h"
+#include "GHI/GraphicsHardwareInterface.h"
 #include "Editor/EditorModule.h"
 #include "Engine/ModuleManager.h"
 #include "GHI/GHICommandList.h"
@@ -13,6 +14,7 @@
 #include "Core/Thread/Thread.h"
 #include "Viewport.h"
 #include "GHI/GHITexture.h"
+#include "GHI/GHIBuffer.h"
 
 #include "Core/Resource.h" // TMP
 #include "Mesh.h" // TMP
@@ -101,14 +103,36 @@ void RenderManager::Draw()
 
     struct MeshPushConstants
     {
-        glm::vec4 data;
+        //glm::vec4 data;
         TMatrix render_matrix;
     } constants;
+
+    static GHIBuffer* ubBuffer = nullptr;
+    static GHIBuffer* ubBuffer2 = nullptr;
+    if (ubBuffer == nullptr)
+    {
+        ubBuffer = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(MeshPushConstants));
+        ubBuffer2 = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(MeshPushConstants));
+    }
 
     if (!GameEngine::Instance()->GetMainWindow()->GetViewport()->GetViewProjectionMatrix(constants.render_matrix))
     {
         constants.render_matrix = TMatrix::Identity;
     }
+    ubBuffer->Upload(&constants, sizeof(constants));
+
+    float aspect = static_cast<float>(targetWidth) / static_cast<float>(targetHeight);
+    constants.render_matrix = TMatrix::Perspective(45.0f, aspect, 0.1f, 10000.0f) * TMatrix::LookAt(TVec3(2.0f, 0, 0.0f), TVec3::Zero, -TVec3::Up);
+    ubBuffer2->Upload(&constants, sizeof(constants));
+
+    static GHIBuffer* ubFBuffer = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(float));
+
+    static float f = 0.0f;
+    f += 0.001f;
+    float ff = UMath::Sin(f);
+    ubFBuffer->Upload(&ff, sizeof(f));
+
+    static bool b = false;
 
     rg.AddPass(
         [=](RenderGraphPassBuilder& rgb)
@@ -119,7 +143,16 @@ void RenderManager::Draw()
         [&constants](GHICommandList& cb)
         {
             cb.BindVertexBuffer(meshPtr->GetVertexBuffer());
-            cb.SetShaderParameter(sizeof(constants), &constants);
+
+            cb.BindUniformBuffer(0, ubFBuffer);
+            cb.BindUniformBuffer(0, ubBuffer);
+
+            //cb.SetShaderParameter(sizeof(constants), &constants);
+
+            cb.Draw(meshPtr->GetVertices().size(), 1, 0, 0);
+
+            cb.BindUniformBuffer(0, ubBuffer2);
+
             cb.Draw(meshPtr->GetVertices().size(), 1, 0, 0);
         }
     );

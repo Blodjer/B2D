@@ -78,7 +78,7 @@ void GameEngine::Init()
     // Init Graphics Hardware Interface
     if (m_GHI)
     {
-        ShaderLibrary::PreloadAll();
+        ShaderLibrary::PreloadAll(m_GHI->GetGraphicsAPI());
         B2D_ASSERT(m_GHI->Init());
     }
     else

@@ -1,15 +1,9 @@
 #pragma once
 
 #include "Core/Resource.h"
-#include "GHI/GHIShader.h"
+#include "Graphics/ShaderLayout.h"
 
-enum class EShaderType
-{
-    Vertex,
-    Pixel,
-    Compute,
-    Geometry
-};
+class GHIShader;
 
 class Shader : public IResource
 {
@@ -19,9 +13,11 @@ protected:
 
 public:
     GHIShader* GetGHIShader() const { return m_ghiShader; }
+    ShaderLayout const& GetLayout() const { return m_shaderLayout; }
 
 private:
     GHIShader* m_ghiShader = nullptr;
+    ShaderLayout m_shaderLayout;
 };
 
 class VertexShader : public Shader

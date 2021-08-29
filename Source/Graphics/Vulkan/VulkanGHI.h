@@ -65,8 +65,9 @@ protected:
 
 private:
     vk::Instance m_instance;
+public: // TMP
     VulkanDevice* m_device = nullptr;
-
+private:
     VmaAllocator m_allocator;
 
     vk::DebugUtilsMessengerEXT m_debugUtilMessenger;
@@ -79,6 +80,7 @@ private:
 
 public:
     vk::PipelineLayout m_pipelineLayout; // TMP
-
+    std::vector<vk::DescriptorSet> m_descriptorSets; // TMP
+    vk::DescriptorSet m_descriptorSet2; // TMP
 };
 

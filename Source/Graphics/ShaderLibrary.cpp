@@ -1,7 +1,6 @@
 #include "B2D_pch.h"
 #include "ShaderLibrary.h"
 
-#include "GameEngine.h"
 #include "GHI/GraphicsHardwareInterface.h"
 
 #include <shaderc/shaderc.hpp>
@@ -19,42 +18,49 @@
 
 // Add Hash 
 
-bool ShaderLibrary::GetShaderBinaries(EGraphicsAPI const targetApi, ResourcePath const& path, std::vector<uint32>*& outData)
+bool ShaderLibrary::GetShaderBinaries(EGraphicsAPI const targetApi, ResourcePath const& path, ShaderBinaryData*& outData)
 {
     // TODO: Do we need to cache this? The resource should guarantee to only load this once.
-    ShaderLibrary::ShaderBinaryMap& targetShaderBinaryMap = GetTargetBinaryShaderMap(targetApi);
+    ShaderLibrary::ShaderSpvDataMap& targetShaderSpvDataMap = GetTargetBinaryShaderMap(targetApi);
 
-    auto const foundIt = targetShaderBinaryMap.find(path);
-    if (foundIt != targetShaderBinaryMap.end())
+    auto const foundIt = targetShaderSpvDataMap.find(path);
+    if (foundIt != targetShaderSpvDataMap.end())
     {
         outData = &(*foundIt).second.binaryData;
         return true;
     }
 
-    ShaderBinaryInfo const* spvShaderBinaryInfo = nullptr;
-    if (!GetOrCompileSpvBinaryShader(path, spvShaderBinaryInfo))
+    ShaderSpvData const* spvData = nullptr;
+    if (!GetOrCompileSpvBinaryShader(path, spvData))
     {
         return false;
     }
 
-    ShaderBinaryInfo targetShaderBinaryInfo;
-    targetShaderBinaryInfo.shaderKind = spvShaderBinaryInfo->shaderKind;
-    if (!CrossCompile(spvShaderBinaryInfo->binaryData, spvShaderBinaryInfo->shaderKind, targetApi, targetShaderBinaryInfo.binaryData))
+    ShaderSpvData targetShaderSpvData;
+    targetShaderSpvData.shaderKind = spvData->shaderKind;
+    if (!CrossCompile(*spvData, targetApi, targetShaderSpvData.binaryData))
     {
         return false;
     }
 
-    ShaderBinaryInfo& c = targetShaderBinaryMap[path] = std::move(targetShaderBinaryInfo);
+    ShaderSpvData& c = targetShaderSpvDataMap[path] = std::move(targetShaderSpvData);
     outData = &c.binaryData;
     return true;
 }
 
-bool ShaderLibrary::GetOrCompileSpvBinaryShader(ResourcePath const& path, ShaderBinaryInfo const*& outShaderBinaryData)
+ShaderLayout const ShaderLibrary::GetShaderLayout(ShaderBinaryData const& shaderBinaryData)
+{
+    ShaderLayout shaderInfo;
+    Reflect(shaderBinaryData, shaderInfo);
+    return shaderInfo;
+}
+
+bool ShaderLibrary::GetOrCompileSpvBinaryShader(ResourcePath const& path, ShaderSpvData const*& outSpvData)
 {
     auto const foundIt = m_spvBinaryShaderMap.find(path);
     if (foundIt != m_spvBinaryShaderMap.end())
     {
-        outShaderBinaryData = &(*foundIt).second;
+        outSpvData = &(*foundIt).second;
         return true;
     }
     else
@@ -65,28 +71,28 @@ bool ShaderLibrary::GetOrCompileSpvBinaryShader(ResourcePath const& path, Shader
             return false;
         }
 
-        ShaderBinaryInfo shaderBinaryInfo;
+        ShaderSpvData shaderBinaryInfo;
 
         if (!GetShaderKindFromFilePath(path, shaderBinaryInfo.shaderKind))
         {
             return false;
         }
 
-        if (!CompileSpvShaderBinaries(path, shaderBinaryInfo.shaderKind, code, shaderBinaryInfo.binaryData))
+        if (!CompileSpvShaderBinaries(shaderBinaryInfo.shaderKind, code, shaderBinaryInfo.binaryData))
         {
             return false;
         }
 
-        outShaderBinaryData = &(m_spvBinaryShaderMap[path] = std::move(shaderBinaryInfo));
+        outSpvData = &(m_spvBinaryShaderMap[path] = std::move(shaderBinaryInfo));
         return true;
     }
 }
 
-bool ShaderLibrary::CompileSpvShaderBinaries(ResourcePath const& path, shaderc_shader_kind const shaderKind, std::string const& code, std::vector<uint32>& outData)
+bool ShaderLibrary::CompileSpvShaderBinaries(shaderc_shader_kind const shaderKind, std::string const& code, ShaderBinaryData& outData)
 {
     shaderc::Compiler compiler;
     shaderc::CompileOptions options;
-    options.SetOptimizationLevel(shaderc_optimization_level_performance);
+    //options.SetOptimizationLevel(shaderc_optimization_level_performance); // TODO
     options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 
     shaderc::SpvCompilationResult const result = compiler.CompileGlslToSpv(code, shaderKind, "", options);
@@ -101,11 +107,11 @@ bool ShaderLibrary::CompileSpvShaderBinaries(ResourcePath const& path, shaderc_s
                 errorMessage.resize(trimNewLine + 1);
             }
 
-            B2D_LOG_ERROR("Failed to compile shader: {} [Result: {}]\n{}", path, result.GetCompilationStatus(), errorMessage);
+            B2D_LOG_ERROR("Failed to compile shader [Result: {}]\n{}", result.GetCompilationStatus(), errorMessage);
         }
         else
         {
-            B2D_LOG_ERROR("Failed to compile shader: {} [Result: {}]", path, result.GetCompilationStatus());
+            B2D_LOG_ERROR("Failed to compile shader [Result: {}]", result.GetCompilationStatus());
         }
 
         return false;
@@ -113,21 +119,19 @@ bool ShaderLibrary::CompileSpvShaderBinaries(ResourcePath const& path, shaderc_s
 
     outData = std::vector(result.begin(), result.end());
 
-    //Reflect(outData, path);
-
     return true;
 }
 
-bool ShaderLibrary::CrossCompile(std::vector<uint32> const& spvBinaryData, shaderc_shader_kind const shaderKind, EGraphicsAPI const targetApi, std::vector<uint32>& outData)
+bool ShaderLibrary::CrossCompile(ShaderSpvData const& spvData, EGraphicsAPI const targetApi, ShaderBinaryData& outData)
 {
     if (targetApi == EGraphicsAPI::Vulkan)
     {
-        outData = spvBinaryData;
+        outData = spvData.binaryData;
         return true;
     }
     else if (targetApi == EGraphicsAPI::OpenGL)
     {
-        spirv_cross::CompilerGLSL compilerg(spvBinaryData);
+        spirv_cross::CompilerGLSL compilerg(spvData.binaryData);
         std::string const openglCode = compilerg.compile();
 
         shaderc::Compiler compiler;
@@ -135,7 +139,7 @@ bool ShaderLibrary::CrossCompile(std::vector<uint32> const& spvBinaryData, shade
         options.SetOptimizationLevel(shaderc_optimization_level_performance);
         options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
 
-        shaderc::SpvCompilationResult const result = compiler.CompileGlslToSpv(openglCode, shaderKind, "", options);
+        shaderc::SpvCompilationResult const result = compiler.CompileGlslToSpv(openglCode, spvData.shaderKind, "", options);
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
             std::string errorMessage = result.GetErrorMessage();
@@ -171,46 +175,51 @@ bool ShaderLibrary::CrossCompile(std::vector<uint32> const& spvBinaryData, shade
     return false;
 }
 
-void ShaderLibrary::Reflect(std::vector<uint32> const& data, ResourcePath const& path)
+void ShaderLibrary::Reflect(ShaderBinaryData const& shaderBinaryData, ShaderLayout& outShaderLayout)
 {
-    spirv_cross::Compiler compiler(data);
-    spirv_cross::ShaderResources resource = compiler.get_shader_resources();
-
-    B2D_LOG_INFO("Reflection of {}:", path);
-
-    if (!resource.sampled_images.empty())
+    spirv_cross::Compiler compiler(shaderBinaryData);
+    spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+    
+    for (auto const& resource : resources.uniform_buffers)
     {
-        B2D_LOG_INFO("  [Sampled Images]");
-        for (auto const& a : resource.sampled_images)
-        {
-            B2D_LOG_INFO("    {}", a.name);
-        }
+        auto const& bufferType = compiler.get_type(resource.base_type_id);
+        uint bufferSize = compiler.get_declared_struct_size(bufferType);
+        uint32 set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+        uint32 binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+        uint memberCount = bufferType.member_types.size();
+
+        ShaderLayout::UniformBuffer ub;
+        ub.set = set;
+        ub.binding = binding;
+        
+        outShaderLayout.uniformBuffers.emplace_back(ub);
+
+        B2D_LOG_INFO("\t  {}", resource.name);
+        B2D_LOG_INFO("\t    Size = {}, Set = {}, Binding = {}, Members = {}", bufferSize, set, binding, memberCount);
     }
 
-    if (!resource.stage_inputs.empty())
+    for (auto const& resource : resources.push_constant_buffers)
     {
-        B2D_LOG_INFO("  [Stage Inputs]");
-        for (auto const& a : resource.stage_inputs)
-        {
-            B2D_LOG_INFO("    {}", a.name);
-        }
-    }
+        auto const& bufferType = compiler.get_type(resource.base_type_id);
+        uint bufferSize = compiler.get_declared_struct_size(bufferType);
+        uint32 binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+        uint32 offset = compiler.get_decoration(resource.id, spv::DecorationOffset);
+        uint memberCount = bufferType.member_types.size();
 
-    if (!resource.uniform_buffers.empty())
-    {
-        B2D_LOG_INFO("  [Uniform Buffers]");
-        for (auto const& a : resource.uniform_buffers)
-        {
-            B2D_LOG_INFO("    {}", a.name);
-        }
+        ShaderLayout::PushConstantBuffers pcb;
+        pcb.offset = offset;
+        pcb.size = bufferSize;
+
+        outShaderLayout.pushConstantBuffers.emplace_back(pcb);
+
+        B2D_LOG_INFO("\t  {}", resource.name);
+        B2D_LOG_INFO("\t    Size = {}, Offset = {}, Binding = {}, Members = {}", bufferSize, offset, binding, memberCount);
     }
 }
 
-void ShaderLibrary::PreloadAll()
+void ShaderLibrary::PreloadAll(EGraphicsAPI const targetApi)
 {
     B2D_LOG_INFO("Preloading shaders...");
-
-    EGraphicsAPI const graphicsApi = GameEngine::Instance()->GetGHI()->GetGraphicsAPI();
 
     // TODO: Involve resource manager
     // Add FileManager which is used by the resource manager to map a resource path to the system path (or package path)
@@ -224,7 +233,7 @@ void ShaderLibrary::PreloadAll()
         B2D_LOG_INFO("\t{}", path);
 
         std::vector<uint32>* data = nullptr;
-        GetShaderBinaries(graphicsApi, path, data);
+        GetShaderBinaries(targetApi, path, data);
     }
 }
 
@@ -303,7 +312,7 @@ shaderc_shader_kind ShaderLibrary::ShaderTypeToShaderKind(EShaderType const shad
     return shaderc_shader_kind::shaderc_glsl_infer_from_source;
 }
 
-ShaderLibrary::ShaderBinaryMap& ShaderLibrary::GetTargetBinaryShaderMap(EGraphicsAPI const targetApi)
+ShaderLibrary::ShaderSpvDataMap& ShaderLibrary::GetTargetBinaryShaderMap(EGraphicsAPI const targetApi)
 {
     B2D_STATIC_ASSERT(m_targetBinaryShaderMaps.size() == static_cast<size_t>(EGraphicsAPI::_Size), "m_targetBinaryShaderMaps is not the same size as available graphics api's!");
     return m_targetBinaryShaderMaps[(int)targetApi];

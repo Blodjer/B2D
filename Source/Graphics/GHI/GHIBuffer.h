@@ -4,6 +4,7 @@ enum class EGHIBufferType
 {
     VertexBuffer,
     IndexBuffer,
+    UniformBuffer,
 };
 
 class GHIBuffer

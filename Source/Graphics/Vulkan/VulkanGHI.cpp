@@ -622,6 +622,8 @@ void VulkanGHI::CreateBasePipeline(GHIRenderPass const* renderPass)
 
     PixelShaderRef ps = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan.fs.glsl");
     VertexShaderRef vs = IResourceManager::Get<VertexShader>("Content/Shader/Vulkan.vs.glsl");
+    ShaderLayout const& psLayout = ps->GetLayout();
+    ShaderLayout const& vsLayout = vs->GetLayout();
 
     struct VertexInputDescription {
 
@@ -646,7 +648,7 @@ void VulkanGHI::CreateBasePipeline(GHIRenderPass const* renderPass)
         positionAttribute.location = 0;
         positionAttribute.format = vk::Format::eR32G32B32Sfloat;
         positionAttribute.offset = offsetof(Mesh::Vertex, position);
-        
+
         // Normal will be stored at Location 1
         vk::VertexInputAttributeDescription normalAttribute;
         normalAttribute.binding = 0;
@@ -733,29 +735,111 @@ void VulkanGHI::CreateBasePipeline(GHIRenderPass const* renderPass)
     finalColor = finalColor & colorWriteMask;
     */
 
-    struct MeshPushConstants
+    std::vector<vk::PushConstantRange> pushConstantRanges;
+    for (auto const pcb : psLayout.pushConstantBuffers)
     {
-        glm::vec4 data;
-        TMatrix render_matrix;
+        vk::PushConstantRange pcr;
+        pcr.offset = pcb.offset;
+        pcr.size = pcb.size;
+        pcr.stageFlags = vk::ShaderStageFlagBits::eFragment;
+        pushConstantRanges.emplace_back(pcr);
+    }
+    for (auto const pcb : vsLayout.pushConstantBuffers)
+    {
+        vk::PushConstantRange pcr;
+        pcr.offset = pcb.offset;
+        pcr.size = pcb.size;
+        pcr.stageFlags = vk::ShaderStageFlagBits::eVertex;
+        pushConstantRanges.emplace_back(pcr);
+    }
+
+    std::vector<std::unordered_map<uint32, vk::DescriptorSetLayoutBinding>> sets;
+
+    auto AddStageUniformBuffers = [&sets](std::vector<ShaderLayout::UniformBuffer> const& ubs, vk::ShaderStageFlagBits const shaderStage) {
+        for (auto const ub : ubs)
+        {
+            if (sets.size() <= ub.set)
+            {
+                sets.resize(ub.set + 1);
+            }
+
+            auto& set = sets[ub.set];
+
+            auto it = set.find(ub.binding);
+            if (it == set.end())
+            {
+                vk::DescriptorSetLayoutBinding setLayoutBinding;
+                setLayoutBinding.binding = ub.binding;
+                setLayoutBinding.descriptorCount = 1;
+                setLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
+                setLayoutBinding.stageFlags = shaderStage;
+                set.insert({ ub.binding, setLayoutBinding });
+            }
+            else
+            {
+                (*it).second.stageFlags |= shaderStage;
+            }
+        }
     };
 
-    vk::PushConstantRange push_constant;
-    push_constant.offset = 0;
-    push_constant.size = sizeof(MeshPushConstants);
-    push_constant.stageFlags = vk::ShaderStageFlagBits::eVertex;
+    AddStageUniformBuffers(vsLayout.uniformBuffers, vk::ShaderStageFlagBits::eVertex);
+    AddStageUniformBuffers(psLayout.uniformBuffers, vk::ShaderStageFlagBits::eFragment);
+
+    std::vector<vk::DescriptorSetLayout> setLayouts;
+    for (auto& set : sets)
+    {
+        std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings;
+        for (auto bindings : set)
+        {
+            setLayoutBindings.emplace_back(bindings.second);
+        }
+
+        vk::DescriptorSetLayoutCreateInfo setLayoutInfo;
+        setLayoutInfo.setBindings(setLayoutBindings);
+        setLayoutInfo.flags = vk::DescriptorSetLayoutCreateFlags(0);
+
+        vk::DescriptorSetLayout setLayout = m_device->GetLogical().createDescriptorSetLayout(setLayoutInfo);
+        setLayouts.emplace_back(setLayout);
+    }
 
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-    pipelineLayoutInfo.setLayoutCount = 0; // Optional
-    pipelineLayoutInfo.pSetLayouts = nullptr; // Optional
-    pipelineLayoutInfo.setPushConstantRanges(push_constant);
+    pipelineLayoutInfo.setSetLayouts(setLayouts);
+    pipelineLayoutInfo.setPushConstantRanges(pushConstantRanges);
 
     m_pipelineLayout = m_device->GetLogical().createPipelineLayout(pipelineLayoutInfo);
+
+    // TODO: Move this
+    {
+        std::array<vk::DescriptorPoolSize, 1> descriptorPoolSizes =
+        {
+            { vk::DescriptorType::eUniformBuffer, 10 }
+        };
+
+        vk::DescriptorPoolCreateInfo descriptorPoolInfo;
+        descriptorPoolInfo.flags = vk::DescriptorPoolCreateFlags(0);
+        descriptorPoolInfo.maxSets = 10;
+        descriptorPoolInfo.setPoolSizes(descriptorPoolSizes);
+
+        auto m_descriptorPool = m_device->GetLogical().createDescriptorPool(descriptorPoolInfo);
+
+        vk::DescriptorSetAllocateInfo allocInfo;
+        allocInfo.descriptorPool = m_descriptorPool;
+        allocInfo.setSetLayouts(setLayouts);
+
+        m_descriptorSets = m_device->GetLogical().allocateDescriptorSets(allocInfo);
+
+        vk::DescriptorSetAllocateInfo allocInfo2;
+        allocInfo2.descriptorPool = m_descriptorPool;
+        allocInfo2.setSetLayouts(setLayouts[0]);
+
+        m_descriptorSet2 = m_device->GetLogical().allocateDescriptorSets(allocInfo2)[0];
+    }
 
     std::array<vk::DynamicState, 2> dynamicStates = {
         vk::DynamicState::eViewport,
         vk::DynamicState::eScissor,
     };
-
+    
     vk::PipelineDynamicStateCreateInfo dynamicState;
     dynamicState.setDynamicStates(dynamicStates);
 
@@ -910,9 +994,12 @@ GHIBuffer* VulkanGHI::CreateBuffer(EGHIBufferType bufferType, uint size)
     case EGHIBufferType::IndexBuffer:
         bufferInfo.usage = vk::BufferUsageFlagBits::eIndexBuffer;
         break;
+    case EGHIBufferType::UniformBuffer:
+        bufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer;
+        break;
     }
     
-    // Let the VMA library know that this data should be writeable by CPU, but also readable by GPU
+    // Let the VMA library know that this data should be writable by CPU, but also readable by GPU
     VmaAllocationCreateInfo vmaallocInfo = {};
     vmaallocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
