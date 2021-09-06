@@ -26,7 +26,12 @@ bool Mesh::Load(ResourcePath const& path)
         B2D_LOG_WARNING("{}", warn); // TODO: Trim message \n
     }
 
-    for (auto & shape : shapes)
+    if (shapes.empty())
+    {
+        return false;
+    }
+
+    for (auto const& shape : shapes)
     {
         // Loop over faces (polygon)
         uint index_offset = 0;

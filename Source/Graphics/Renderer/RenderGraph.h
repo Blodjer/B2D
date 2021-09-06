@@ -71,7 +71,7 @@ struct RenderTargetDesc
 struct RenderPassDesc
 {
     std::function<void(RenderGraphPassBuilder&)> setupFunction = nullptr;
-    std::function<void(GHICommandList&)> executionFunction = nullptr;
+    std::function<void(GHICommandList&, GHIRenderPass const*)> executionFunction = nullptr;
 };
 
 struct RenderGraphPass
@@ -93,7 +93,7 @@ public:
 public:
     // FullscreenPass?
 
-    void AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandList&)> execution);
+    void AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandList&, GHIRenderPass const*)> execution);
 
     RenderResourcePtr const CreateRenderTarget(RenderTargetDesc const& desc);
 

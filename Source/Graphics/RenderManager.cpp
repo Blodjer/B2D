@@ -15,6 +15,7 @@
 #include "Viewport.h"
 #include "GHI/GHITexture.h"
 #include "GHI/GHIBuffer.h"
+#include "GHI/GHIResourceSet.h"
 
 #include "Core/Resource.h" // TMP
 #include "Mesh.h" // TMP
@@ -68,6 +69,11 @@ void RenderManager::Draw()
     B2D_ASSERT(ghi);
 
     static auto meshPtr = IResourceManager::Get<Mesh>("Content/Mesh/viking_room.obj");
+    static auto meshPtr2 = IResourceManager::Get<Mesh>("Content/Mesh/bunny.obj");
+
+    VertexShaderRef vs = IResourceManager::Get<VertexShader>("Content/Shader/Vulkan.vs.glsl");
+    PixelShaderRef ps = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan.fs.glsl");
+    PixelShaderRef ps2 = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan2.fs.glsl");
 
     RenderGraph rg = RenderGraph(*ghi);
 
@@ -101,38 +107,61 @@ void RenderManager::Draw()
     RenderResourcePtr const depth = rg.CreateRenderTarget(depthDesc);
     // TODO: Define clear, input,...
 
-    struct MeshPushConstants
+    struct RenderData
     {
-        //glm::vec4 data;
-        TMatrix render_matrix;
+        TMatrix viewProjectionMatrix;
     } constants;
 
-    static GHIBuffer* ubBuffer = nullptr;
-    static GHIBuffer* ubBuffer2 = nullptr;
-    if (ubBuffer == nullptr)
+    static GHIBuffer* ubVPBuffer1 = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(RenderData));
+    static GHIBuffer* ubVPBuffer2 = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(RenderData));
+
+    if (!GameEngine::Instance()->GetMainWindow()->GetViewport()->GetViewProjectionMatrix(constants.viewProjectionMatrix))
     {
-        ubBuffer = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(MeshPushConstants));
-        ubBuffer2 = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(MeshPushConstants));
+        constants.viewProjectionMatrix = TMatrix::Identity;
     }
+    ubVPBuffer1->Upload(&constants, sizeof(constants));
 
-    if (!GameEngine::Instance()->GetMainWindow()->GetViewport()->GetViewProjectionMatrix(constants.render_matrix))
-    {
-        constants.render_matrix = TMatrix::Identity;
-    }
-    ubBuffer->Upload(&constants, sizeof(constants));
-
-    float aspect = static_cast<float>(targetWidth) / static_cast<float>(targetHeight);
-    constants.render_matrix = TMatrix::Perspective(45.0f, aspect, 0.1f, 10000.0f) * TMatrix::LookAt(TVec3(2.0f, 0, 0.0f), TVec3::Zero, -TVec3::Up);
-    ubBuffer2->Upload(&constants, sizeof(constants));
-
-    static GHIBuffer* ubFBuffer = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(float));
+    float const aspect = static_cast<float>(targetWidth) / static_cast<float>(targetHeight);
+    constants.viewProjectionMatrix = TMatrix::Perspective(45.0f, aspect, 0.1f, 10000.0f) * TMatrix::LookAt(TVec3(2.0f, 0, 0.0f), TVec3::Zero, -TVec3::Up);
+    ubVPBuffer2->Upload(&constants, sizeof(constants));
 
     static float f = 0.0f;
     f += 0.001f;
-    float ff = UMath::Sin(f);
-    ubFBuffer->Upload(&ff, sizeof(f));
+    float sinFloat = UMath::Sin(f);
 
-    static bool b = false;
+    static GHIBuffer* ubFloatBuffer = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(sinFloat));
+    ubFloatBuffer->Upload(&sinFloat, sizeof(f));
+
+    float sinFloat3[] = { UMath::Sin(f), UMath::Cos(f + UMath::PI * 0.5f), 0.5f };
+    static GHIBuffer* ubFloat3Buffer = ghi->CreateBuffer(EGHIBufferType::UniformBuffer, sizeof(sinFloat3));
+    ubFloat3Buffer->Upload(&sinFloat3, sizeof(sinFloat3));
+
+    static GHIResourceSet* rs0 = nullptr;
+    if (!rs0)
+    {
+        rs0 = ghi->CreateResourceSet();
+        rs0->Bind(0, ubVPBuffer1);
+        //rs0->Bind(1, ubFloat3Buffer);
+    }
+
+    static GHIResourceSet* rs0c = nullptr;
+    if (!rs0c)
+    {
+        rs0c = ghi->CreateResourceSet();
+        rs0c->Bind(0, ubVPBuffer1);
+        rs0c->Bind(2, ubFloat3Buffer);
+    }
+
+    static bool bb = false;
+    rs0c->Bind(0, bb ? ubVPBuffer2 : ubVPBuffer1);
+    bb = !bb;
+
+    static GHIResourceSet* rs1 = nullptr;
+    if (!rs1)
+    {
+        rs1 = ghi->CreateResourceSet();
+        rs1->Bind(0, ubFloatBuffer);
+    }
 
     rg.AddPass(
         [=](RenderGraphPassBuilder& rgb)
@@ -140,20 +169,31 @@ void RenderManager::Draw()
             rgb.AddOutput(rt0);
             rgb.AddDepthStencil(depth);
         },
-        [&constants](GHICommandList& cb)
+        [ghi, vs, ps, ps2](GHICommandList& cb, GHIRenderPass const* renderPass)
         {
+            // TODO: Find a better way to create pipelines
+            static GHIGraphicsPipeline* graphicsPipeline1 = ghi->CreateGraphicsPipeline(renderPass, vs, ps);
+            static GHIGraphicsPipeline* graphicsPipeline2 = ghi->CreateGraphicsPipeline(renderPass, vs, ps2);
+
+            cb.BindGraphicsPipeline(graphicsPipeline1);
+
             cb.BindVertexBuffer(meshPtr->GetVertexBuffer());
 
-            cb.BindUniformBuffer(0, ubFBuffer);
-            cb.BindUniformBuffer(0, ubBuffer);
+            cb.BindResourceSet(0, rs0);
+            cb.BindResourceSet(1, rs1);
 
             //cb.SetShaderParameter(sizeof(constants), &constants);
 
             cb.Draw(meshPtr->GetVertices().size(), 1, 0, 0);
 
-            cb.BindUniformBuffer(0, ubBuffer2);
+            cb.BindGraphicsPipeline(graphicsPipeline2);
 
-            cb.Draw(meshPtr->GetVertices().size(), 1, 0, 0);
+            cb.BindVertexBuffer(meshPtr2->GetVertexBuffer());
+
+            cb.BindResourceSet(0, rs0c);
+            //cb.BindResourceSet(1, rs1);
+
+            cb.Draw(meshPtr2->GetVertices().size(), 1, 0, 0);
         }
     );
 
@@ -164,7 +204,7 @@ void RenderManager::Draw()
             {
                 rgb.AddOutput(rt0);
             },
-            [editor](GHICommandList& cb)
+            [editor](GHICommandList& cb, GHIRenderPass const* renderPass)
             {
                 // TODO: ImGui tries to access the render outputs from the renderers. This draw is called from the main thread but the render thread might have already cleared the render output
                 // S1 Change ImGUI to always lookup the latest render output

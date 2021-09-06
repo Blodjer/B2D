@@ -40,7 +40,7 @@ RenderGraph::RenderGraph(IGraphicsHardwareInterface& ghi)
 
 }
 
-void RenderGraph::AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandList&)> execution)
+void RenderGraph::AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandList&, GHIRenderPass const*)> execution)
 {
     RenderPassDesc r;
     r.setupFunction = setup;
@@ -202,7 +202,7 @@ void RenderGraph::Execute()
 
         m_ghi.BeginRenderPass(pass.ghiRenderPass, commandList);
 
-        pass.renderPassDesc->executionFunction(*commandList);
+        pass.renderPassDesc->executionFunction(*commandList, pass.ghiRenderPass);
 
         m_ghi.EndRenderPass(pass.ghiRenderPass, commandList);
 

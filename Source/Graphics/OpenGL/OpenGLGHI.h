@@ -25,6 +25,12 @@ public:
 
     virtual void DestroyShader(GHIShader*& shader) override;
 
+    virtual GHIGraphicsPipeline* CreateGraphicsPipeline(GHIRenderPass const* targetPass, VertexShaderRef vertexShader, PixelShaderRef pixelShader) override { B2D_NOT_IMPLEMENTED(); }
+    virtual void DestroyGraphicsPipeline(GHIGraphicsPipeline* pipeline) override { B2D_NOT_IMPLEMENTED(); }
+
+    virtual GHIResourceSet* CreateResourceSet() override { B2D_NOT_IMPLEMENTED(); }
+    virtual void DestroyResourceSet(GHIResourceSet* resourceSet) override { B2D_NOT_IMPLEMENTED(); }
+
     virtual GHIRenderPass* CreateRenderPass(std::vector<GHITexture*> const& renderTargets, GHITexture const* depthTarget) override { B2D_NOT_IMPLEMENTED(); }
     virtual void DestroyRenderPass(GHIRenderPass* renderPass) override { B2D_NOT_IMPLEMENTED(); }
 

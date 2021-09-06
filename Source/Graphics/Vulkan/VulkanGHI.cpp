@@ -3,7 +3,6 @@
 
 #include "GameEngine.h"
 
-#include "Graphics/Shader.h" // TMP
 #include "Graphics/Mesh.h" // TMP
 
 #include "VulkanDevice.h"
@@ -13,6 +12,8 @@
 #include "VulkanTexture.h"
 #include "VulkanCommandList.h"
 #include "VulkanBuffer.h"
+#include "VulkanGraphicsPipeline.h"
+#include "VulkanResourceSet.h"
 
 #include "Editor/ImGuiCommon.h"
 #include "Editor/imgui_impl_vulkan.h"
@@ -169,8 +170,8 @@ void VulkanGHI::Shutdown()
 
     m_device->GetLogical().destroyCommandPool(m_commandPool);
 
-    m_device->GetLogical().destroyPipeline(m_pipeline);
-    m_device->GetLogical().destroyPipelineLayout(m_pipelineLayout);
+    //m_device->GetLogical().destroyPipeline(m_pipeline);
+    //m_device->GetLogical().destroyPipelineLayout(m_pipelineLayout);
 
     vmaDestroyAllocator(m_allocator);
 
@@ -394,6 +395,232 @@ void VulkanGHI::DestroyShader(GHIShader*& ghiShader)
     ghiShader = nullptr;
 }
 
+GHIGraphicsPipeline* VulkanGHI::CreateGraphicsPipeline(GHIRenderPass const* targetPass, VertexShaderRef vertexShader, PixelShaderRef pixelShader)
+{
+    VulkanRenderPass const* vkRenderPass = static_cast<VulkanRenderPass const*>(targetPass);
+
+    VulkanShader* vkVertexShader = static_cast<VulkanShader*>(vertexShader->GetGHIShader());
+    VulkanShader* vkPixelShader = static_cast<VulkanShader*>(pixelShader->GetGHIShader());
+
+    ShaderLayout const& vertexShaderLayout = vertexShader->GetLayout();
+    ShaderLayout const& PixelShaderLayout = pixelShader->GetLayout();
+
+    std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+    shaderStages.emplace_back(vkPixelShader->GetPipelineInfo());
+    shaderStages.emplace_back(vkVertexShader->GetPipelineInfo());
+
+    struct VertexInputDescription {
+
+        std::vector<vk::VertexInputBindingDescription> bindings;
+        std::vector<vk::VertexInputAttributeDescription> attributes;
+        vk::PipelineVertexInputStateCreateFlags flags;
+    } description;
+
+    {
+        // We will have just 1 vertex buffer binding, with a per-vertex rate
+        vk::VertexInputBindingDescription mainBinding;
+        mainBinding.binding = 0;
+        mainBinding.stride = sizeof(Mesh::Vertex);
+        mainBinding.inputRate = vk::VertexInputRate::eVertex;
+
+        description.bindings.push_back(mainBinding);
+
+        // Position will be stored at Location 0
+        vk::VertexInputAttributeDescription positionAttribute;
+        positionAttribute.binding = 0;
+        positionAttribute.location = 0;
+        positionAttribute.format = vk::Format::eR32G32B32Sfloat;
+        positionAttribute.offset = offsetof(Mesh::Vertex, position);
+
+        // Normal will be stored at Location 1
+        vk::VertexInputAttributeDescription normalAttribute;
+        normalAttribute.binding = 0;
+        normalAttribute.location = 1;
+        normalAttribute.format = vk::Format::eR32G32B32Sfloat;
+        normalAttribute.offset = offsetof(Mesh::Vertex, normal);
+
+        description.attributes.push_back(positionAttribute);
+        description.attributes.push_back(normalAttribute);
+    }
+
+    vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
+    vertexInputCreateInfo.setVertexBindingDescriptions(description.bindings);
+    vertexInputCreateInfo.setVertexAttributeDescriptions(description.attributes);
+
+    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo;
+    inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
+    inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
+
+    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo;
+    viewportStateCreateInfo.viewportCount = 1;
+    viewportStateCreateInfo.scissorCount = 1;
+
+    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
+    rasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
+    rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
+    rasterizationStateCreateInfo.lineWidth = 1.0f;
+    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
+    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
+    rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
+    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f; // Optional
+    rasterizationStateCreateInfo.depthBiasClamp = 0.0f; // Optional
+    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f; // Optional
+
+    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo;
+    multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
+    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
+    multisampleStateCreateInfo.minSampleShading = 1.0f; // Optional
+    multisampleStateCreateInfo.pSampleMask = nullptr; // Optional
+    multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE; // Optional
+    multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE; // Optional
+
+    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState;
+    colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+    colorBlendAttachmentState.blendEnable = VK_FALSE;
+    colorBlendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne; // Optional
+    colorBlendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eZero; // Optional
+    colorBlendAttachmentState.colorBlendOp = vk::BlendOp::eAdd; // Optional
+    colorBlendAttachmentState.srcAlphaBlendFactor = vk::BlendFactor::eOne; // Optional
+    colorBlendAttachmentState.dstAlphaBlendFactor = vk::BlendFactor::eZero; // Optional
+    colorBlendAttachmentState.alphaBlendOp = vk::BlendOp::eAdd; // Optional
+
+    vk::PipelineColorBlendStateCreateInfo colorBlendState;
+    colorBlendState.logicOpEnable = VK_FALSE;
+    colorBlendState.logicOp = vk::LogicOp::eCopy; // Optional
+    colorBlendState.attachmentCount = 1;
+    colorBlendState.pAttachments = &colorBlendAttachmentState;
+    colorBlendState.blendConstants[0] = 0.0f; // Optional
+    colorBlendState.blendConstants[1] = 0.0f; // Optional
+    colorBlendState.blendConstants[2] = 0.0f; // Optional
+    colorBlendState.blendConstants[3] = 0.0f; // Optional
+
+    vk::PipelineDepthStencilStateCreateInfo depthStencilState;
+    depthStencilState.depthTestEnable = true ? VK_TRUE : VK_FALSE; // TODO
+    depthStencilState.depthWriteEnable = true ? VK_TRUE : VK_FALSE;
+    depthStencilState.depthCompareOp = true ? vk::CompareOp::eLessOrEqual : vk::CompareOp::eAlways;
+    depthStencilState.depthBoundsTestEnable = VK_FALSE;
+    depthStencilState.minDepthBounds = 0.0f; // Optional
+    depthStencilState.maxDepthBounds = 1.0f; // Optional
+    depthStencilState.stencilTestEnable = VK_FALSE;
+
+    vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
+    std::vector<vk::DescriptorSetLayout> setLayouts;
+    {
+        std::vector<vk::PushConstantRange> combinedPushConstants;
+        std::vector<std::unordered_map<uint32, vk::DescriptorSetLayoutBinding>> combinedDescriptorSets;
+
+        auto CombineStageLayouts = [&combinedDescriptorSets, &combinedPushConstants](ShaderLayout const& shaderLayout, vk::ShaderStageFlagBits const shaderStage) {
+            for (auto const& ub : shaderLayout.uniformBuffers)
+            {
+                if (combinedDescriptorSets.size() <= ub.set)
+                {
+                    combinedDescriptorSets.resize(ub.set + 1);
+                }
+
+                auto& set = combinedDescriptorSets[ub.set];
+
+                auto it = set.find(ub.binding);
+                if (it == set.end())
+                {
+                    vk::DescriptorSetLayoutBinding setLayoutBinding;
+                    setLayoutBinding.binding = ub.binding;
+                    setLayoutBinding.descriptorCount = 1;
+                    setLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
+                    setLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAll; // TMP //shaderStage;
+                    set.insert({ ub.binding, setLayoutBinding });
+                }
+                else
+                {
+                    (*it).second.stageFlags |= shaderStage;
+                }
+            }
+
+            // TODO: Needs to be combined? (https://stackoverflow.com/questions/37056159/using-different-push-constants-in-different-shader-stages)
+            for (auto const& pcb : shaderLayout.pushConstantBuffers)
+            {
+                vk::PushConstantRange pcr;
+                pcr.offset = pcb.offset;
+                pcr.size = pcb.size;
+                pcr.stageFlags = shaderStage;
+                combinedPushConstants.emplace_back(pcr);
+            }
+        };
+
+        CombineStageLayouts(vertexShaderLayout, vk::ShaderStageFlagBits::eVertex);
+        CombineStageLayouts(PixelShaderLayout, vk::ShaderStageFlagBits::eFragment);
+
+        for (auto& set : combinedDescriptorSets)
+        {
+            std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings;
+            for (auto bindings : set)
+            {
+                setLayoutBindings.emplace_back(bindings.second);
+            }
+
+            vk::DescriptorSetLayoutCreateInfo setLayoutInfo;
+            setLayoutInfo.setBindings(setLayoutBindings);
+            setLayoutInfo.flags = vk::DescriptorSetLayoutCreateFlags(0);
+
+            vk::DescriptorSetLayout setLayout = m_device->GetLogical().createDescriptorSetLayout(setLayoutInfo);
+            setLayouts.emplace_back(setLayout);
+        }
+
+        pipelineLayoutInfo.setSetLayouts(setLayouts);
+        pipelineLayoutInfo.setPushConstantRanges(combinedPushConstants);
+    }
+    vk::PipelineLayout pipelineLayout = m_device->GetLogical().createPipelineLayout(pipelineLayoutInfo);
+
+    std::array<vk::DynamicState, 2> dynamicStates = {
+        vk::DynamicState::eViewport,
+        vk::DynamicState::eScissor,
+    };
+
+    vk::PipelineDynamicStateCreateInfo dynamicState;
+    dynamicState.setDynamicStates(dynamicStates);
+
+    vk::GraphicsPipelineCreateInfo pipelineInfo;
+    pipelineInfo.setStages(shaderStages);
+    pipelineInfo.pVertexInputState = &vertexInputCreateInfo;
+    pipelineInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
+    pipelineInfo.pViewportState = &viewportStateCreateInfo;
+    pipelineInfo.pRasterizationState = &rasterizationStateCreateInfo;
+    pipelineInfo.pMultisampleState = &multisampleStateCreateInfo;
+    pipelineInfo.pDepthStencilState = &depthStencilState;
+    pipelineInfo.pColorBlendState = &colorBlendState;
+    pipelineInfo.pDynamicState = &dynamicState;
+
+    pipelineInfo.layout = pipelineLayout;
+    pipelineInfo.renderPass = vkRenderPass->m_renderPass;
+    pipelineInfo.subpass = 0;
+
+    VulkanGraphicsPipeline* gp = new VulkanGraphicsPipeline();
+    gp->m_pipelineLayout = pipelineLayout;
+    gp->m_pipeline = m_device->GetLogical().createGraphicsPipeline(nullptr, pipelineInfo).value;
+
+    return gp;
+}
+
+void VulkanGHI::DestroyGraphicsPipeline(GHIGraphicsPipeline* pipeline)
+{
+    VulkanGraphicsPipeline* vkPipeline = static_cast<VulkanGraphicsPipeline*>(pipeline);
+    m_device->GetLogical().destroyPipeline(vkPipeline->m_pipeline);
+    m_device->GetLogical().destroyPipelineLayout(vkPipeline->m_pipelineLayout);
+    delete vkPipeline;
+}
+
+GHIResourceSet* VulkanGHI::CreateResourceSet()
+{
+    VulkanResourceSet* resourceSet = new VulkanResourceSet();
+    resourceSet->m_device = m_device;
+    return resourceSet;
+}
+
+void VulkanGHI::DestroyResourceSet(GHIResourceSet* resourceSet)
+{
+    delete resourceSet;
+}
+
 GHITexture* VulkanGHI::CreateTexture(uint32 width, uint32 height, EGHITextureFormat format, EGHITextureUsageFlags usage)
 {
     vk::Extent3D extent;
@@ -597,8 +824,6 @@ GHIRenderPass* VulkanGHI::CreateRenderPass(std::vector<GHITexture*> const& rende
     vk::SemaphoreCreateInfo semaphoreInfo;
     renderPass->m_renderFinishedSemaphore = m_device->GetLogical().createSemaphore(semaphoreInfo);
 
-    CreateBasePipeline(renderPass);
-
     return renderPass;
 }
 
@@ -609,269 +834,6 @@ void VulkanGHI::DestroyRenderPass(GHIRenderPass* renderPass)
     m_device->GetLogical().destroyFramebuffer(vkRenderPass->m_frameBuffer);
     m_device->GetLogical().destroySemaphore(vkRenderPass->m_renderFinishedSemaphore);
     delete vkRenderPass;
-}
-
-void VulkanGHI::CreateBasePipeline(GHIRenderPass const* renderPass)
-{
-    if (m_pipeline)
-    {
-        return;
-    }
-
-    VulkanRenderPass const* vkRenderPass = static_cast<VulkanRenderPass const*>(renderPass);
-
-    PixelShaderRef ps = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan.fs.glsl");
-    VertexShaderRef vs = IResourceManager::Get<VertexShader>("Content/Shader/Vulkan.vs.glsl");
-    ShaderLayout const& psLayout = ps->GetLayout();
-    ShaderLayout const& vsLayout = vs->GetLayout();
-
-    struct VertexInputDescription {
-
-        std::vector<vk::VertexInputBindingDescription> bindings;
-        std::vector<vk::VertexInputAttributeDescription> attributes;
-
-        vk::PipelineVertexInputStateCreateFlags flags;
-    } description;
-
-    {
-        // We will have just 1 vertex buffer binding, with a per-vertex rate
-        vk::VertexInputBindingDescription mainBinding;
-        mainBinding.binding = 0;
-        mainBinding.stride = sizeof(Mesh::Vertex);
-        mainBinding.inputRate = vk::VertexInputRate::eVertex;
-
-        description.bindings.push_back(mainBinding);
-
-        // Position will be stored at Location 0
-        vk::VertexInputAttributeDescription positionAttribute;
-        positionAttribute.binding = 0;
-        positionAttribute.location = 0;
-        positionAttribute.format = vk::Format::eR32G32B32Sfloat;
-        positionAttribute.offset = offsetof(Mesh::Vertex, position);
-
-        // Normal will be stored at Location 1
-        vk::VertexInputAttributeDescription normalAttribute;
-        normalAttribute.binding = 0;
-        normalAttribute.location = 1;
-        normalAttribute.format = vk::Format::eR32G32B32Sfloat;
-        normalAttribute.offset = offsetof(Mesh::Vertex, normal);
-
-        description.attributes.push_back(positionAttribute);
-        description.attributes.push_back(normalAttribute);
-    }
-
-    vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
-    vertexInputCreateInfo.setVertexBindingDescriptions(description.bindings);
-    vertexInputCreateInfo.setVertexAttributeDescriptions(description.attributes);
-
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo;
-    inputAssemblyCreateInfo.topology = vk::PrimitiveTopology::eTriangleList;
-    inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
-
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo;
-    viewportStateCreateInfo.viewportCount = 1;
-    viewportStateCreateInfo.scissorCount = 1;
-
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
-    rasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
-    rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-    rasterizationStateCreateInfo.polygonMode = vk::PolygonMode::eFill;
-    rasterizationStateCreateInfo.lineWidth = 1.0f;
-    rasterizationStateCreateInfo.cullMode = vk::CullModeFlagBits::eBack;
-    rasterizationStateCreateInfo.frontFace = vk::FrontFace::eClockwise;
-    rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
-    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f; // Optional
-    rasterizationStateCreateInfo.depthBiasClamp = 0.0f; // Optional
-    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f; // Optional
-
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo;
-    multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-    multisampleStateCreateInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-    multisampleStateCreateInfo.minSampleShading = 1.0f; // Optional
-    multisampleStateCreateInfo.pSampleMask = nullptr; // Optional
-    multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE; // Optional
-    multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE; // Optional
-
-    vk::PipelineColorBlendAttachmentState colorBlendAttachmentState;
-    colorBlendAttachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-    colorBlendAttachmentState.blendEnable = VK_FALSE;
-    colorBlendAttachmentState.srcColorBlendFactor = vk::BlendFactor::eOne; // Optional
-    colorBlendAttachmentState.dstColorBlendFactor = vk::BlendFactor::eZero; // Optional
-    colorBlendAttachmentState.colorBlendOp = vk::BlendOp::eAdd; // Optional
-    colorBlendAttachmentState.srcAlphaBlendFactor = vk::BlendFactor::eOne; // Optional
-    colorBlendAttachmentState.dstAlphaBlendFactor = vk::BlendFactor::eZero; // Optional
-    colorBlendAttachmentState.alphaBlendOp = vk::BlendOp::eAdd; // Optional
-
-    vk::PipelineColorBlendStateCreateInfo colorBlendState;
-    colorBlendState.logicOpEnable = VK_FALSE;
-    colorBlendState.logicOp = vk::LogicOp::eCopy; // Optional
-    colorBlendState.attachmentCount = 1;
-    colorBlendState.pAttachments = &colorBlendAttachmentState;
-    colorBlendState.blendConstants[0] = 0.0f; // Optional
-    colorBlendState.blendConstants[1] = 0.0f; // Optional
-    colorBlendState.blendConstants[2] = 0.0f; // Optional
-    colorBlendState.blendConstants[3] = 0.0f; // Optional
-
-    vk::PipelineDepthStencilStateCreateInfo depthStencilState;
-    depthStencilState.depthTestEnable = true ? VK_TRUE : VK_FALSE; // TODO
-    depthStencilState.depthWriteEnable = true ? VK_TRUE : VK_FALSE;
-    depthStencilState.depthCompareOp = true ? vk::CompareOp::eLessOrEqual : vk::CompareOp::eAlways;
-    depthStencilState.depthBoundsTestEnable = VK_FALSE;
-    depthStencilState.minDepthBounds = 0.0f; // Optional
-    depthStencilState.maxDepthBounds = 1.0f; // Optional
-    depthStencilState.stencilTestEnable = VK_FALSE;
-
-    /*
-    if (blendEnable)
-    {
-        finalColor.rgb = (srcColorBlendFactor * newColor.rgb) < colorBlendOp > (dstColorBlendFactor * oldColor.rgb);
-        finalColor.a = (srcAlphaBlendFactor * newColor.a) < alphaBlendOp > (dstAlphaBlendFactor * oldColor.a);
-    }
-    else
-    {
-        finalColor = newColor;
-    }
-
-    finalColor = finalColor & colorWriteMask;
-    */
-
-    std::vector<vk::PushConstantRange> pushConstantRanges;
-    for (auto const pcb : psLayout.pushConstantBuffers)
-    {
-        vk::PushConstantRange pcr;
-        pcr.offset = pcb.offset;
-        pcr.size = pcb.size;
-        pcr.stageFlags = vk::ShaderStageFlagBits::eFragment;
-        pushConstantRanges.emplace_back(pcr);
-    }
-    for (auto const pcb : vsLayout.pushConstantBuffers)
-    {
-        vk::PushConstantRange pcr;
-        pcr.offset = pcb.offset;
-        pcr.size = pcb.size;
-        pcr.stageFlags = vk::ShaderStageFlagBits::eVertex;
-        pushConstantRanges.emplace_back(pcr);
-    }
-
-    std::vector<std::unordered_map<uint32, vk::DescriptorSetLayoutBinding>> sets;
-
-    auto AddStageUniformBuffers = [&sets](std::vector<ShaderLayout::UniformBuffer> const& ubs, vk::ShaderStageFlagBits const shaderStage) {
-        for (auto const ub : ubs)
-        {
-            if (sets.size() <= ub.set)
-            {
-                sets.resize(ub.set + 1);
-            }
-
-            auto& set = sets[ub.set];
-
-            auto it = set.find(ub.binding);
-            if (it == set.end())
-            {
-                vk::DescriptorSetLayoutBinding setLayoutBinding;
-                setLayoutBinding.binding = ub.binding;
-                setLayoutBinding.descriptorCount = 1;
-                setLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
-                setLayoutBinding.stageFlags = shaderStage;
-                set.insert({ ub.binding, setLayoutBinding });
-            }
-            else
-            {
-                (*it).second.stageFlags |= shaderStage;
-            }
-        }
-    };
-
-    AddStageUniformBuffers(vsLayout.uniformBuffers, vk::ShaderStageFlagBits::eVertex);
-    AddStageUniformBuffers(psLayout.uniformBuffers, vk::ShaderStageFlagBits::eFragment);
-
-    std::vector<vk::DescriptorSetLayout> setLayouts;
-    for (auto& set : sets)
-    {
-        std::vector<vk::DescriptorSetLayoutBinding> setLayoutBindings;
-        for (auto bindings : set)
-        {
-            setLayoutBindings.emplace_back(bindings.second);
-        }
-
-        vk::DescriptorSetLayoutCreateInfo setLayoutInfo;
-        setLayoutInfo.setBindings(setLayoutBindings);
-        setLayoutInfo.flags = vk::DescriptorSetLayoutCreateFlags(0);
-
-        vk::DescriptorSetLayout setLayout = m_device->GetLogical().createDescriptorSetLayout(setLayoutInfo);
-        setLayouts.emplace_back(setLayout);
-    }
-
-    vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-    pipelineLayoutInfo.setSetLayouts(setLayouts);
-    pipelineLayoutInfo.setPushConstantRanges(pushConstantRanges);
-
-    m_pipelineLayout = m_device->GetLogical().createPipelineLayout(pipelineLayoutInfo);
-
-    // TODO: Move this
-    {
-        std::array<vk::DescriptorPoolSize, 1> descriptorPoolSizes =
-        {
-            { vk::DescriptorType::eUniformBuffer, 10 }
-        };
-
-        vk::DescriptorPoolCreateInfo descriptorPoolInfo;
-        descriptorPoolInfo.flags = vk::DescriptorPoolCreateFlags(0);
-        descriptorPoolInfo.maxSets = 10;
-        descriptorPoolInfo.setPoolSizes(descriptorPoolSizes);
-
-        auto m_descriptorPool = m_device->GetLogical().createDescriptorPool(descriptorPoolInfo);
-
-        vk::DescriptorSetAllocateInfo allocInfo;
-        allocInfo.descriptorPool = m_descriptorPool;
-        allocInfo.setSetLayouts(setLayouts);
-
-        m_descriptorSets = m_device->GetLogical().allocateDescriptorSets(allocInfo);
-
-        vk::DescriptorSetAllocateInfo allocInfo2;
-        allocInfo2.descriptorPool = m_descriptorPool;
-        allocInfo2.setSetLayouts(setLayouts[0]);
-
-        m_descriptorSet2 = m_device->GetLogical().allocateDescriptorSets(allocInfo2)[0];
-    }
-
-    std::array<vk::DynamicState, 2> dynamicStates = {
-        vk::DynamicState::eViewport,
-        vk::DynamicState::eScissor,
-    };
-    
-    vk::PipelineDynamicStateCreateInfo dynamicState;
-    dynamicState.setDynamicStates(dynamicStates);
-
-    std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
-    if (ps.IsValid() && vs.IsValid())
-    {
-        VulkanShader* v_ps = static_cast<VulkanShader*>(ps->GetGHIShader());
-        VulkanShader* v_vs = static_cast<VulkanShader*>(vs->GetGHIShader());
-
-        shaderStages.emplace_back(v_ps->GetPipelineInfo());
-        shaderStages.emplace_back(v_vs->GetPipelineInfo());
-
-        vk::GraphicsPipelineCreateInfo pipelineInfo;
-        pipelineInfo.setStages(shaderStages);
-        pipelineInfo.pVertexInputState = &vertexInputCreateInfo;
-        pipelineInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
-        pipelineInfo.pViewportState = &viewportStateCreateInfo;
-        pipelineInfo.pRasterizationState = &rasterizationStateCreateInfo;
-        pipelineInfo.pMultisampleState = &multisampleStateCreateInfo;
-        pipelineInfo.pDepthStencilState = &depthStencilState;
-        pipelineInfo.pColorBlendState = &colorBlendState;
-        pipelineInfo.pDynamicState = &dynamicState;
-
-        pipelineInfo.layout = m_pipelineLayout;
-        pipelineInfo.renderPass = vkRenderPass->m_renderPass;
-        pipelineInfo.subpass = 0;
-
-        pipelineInfo.basePipelineHandle = nullptr; // Optional
-        pipelineInfo.basePipelineIndex = -1; // Optional
-
-        m_pipeline = m_device->GetLogical().createGraphicsPipeline(nullptr, pipelineInfo).value;
-    }
 }
 
 void VulkanGHI::BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer)
@@ -909,11 +871,6 @@ void VulkanGHI::BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* comma
     scissor.offset = vk::Offset2D({ 0, 0 });
     scissor.extent = vkRenderPass->m_extent;
     vkCommandBuffer.setScissor(0, 1, &scissor);
-
-    if (m_pipeline)
-    {
-        vkCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_pipeline);
-    }
 
     //vk::ClearAttachment c;
     //c.clearValue = clearColorValue;

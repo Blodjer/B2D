@@ -38,13 +38,18 @@ public:
     GHIShader* CreateShader(std::vector<uint32> const& data, vk::ShaderStageFlagBits stage);
     virtual void DestroyShader(GHIShader*& shader) override;
 
+    virtual GHIGraphicsPipeline* CreateGraphicsPipeline(GHIRenderPass const* targetPass, VertexShaderRef vertexShader, PixelShaderRef pixelShader) override;
+    virtual void DestroyGraphicsPipeline(GHIGraphicsPipeline* pipeline) override;
+
+    virtual GHIResourceSet* CreateResourceSet() override;
+    virtual void DestroyResourceSet(GHIResourceSet* resourceSet) override;
+
     virtual GHITexture* CreateTexture(uint32 width, uint32 height, EGHITextureFormat format, EGHITextureUsageFlags usage) override;
     virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) override { B2D_NOT_IMPLEMENTED(); }
     virtual void DestroyTexture(GHITexture* texture) override;
 
     virtual GHIRenderPass* CreateRenderPass(std::vector<GHITexture*> const& renderTargets, GHITexture const* depthTarget) override;
     virtual void DestroyRenderPass(GHIRenderPass* renderPass) override;
-    /* TMP */ void CreateBasePipeline(GHIRenderPass const* renderPass);
 
     virtual void BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer) override;
     virtual void EndRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer) override;
@@ -74,13 +79,6 @@ private:
 
     vk::CommandPool m_commandPool;
 
-    vk::Pipeline m_pipeline;
-    
     VulkanSurface* m_primarySurface = nullptr; // TMP
-
-public:
-    vk::PipelineLayout m_pipelineLayout; // TMP
-    std::vector<vk::DescriptorSet> m_descriptorSets; // TMP
-    vk::DescriptorSet m_descriptorSet2; // TMP
 };
 

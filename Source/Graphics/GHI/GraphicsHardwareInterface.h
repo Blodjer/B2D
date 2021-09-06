@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GraphicsCommon.h"
+#include "Graphics/Shader.h"
 
 class GHIShader;
 class GHIMaterial;
@@ -9,6 +10,8 @@ class GHISurface;
 class GHIRenderPass;
 class GHICommandList;
 class GHIBuffer;
+class GHIGraphicsPipeline;
+class GHIResourceSet;
 enum class EGHIBufferType;
 enum class EGHITextureFormat;
 enum EGHITextureUsageFlags;
@@ -36,6 +39,12 @@ public:
     virtual GHIShader* CreateVertexShader(std::vector<uint32> const& data) = 0;
     virtual GHIShader* CreatePixelShader(std::vector<uint32> const& data) = 0;
     virtual void DestroyShader(GHIShader*& shader) = 0;
+
+    virtual GHIGraphicsPipeline* CreateGraphicsPipeline(GHIRenderPass const* targetPass, VertexShaderRef vertexShader, PixelShaderRef pixelShader) = 0;
+    virtual void DestroyGraphicsPipeline(GHIGraphicsPipeline* pipeline) = 0;
+
+    virtual GHIResourceSet* CreateResourceSet() = 0;
+    virtual void DestroyResourceSet(GHIResourceSet* resourceSet) = 0;
 
     virtual GHITexture* CreateTexture(uint32 width, uint32 height, EGHITextureFormat format, EGHITextureUsageFlags usage) = 0;
     virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) = 0;
