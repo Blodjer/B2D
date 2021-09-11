@@ -8,6 +8,21 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader/tiny_obj_loader.h>
 
+namespace std
+{
+    template<>
+    struct std::hash<Mesh::Vertex>
+    {
+        size_t operator()(Mesh::Vertex const& vertex) const
+        {
+            return // TODO
+                ((std::hash<float>()(vertex.position.x + vertex.position.y + vertex.position.z) ^
+                (std::hash<float>()(vertex.normal.x + vertex.normal.y + vertex.normal.z) << 1)) >> 1) ^
+                (std::hash<float>()(vertex.uv.x + vertex.uv.y) << 1);
+        }
+    };
+}
+
 bool Mesh::Load(ResourcePath const& path)
 {
     tinyobj::attrib_t attrib;
@@ -31,6 +46,7 @@ bool Mesh::Load(ResourcePath const& path)
         return false;
     }
 
+    std::unordered_map<Vertex, decltype(m_indices)::value_type> uniqueVertices;
     for (auto const& shape : shapes)
     {
         // Loop over faces (polygon)
@@ -71,25 +87,24 @@ bool Mesh::Load(ResourcePath const& path)
                 newVertex.uv.x = ux;
                 newVertex.uv.y = uy;
 
-                m_vertices.push_back(newVertex);
+                auto [it, isNew] = uniqueVertices.emplace(newVertex, static_cast<uint32>(m_vertices.size()));
+                if (isNew)
+                {
+                    m_vertices.push_back(newVertex);
+                }
+                m_indices.push_back(it->second);
             }
             index_offset += fv;
         }
     }
 
-//     m_vertices.resize(3);
-// 
-//     m_vertices[0].position = { 1.f, 1.f, 0.0f };
-//     m_vertices[1].position = { -1.f, 1.f, 0.0f };
-//     m_vertices[2].position = { 0.f, -1.f, 0.0f };
-// 
-//     m_vertices[0].normal = { 1.f, 0.f, 0.0f };
-//     m_vertices[1].normal = { 0.f, 1.f, 0.0f };
-//     m_vertices[2].normal = { 0.f, 0.f, 1.0f };
-
     uint size = m_vertices.size() * sizeof(Vertex);
     m_vertexBuffer = GameEngine::Instance()->GetGHI()->CreateBuffer(EGHIBufferType::VertexBuffer, size);
     m_vertexBuffer->Upload(m_vertices.data(), size);
+
+    uint indicesSize = m_indices.size() * sizeof(decltype(m_indices)::value_type);
+    m_indexBuffer = GameEngine::Instance()->GetGHI()->CreateBuffer(EGHIBufferType::IndexBuffer, indicesSize);
+    m_indexBuffer->Upload(m_indices.data(), indicesSize);
 
     return true;
 }

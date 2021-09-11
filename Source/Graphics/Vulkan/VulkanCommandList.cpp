@@ -39,6 +39,14 @@ void VulkanCommandList::BindVertexBuffer(GHIBuffer const* buffer)
     m_commandBuffer.bindVertexBuffers(0, vkBuffer->buffer, offset);
 }
 
+void VulkanCommandList::BindIndexBuffer(GHIBuffer const* buffer)
+{
+    VulkanBuffer const* vkBuffer = static_cast<VulkanBuffer const*>(buffer);
+    vk::DeviceSize offset = 0;
+
+    m_commandBuffer.bindIndexBuffer(vkBuffer->buffer, offset, vk::IndexType::eUint32);
+}
+
 void VulkanCommandList::BindResourceSet(uint32 slot, GHIResourceSet* set)
 {
     VulkanResourceSet* vkResourceSet = static_cast<VulkanResourceSet*>(set);
@@ -53,4 +61,9 @@ void VulkanCommandList::SetShaderParameter(uint32 bytes, void const* ptr)
 void VulkanCommandList::Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance)
 {
     m_commandBuffer.draw(vertexCount, instanceCount, firstVertex, firstInstance);
+}
+
+void VulkanCommandList::DrawIndexed(uint32 indexCount, uint32 instanceCount, uint32 firstIndex, uint32 vertexOffset, uint32 firstInstance)
+{
+    m_commandBuffer.drawIndexed(indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }

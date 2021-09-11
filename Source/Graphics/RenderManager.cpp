@@ -212,7 +212,8 @@ void RenderManager::Draw()
             //cb.SetShaderParameter(sizeof(constants), &constants);
 
             cb.BindVertexBuffer(meshPtr->GetVertexBuffer());
-            cb.Draw(meshPtr->GetVertices().size(), 1, 0, 0);
+            cb.BindIndexBuffer(meshPtr->GetIndexBuffer());
+            cb.DrawIndexed(meshPtr->GetIndices().size(), 1, 0, 0, 0);
 
             cb.BindResourceSet(2, rs4);
             cb.BindVertexBuffer(vBuffer);

@@ -19,6 +19,7 @@ public:
     virtual void BindGraphicsPipeline(GHIGraphicsPipeline const* pipeline) override;
 
     virtual void BindVertexBuffer(GHIBuffer const* buffer) override;
+    virtual void BindIndexBuffer(GHIBuffer const* buffer) override;
 
     virtual void BindResourceSet(uint32 slot, GHIResourceSet* set) override;
     //virtual void BindResourceSet(uint32 firstSlot, std::vector<GHIResourceSet*> sets);
@@ -26,6 +27,7 @@ public:
     virtual void SetShaderParameter(uint32 bytes, void const* ptr) override;
 
     virtual void Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance) override;
+    virtual void DrawIndexed(uint32 indexCount, uint32 instanceCount, uint32 firstIndex, uint32 vertexOffset, uint32 firstInstance) override;
 
 private:
     VulkanGraphicsPipeline const* m_currentPipeline = nullptr; // TMP
