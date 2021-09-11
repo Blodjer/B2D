@@ -22,6 +22,13 @@ struct ShaderLayout
         uint32 binding;
     };
 
-    std::vector<UniformBuffer> uniformBuffers;
+    struct Sampler
+    {
+        uint32 set;
+        uint32 binding;
+    };
+
     std::vector<PushConstantBuffers> pushConstantBuffers;
+    std::vector<UniformBuffer> uniformBuffers;
+    std::vector<Sampler> samplers;
 };

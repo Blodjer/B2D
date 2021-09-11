@@ -19,6 +19,7 @@
 
 #include "Core/Resource.h" // TMP
 #include "Mesh.h" // TMP
+#include "Texture.h" // TMP
 
 RenderManager::RenderManager()
 {
@@ -71,6 +72,9 @@ void RenderManager::Draw()
     static auto meshPtr = IResourceManager::Get<Mesh>("Content/Mesh/viking_room.obj");
     static auto meshPtr2 = IResourceManager::Get<Mesh>("Content/Mesh/bunny.obj");
 
+    static auto textureKid = IResourceManager::Get<CTexture>("Content/Textures/SuccessKid.png");
+    static auto textureViking = IResourceManager::Get<CTexture>("Content/Textures/viking_room.png");
+
     VertexShaderRef vs = IResourceManager::Get<VertexShader>("Content/Shader/Vulkan.vs.glsl");
     PixelShaderRef ps = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan.fs.glsl");
     PixelShaderRef ps2 = IResourceManager::Get<PixelShader>("Content/Shader/Vulkan2.fs.glsl");
@@ -121,10 +125,6 @@ void RenderManager::Draw()
     }
     ubVPBuffer1->Upload(&constants, sizeof(constants));
 
-    float const aspect = static_cast<float>(targetWidth) / static_cast<float>(targetHeight);
-    constants.viewProjectionMatrix = TMatrix::Perspective(45.0f, aspect, 0.1f, 10000.0f) * TMatrix::LookAt(TVec3(2.0f, 0, 0.0f), TVec3::Zero, -TVec3::Up);
-    ubVPBuffer2->Upload(&constants, sizeof(constants));
-
     static float f = 0.0f;
     f += 0.001f;
     float sinFloat = UMath::Sin(f);
@@ -152,15 +152,43 @@ void RenderManager::Draw()
         rs0c->Bind(2, ubFloat3Buffer);
     }
 
-    static bool bb = false;
-    rs0c->Bind(0, bb ? ubVPBuffer2 : ubVPBuffer1);
-    bb = !bb;
-
     static GHIResourceSet* rs1 = nullptr;
     if (!rs1)
     {
         rs1 = ghi->CreateResourceSet();
         rs1->Bind(0, ubFloatBuffer);
+    }
+
+    static GHIResourceSet* rs2 = nullptr;
+    if (!rs2)
+    {
+        GHISampler* sampler = ghi->CreateSampler();
+        rs2 = ghi->CreateResourceSet();
+        rs2->Bind(0, textureViking->GetGHITexture(), sampler);
+    }
+
+    static GHIResourceSet* rs4 = nullptr;
+    if (!rs4)
+    {
+        GHISampler* sampler = ghi->CreateSampler();
+        rs4 = ghi->CreateResourceSet();
+        rs4->Bind(0, textureKid->GetGHITexture(), sampler);
+    }
+
+    static GHIBuffer* vBuffer = nullptr;
+    if (!vBuffer)
+    {
+        Mesh::Vertex quad[6] = {
+            { TVec3(-0.5f, -0.5f, 1), TVec3::Up, TVec2(1, 0) },
+            { TVec3(0.5f, -0.5f, 1), TVec3::Up, TVec2(0, 0) },
+            { TVec3(0.5f, 0.5f, 1), TVec3::Up, TVec2(0, 1) },
+            { TVec3(-0.5f, -0.5f, 1), TVec3::Up, TVec2(1, 0) },
+            { TVec3(0.5f, 0.5f, 1), TVec3::Up, TVec2(0, 1) },
+            { TVec3(-0.5f, 0.5f, 1), TVec3::Up, TVec2(1, 1) },
+        };
+
+        vBuffer = ghi->CreateBuffer(EGHIBufferType::VertexBuffer, sizeof(quad));
+        vBuffer->Upload(quad, sizeof(quad));
     }
 
     rg.AddPass(
@@ -177,23 +205,25 @@ void RenderManager::Draw()
 
             cb.BindGraphicsPipeline(graphicsPipeline1);
 
-            cb.BindVertexBuffer(meshPtr->GetVertexBuffer());
-
             cb.BindResourceSet(0, rs0);
             cb.BindResourceSet(1, rs1);
+            cb.BindResourceSet(2, rs2);
 
             //cb.SetShaderParameter(sizeof(constants), &constants);
 
+            cb.BindVertexBuffer(meshPtr->GetVertexBuffer());
             cb.Draw(meshPtr->GetVertices().size(), 1, 0, 0);
 
-            cb.BindGraphicsPipeline(graphicsPipeline2);
+            cb.BindResourceSet(2, rs4);
+            cb.BindVertexBuffer(vBuffer);
+            cb.Draw(6, 1, 0, 0);
 
-            cb.BindVertexBuffer(meshPtr2->GetVertexBuffer());
+            //cb.BindGraphicsPipeline(graphicsPipeline2);
 
-            cb.BindResourceSet(0, rs0c);
-            //cb.BindResourceSet(1, rs1);
+            //cb.BindResourceSet(0, rs0c);
 
-            cb.Draw(meshPtr2->GetVertices().size(), 1, 0, 0);
+            //cb.BindVertexBuffer(meshPtr2->GetVertexBuffer());
+            //cb.Draw(meshPtr2->GetVertices().size(), 1, 0, 0);
         }
     );
 

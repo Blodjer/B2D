@@ -57,28 +57,14 @@ void OpenGLGHI::Shutdown()
 
 }
 
-GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 height, uint8 components)
+GHITexture* OpenGLGHI::CreateTexture(void const* data, uint32 width, uint32 height, EGHITextureFormat format)
 {
-    GLenum format;
-    switch (components)
-    {
-    case 1:
-        format = GL_RED;
-    case 3:
-        format = GL_RGB;
-        break;
-    case 4:
-        format = GL_RGBA;
-        break;
-    default:
-        B2D_LOG_ERROR("Cannot create texture with {} components", components);
-        return nullptr;
-    }
+    GLenum glFormat = Convert(format);
 
     GLuint handle;
     glGenTextures(1, &handle);
     glBindTexture(GL_TEXTURE_2D, handle);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, glFormat, width, height, 0, glFormat, GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -281,6 +267,22 @@ void OpenGLGHI::DestroyShader(GHIShader*& shader)
 //
 //    glUseProgram(openglMaterial->GetHandle());
 //}
+
+GLint OpenGLGHI::Convert(EGHITextureFormat format)
+{
+    switch (format)
+    {
+        case EGHITextureFormat::RGBA8:              return GL_RGBA;
+        case EGHITextureFormat::BGRA8:              return GL_RGBA;
+        case EGHITextureFormat::Depth24:            return GL_DEPTH_COMPONENT24;
+        case EGHITextureFormat::Depth24Stencil8:    return GL_DEPTH24_STENCIL8;
+
+        default:
+            B2D_TRAP_f("Format not supported by OpenGL!");
+    }
+
+    return GL_NONE;
+}
 
 bool OpenGLGHI::ImGui_Init()
 {

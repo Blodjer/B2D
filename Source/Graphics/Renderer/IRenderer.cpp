@@ -7,9 +7,9 @@
 
 void IRenderer::Init()
 {
-    IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
-    GHITexture* renderTexture1 = ghi->CreateTexture(nullptr, 1, 1, 3);
-    GHITexture* renderTexture2 = ghi->CreateTexture(nullptr, 1, 1, 3);
+    //IGraphicsHardwareInterface* ghi = GameEngine::Instance()->GetGHI();
+    //GHITexture* renderTexture1 = ghi->CreateTexture(nullptr, 1, 1, 3);
+    //GHITexture* renderTexture2 = ghi->CreateTexture(nullptr, 1, 1, 3);
 
     // Add viewport
     // 

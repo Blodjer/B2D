@@ -13,6 +13,7 @@ public:
     virtual ~VulkanResourceSet();
 
     virtual void Bind(uint32 binding, GHIBuffer const* buffer) override;
+    virtual void Bind(uint32 binding, GHITexture const* texture, GHISampler const* sampler) override;
 
     void Build();
 
@@ -24,7 +25,23 @@ private:
     struct Binding
     {
         uint32 binding;
-        GHIBuffer const* buffer;
+
+        enum class Type
+        {
+            Buffer,
+            Sampler
+        } type = Type::Buffer;
+
+        union
+        {
+            GHIBuffer const* buffer;
+
+            struct CombinedSampler
+            {
+                GHITexture const* texture;
+                GHISampler const* sampler;
+            } combinedSampler;
+        };
     };
 
     bool m_descriptorSetBindingsDirty = true;

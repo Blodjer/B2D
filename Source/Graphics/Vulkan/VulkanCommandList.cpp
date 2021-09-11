@@ -5,15 +5,15 @@
 #include "VulkanBuffer.h"
 #include "VulkanResourceSet.h"
 
-#include "GameEngine.h" // TMP
-#include "VulkanGHI.h" // TMP
-#include "VulkanDevice.h" // TMP
-
 void VulkanCommandList::Begin()
 {
+    Begin(vk::CommandBufferUsageFlags(0));
+}
+
+void VulkanCommandList::Begin(vk::CommandBufferUsageFlags flags)
+{
     vk::CommandBufferBeginInfo commandBufferBeginInfo;
-    commandBufferBeginInfo.flags = vk::CommandBufferUsageFlags(0);
-    commandBufferBeginInfo.pInheritanceInfo = nullptr;
+    commandBufferBeginInfo.flags = flags;
 
     m_commandBuffer.begin(commandBufferBeginInfo);
 }

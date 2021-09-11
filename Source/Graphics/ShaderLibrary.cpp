@@ -215,6 +215,22 @@ void ShaderLibrary::Reflect(ShaderBinaryData const& shaderBinaryData, ShaderLayo
         B2D_LOG_INFO("\t  {}", resource.name);
         B2D_LOG_INFO("\t    Size = {}, Offset = {}, Binding = {}, Members = {}", bufferSize, offset, binding, memberCount);
     }
+
+    for (auto const& resource : resources.sampled_images)
+    {
+        auto const& bufferType = compiler.get_type(resource.base_type_id);
+        uint32 set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+        uint32 binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+
+        ShaderLayout::Sampler sampler;
+        sampler.set = set;
+        sampler.binding = binding;
+
+        outShaderLayout.samplers.emplace_back(sampler);
+
+        B2D_LOG_INFO("\t  {}", resource.name);
+        B2D_LOG_INFO("\t    Set = {}, Binding = {}", set, binding);
+    }
 }
 
 void ShaderLibrary::PreloadAll(EGraphicsAPI const targetApi)

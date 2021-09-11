@@ -12,6 +12,8 @@ public:
 
 public:
     virtual void Begin() override;
+    void Begin(vk::CommandBufferUsageFlags flags);
+
     virtual void End() override;
 
     virtual void BindGraphicsPipeline(GHIGraphicsPipeline const* pipeline) override;

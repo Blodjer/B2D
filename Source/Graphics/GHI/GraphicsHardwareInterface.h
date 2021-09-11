@@ -12,6 +12,7 @@ class GHICommandList;
 class GHIBuffer;
 class GHIGraphicsPipeline;
 class GHIResourceSet;
+class GHISampler;
 enum class EGHIBufferType;
 enum class EGHITextureFormat;
 enum EGHITextureUsageFlags;
@@ -47,8 +48,10 @@ public:
     virtual void DestroyResourceSet(GHIResourceSet* resourceSet) = 0;
 
     virtual GHITexture* CreateTexture(uint32 width, uint32 height, EGHITextureFormat format, EGHITextureUsageFlags usage) = 0;
-    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) = 0;
+    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, EGHITextureFormat format) = 0;
     virtual void DestroyTexture(GHITexture* texture) = 0;
+
+    virtual GHISampler* CreateSampler() = 0;
 
     virtual GHIRenderPass* CreateRenderPass(std::vector<GHITexture*> const& renderTargets, GHITexture const* depthTarget) = 0;
     virtual void DestroyRenderPass(GHIRenderPass* renderPass) = 0;
@@ -61,6 +64,7 @@ public:
     virtual void Submit(std::vector<GHICommandList*>& commandLists) = 0;
 
     virtual GHIBuffer* CreateBuffer(EGHIBufferType bufferType, uint size) = 0;
+    virtual void DestroyBuffer(GHIBuffer* buffer) = 0;
 
 protected:
     friend class EditorModule;

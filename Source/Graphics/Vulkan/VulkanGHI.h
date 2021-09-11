@@ -8,6 +8,8 @@
 class VulkanDevice;
 class VulkanSurface;
 class VulkanRenderPass;
+class VulkanBuffer;
+class VulkanCommandList;
 
 class VulkanGHI final : public IGraphicsHardwareInterface
 {
@@ -45,8 +47,10 @@ public:
     virtual void DestroyResourceSet(GHIResourceSet* resourceSet) override;
 
     virtual GHITexture* CreateTexture(uint32 width, uint32 height, EGHITextureFormat format, EGHITextureUsageFlags usage) override;
-    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) override { B2D_NOT_IMPLEMENTED(); }
+    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, EGHITextureFormat format) override;
     virtual void DestroyTexture(GHITexture* texture) override;
+
+    virtual GHISampler* CreateSampler() override;
 
     virtual GHIRenderPass* CreateRenderPass(std::vector<GHITexture*> const& renderTargets, GHITexture const* depthTarget) override;
     virtual void DestroyRenderPass(GHIRenderPass* renderPass) override;
@@ -58,8 +62,13 @@ public:
     virtual void FreeCommandBuffer(GHICommandList* commandBuffer) override;
 
     virtual void Submit(std::vector<GHICommandList*>& commandLists) override;
+    void ImmediateSubmit(std::function<void(VulkanCommandList&)>&& function);
 
     virtual GHIBuffer* CreateBuffer(EGHIBufferType bufferType, uint size) override;
+    VulkanBuffer* CreateBuffer(uint size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
+    virtual void DestroyBuffer(GHIBuffer* buffer) override;
+
+    static vk::Format Convert(EGHITextureFormat textureFormat);
 
 protected:
     virtual bool ImGui_Init() override;
@@ -78,6 +87,7 @@ private:
     vk::DebugUtilsMessengerEXT m_debugUtilMessenger;
 
     vk::CommandPool m_commandPool;
+    vk::CommandPool m_immediateCommandPool;
 
     VulkanSurface* m_primarySurface = nullptr; // TMP
 };

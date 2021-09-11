@@ -14,6 +14,7 @@
 #include "VulkanBuffer.h"
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanResourceSet.h"
+#include "VulkanSampler.h"
 
 #include "Editor/ImGuiCommon.h"
 #include "Editor/imgui_impl_vulkan.h"
@@ -142,24 +143,34 @@ bool VulkanGHI::Init()
     B2D_ASSERT(!physicalDevices.empty());
 
     vk::PhysicalDevice physicalDevice = SelectPhysicalDevice(physicalDevices);
-
+    
     std::vector<char const*> deviceExtensionsToEnable;
     SelectDeviceExtensions(physicalDevice, deviceExtensionsToEnable);
 
     m_device = new VulkanDevice(m_instance, physicalDevice, deviceExtensionsToEnable);
 
     VmaAllocatorCreateInfo allocatorInfo = {};
-    allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+    allocatorInfo.vulkanApiVersion = appInfo.apiVersion;
     allocatorInfo.physicalDevice = m_device->GetPhysical();
     allocatorInfo.device = m_device->GetLogical();
     allocatorInfo.instance = m_instance;
     vmaCreateAllocator(&allocatorInfo, &m_allocator);
 
-    vk::CommandPoolCreateInfo commandPoolInfo;
-    commandPoolInfo.queueFamilyIndex = m_device->GetGraphicsQueue().GetFamilyIndex();
-    commandPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer; // TODO
+    {
+        vk::CommandPoolCreateInfo commandPoolInfo;
+        commandPoolInfo.queueFamilyIndex = m_device->GetGraphicsQueue().GetFamilyIndex();
+        commandPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 
-    m_commandPool = m_device->GetLogical().createCommandPool(commandPoolInfo);
+        m_commandPool = m_device->GetLogical().createCommandPool(commandPoolInfo);
+    }
+
+    {
+        vk::CommandPoolCreateInfo commandPoolInfo;
+        commandPoolInfo.queueFamilyIndex = m_device->GetGraphicsQueue().GetFamilyIndex();
+        commandPoolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient;
+
+        m_immediateCommandPool = m_device->GetLogical().createCommandPool(commandPoolInfo);
+    }
 
     return true;
 }
@@ -169,6 +180,7 @@ void VulkanGHI::Shutdown()
     m_device->GetLogical().waitIdle();
 
     m_device->GetLogical().destroyCommandPool(m_commandPool);
+    m_device->GetLogical().destroyCommandPool(m_immediateCommandPool);
 
     //m_device->GetLogical().destroyPipeline(m_pipeline);
     //m_device->GetLogical().destroyPipelineLayout(m_pipelineLayout);
@@ -439,8 +451,16 @@ GHIGraphicsPipeline* VulkanGHI::CreateGraphicsPipeline(GHIRenderPass const* targ
         normalAttribute.format = vk::Format::eR32G32B32Sfloat;
         normalAttribute.offset = offsetof(Mesh::Vertex, normal);
 
+        // UV will be stored at Location 2
+        vk::VertexInputAttributeDescription uvAttribute;
+        uvAttribute.binding = 0;
+        uvAttribute.location = 2;
+        uvAttribute.format = vk::Format::eR32G32Sfloat;
+        uvAttribute.offset = offsetof(Mesh::Vertex, uv);
+
         description.attributes.push_back(positionAttribute);
         description.attributes.push_back(normalAttribute);
+        description.attributes.push_back(uvAttribute);
     }
 
     vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
@@ -529,6 +549,31 @@ GHIGraphicsPipeline* VulkanGHI::CreateGraphicsPipeline(GHIRenderPass const* targ
                     setLayoutBinding.descriptorType = vk::DescriptorType::eUniformBuffer;
                     setLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAll; // TMP //shaderStage;
                     set.insert({ ub.binding, setLayoutBinding });
+                }
+                else
+                {
+                    (*it).second.stageFlags |= shaderStage;
+                }
+            }
+
+            for (auto const& s : shaderLayout.samplers)
+            {
+                if (combinedDescriptorSets.size() <= s.set)
+                {
+                    combinedDescriptorSets.resize(s.set + 1);
+                }
+
+                auto& set = combinedDescriptorSets[s.set];
+
+                auto it = set.find(s.binding);
+                if (it == set.end())
+                {
+                    vk::DescriptorSetLayoutBinding setLayoutBinding;
+                    setLayoutBinding.binding = s.binding;
+                    setLayoutBinding.descriptorCount = 1;
+                    setLayoutBinding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+                    setLayoutBinding.stageFlags = vk::ShaderStageFlagBits::eAll; // TMP //shaderStage;
+                    set.insert({ s.binding, setLayoutBinding });
                 }
                 else
                 {
@@ -631,29 +676,10 @@ GHITexture* VulkanGHI::CreateTexture(uint32 width, uint32 height, EGHITextureFor
     vk::ImageCreateInfo imageCreateInfo;
     imageCreateInfo.extent = extent;
     imageCreateInfo.imageType = vk::ImageType::e2D;
+    imageCreateInfo.format = Convert(format);
     imageCreateInfo.usage = vk::ImageUsageFlagBits::eTransferSrc;
     imageCreateInfo.mipLevels = 1;
     imageCreateInfo.arrayLayers = 1;
-    //imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    //imageCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-
-    switch (format)
-    {
-    case EGHITextureFormat::RGBA8:
-        imageCreateInfo.format = vk::Format::eR8G8B8A8Unorm;
-        break;
-    case EGHITextureFormat::BGRA8:
-        imageCreateInfo.format = vk::Format::eB8G8R8A8Unorm;
-        break;
-    case EGHITextureFormat::Depth24:
-        imageCreateInfo.format = vk::Format::eD24UnormS8Uint;
-        break;
-    case EGHITextureFormat::Depth24Stencil8:
-        imageCreateInfo.format = vk::Format::eD24UnormS8Uint;
-        break;
-    default:
-        B2D_TRAP_f("Format not supported by Vulkan!");
-    }
 
     if (usage & EGHITextureUsageFlags::ColorAttachment)
     {
@@ -702,12 +728,132 @@ GHITexture* VulkanGHI::CreateTexture(uint32 width, uint32 height, EGHITextureFor
     return texture;
 }
 
+GHITexture* VulkanGHI::CreateTexture(void const* data, uint32 width, uint32 height, EGHITextureFormat format)
+{
+    vk::Extent3D extent;
+    extent.width = width;
+    extent.height = height;
+    extent.depth = 1;
+
+    vk::Format vkFormat = Convert(format);
+    uint bytesPerPixel = GetBytesPerPixel(format);
+
+    vk::FormatProperties formatProperties = m_device->GetPhysical().getFormatProperties(vkFormat);
+    vk::FormatFeatureFlags featureFlags = vk::FormatFeatureFlagBits::eSampledImage | vk::FormatFeatureFlagBits::eTransferDst;
+    if ((formatProperties.optimalTilingFeatures & featureFlags) != featureFlags)
+    {
+        B2D_BREAK_f("Fomat not supported!");
+        return nullptr;
+    }
+
+    vk::ImageCreateInfo imageCreateInfo;
+    imageCreateInfo.extent = extent;
+    imageCreateInfo.imageType = vk::ImageType::e2D;
+    imageCreateInfo.format = vkFormat;
+    imageCreateInfo.usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst;
+    imageCreateInfo.mipLevels = 1;
+    imageCreateInfo.arrayLayers = 1;
+    imageCreateInfo.tiling = vk::ImageTiling::eOptimal;
+    imageCreateInfo.initialLayout = vk::ImageLayout::eUndefined;
+
+    uint imageSize = width * height * bytesPerPixel;
+    VulkanBuffer* stagingBuffer = CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc, VMA_MEMORY_USAGE_CPU_ONLY);
+    stagingBuffer->Upload(data, imageSize);
+
+    VulkanTexture* texture = new VulkanTexture(width, height);
+
+    VmaAllocationCreateInfo allocationCreateInfo = {};
+    allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    allocationCreateInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    VkImage outImage;
+    vmaCreateImage(m_allocator, &static_cast<VkImageCreateInfo>(imageCreateInfo), &allocationCreateInfo, &outImage, &texture->m_allocation, nullptr);
+
+    ImmediateSubmit([&](VulkanCommandList& cmd)
+        {
+            vk::ImageSubresourceRange range;
+            range.aspectMask = vk::ImageAspectFlagBits::eColor;
+            range.baseMipLevel = 0;
+            range.levelCount = 1;
+            range.baseArrayLayer = 0;
+            range.layerCount = 1;
+
+            vk::ImageMemoryBarrier imageBarrier_toTransfer;
+            imageBarrier_toTransfer.image = outImage;
+            imageBarrier_toTransfer.subresourceRange = range;
+            imageBarrier_toTransfer.oldLayout = vk::ImageLayout::eUndefined;
+            imageBarrier_toTransfer.newLayout = vk::ImageLayout::eTransferDstOptimal;
+            imageBarrier_toTransfer.srcAccessMask = vk::AccessFlagBits::eNoneKHR;
+            imageBarrier_toTransfer.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+            cmd.m_commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags(0), nullptr, nullptr, imageBarrier_toTransfer);
+
+            vk::BufferImageCopy copyRegion;
+            copyRegion.bufferOffset = 0;
+            copyRegion.bufferRowLength = 0;
+            copyRegion.bufferImageHeight = 0;
+            copyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+            copyRegion.imageSubresource.mipLevel = 0;
+            copyRegion.imageSubresource.baseArrayLayer = 0;
+            copyRegion.imageSubresource.layerCount = 1;
+            copyRegion.imageExtent = extent;
+
+            cmd.m_commandBuffer.copyBufferToImage(stagingBuffer->buffer, outImage, vk::ImageLayout::eTransferDstOptimal, copyRegion);
+
+            vk::ImageMemoryBarrier imageBarrier_toReadable = imageBarrier_toTransfer;
+            imageBarrier_toReadable.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+            imageBarrier_toReadable.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            imageBarrier_toReadable.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+            imageBarrier_toReadable.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+            cmd.m_commandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, vk::DependencyFlags(0), nullptr, nullptr, imageBarrier_toReadable);
+        });
+
+    DestroyBuffer(stagingBuffer);
+
+    vk::ImageViewCreateInfo createInfo;
+    createInfo.image = outImage;
+    createInfo.viewType = vk::ImageViewType::e2D;
+    createInfo.format = imageCreateInfo.format;
+    createInfo.components.r = vk::ComponentSwizzle::eIdentity;
+    createInfo.components.g = vk::ComponentSwizzle::eIdentity;
+    createInfo.components.b = vk::ComponentSwizzle::eIdentity;
+    createInfo.components.a = vk::ComponentSwizzle::eIdentity;
+    createInfo.subresourceRange.baseMipLevel = 0;
+    createInfo.subresourceRange.levelCount = 1;
+    createInfo.subresourceRange.baseArrayLayer = 0;
+    createInfo.subresourceRange.layerCount = 1;
+    createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+
+    texture->m_image = outImage;
+    texture->m_imageView = m_device->GetLogical().createImageView(createInfo);
+    texture->m_format = imageCreateInfo.format;
+
+    return texture;
+}
+
 void VulkanGHI::DestroyTexture(GHITexture* texture)
 {
     VulkanTexture* vkTexture = static_cast<VulkanTexture*>(texture);
     m_device->GetLogical().destroyImageView(vkTexture->m_imageView);
     vmaDestroyImage(m_allocator, vkTexture->m_image, vkTexture->m_allocation);
     delete vkTexture;
+}
+
+GHISampler* VulkanGHI::CreateSampler()
+{
+    VulkanSampler* sampler = new VulkanSampler();
+
+    vk::SamplerCreateInfo info;
+    info.magFilter = vk::Filter::eLinear;
+    info.minFilter = vk::Filter::eLinear;
+    info.addressModeU = vk::SamplerAddressMode::eRepeat;
+    info.addressModeV = vk::SamplerAddressMode::eRepeat;
+    info.addressModeW = vk::SamplerAddressMode::eRepeat;
+
+    sampler->sampler = m_device->GetLogical().createSampler(info);
+
+    return sampler;
 }
 
 GHIRenderPass* VulkanGHI::CreateRenderPass(std::vector<GHITexture*> const& renderTargets, GHITexture const* depthTarget)
@@ -726,7 +872,6 @@ GHIRenderPass* VulkanGHI::CreateRenderPass(std::vector<GHITexture*> const& rende
 
         vk::AttachmentDescription colorAttachment;
         colorAttachment.format = vkRenderTarget->m_format;
-        colorAttachment.samples = vk::SampleCountFlagBits::e1;
         colorAttachment.loadOp = depthTarget != nullptr ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
         colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
         colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
@@ -750,7 +895,6 @@ GHIRenderPass* VulkanGHI::CreateRenderPass(std::vector<GHITexture*> const& rende
 
         vk::AttachmentDescription depthAttachment;
         depthAttachment.format = vkDepthTarget->m_format;
-        depthAttachment.samples = vk::SampleCountFlagBits::e1;
         depthAttachment.loadOp = vk::AttachmentLoadOp::eClear;
         depthAttachment.storeOp = vk::AttachmentStoreOp::eStore;
         depthAttachment.stencilLoadOp = vk::AttachmentLoadOp::eClear;
@@ -871,20 +1015,6 @@ void VulkanGHI::BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* comma
     scissor.offset = vk::Offset2D({ 0, 0 });
     scissor.extent = vkRenderPass->m_extent;
     vkCommandBuffer.setScissor(0, 1, &scissor);
-
-    //vk::ClearAttachment c;
-    //c.clearValue = clearColorValue;
-    //c.colorAttachment = 0;
-    //c.aspectMask = vk::ImageAspectFlagBits::eColor;
-
-    //vk::Rect2D r;
-    //r.extent = vkRenderPass->m_extent;
-
-    //vk::ClearRect cr;
-    //cr.rect = r;
-    //cr.baseArrayLayer = 0;
-    //cr.layerCount = 1;
-    //commandBuffer.clearAttachments(c, cr);
 }
 
 void VulkanGHI::EndRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer)
@@ -938,36 +1068,95 @@ void VulkanGHI::Submit(std::vector<GHICommandList*>& commandLists)
     m_device->GetGraphicsQueue().GetHandle().waitIdle();
 }
 
+void VulkanGHI::ImmediateSubmit(std::function<void(VulkanCommandList&)>&& function)
+{
+    vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
+    commandBufferAllocateInfo.commandPool = m_immediateCommandPool;
+    commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
+    commandBufferAllocateInfo.commandBufferCount = 1;
+
+    VulkanCommandList* cmd = new VulkanCommandList();
+    cmd->m_commandBuffer = m_device->GetLogical().allocateCommandBuffers(commandBufferAllocateInfo)[0];
+
+    cmd->Begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+    function(*cmd);
+
+    cmd->End();
+
+    vk::SubmitInfo submitInfo;
+    submitInfo.setCommandBuffers(cmd->m_commandBuffer);
+
+    m_device->GetGraphicsQueue().GetHandle().submit(1, &submitInfo, nullptr);
+    m_device->GetGraphicsQueue().GetHandle().waitIdle();
+
+    m_device->GetLogical().resetCommandPool(m_immediateCommandPool);
+}
+
 GHIBuffer* VulkanGHI::CreateBuffer(EGHIBufferType bufferType, uint size)
 {
-    vk::BufferCreateInfo bufferInfo;    
-    bufferInfo.size = size;
+    vk::BufferUsageFlags vkBufferType;
 
     switch (bufferType)
     {
-    case EGHIBufferType::VertexBuffer:
-        bufferInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer;
-        break;
-    case EGHIBufferType::IndexBuffer:
-        bufferInfo.usage = vk::BufferUsageFlagBits::eIndexBuffer;
-        break;
-    case EGHIBufferType::UniformBuffer:
-        bufferInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer;
-        break;
+        case EGHIBufferType::VertexBuffer:
+            vkBufferType = vk::BufferUsageFlagBits::eVertexBuffer;
+            break;
+        case EGHIBufferType::IndexBuffer:
+            vkBufferType = vk::BufferUsageFlagBits::eIndexBuffer;
+            break;
+        case EGHIBufferType::UniformBuffer:
+            vkBufferType = vk::BufferUsageFlagBits::eUniformBuffer;
+            break;
+        default:
+            B2D_BREAK_f("Buffer type not supported");
+            return nullptr;
     }
-    
-    // Let the VMA library know that this data should be writable by CPU, but also readable by GPU
+
+    return CreateBuffer(size, vkBufferType, VMA_MEMORY_USAGE_CPU_TO_GPU);
+}
+
+VulkanBuffer* VulkanGHI::CreateBuffer(uint size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage)
+{
+    vk::BufferCreateInfo bufferInfo;
+    bufferInfo.usage = bufferUsage;
+    bufferInfo.size = size;
+
     VmaAllocationCreateInfo vmaallocInfo = {};
-    vmaallocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+    vmaallocInfo.usage = memoryUsage;
 
     VulkanBuffer* vulkanBuffer = new VulkanBuffer();
-    vulkanBuffer->allocator = m_allocator;
 
     VkBuffer buffer;
     vmaCreateBuffer(m_allocator, &static_cast<VkBufferCreateInfo>(bufferInfo), &vmaallocInfo, &buffer, &vulkanBuffer->allocation, nullptr);
+
+    vulkanBuffer->allocator = m_allocator;
     vulkanBuffer->buffer = buffer;
 
     return vulkanBuffer;
+}
+
+void VulkanGHI::DestroyBuffer(GHIBuffer* buffer)
+{
+    VulkanBuffer* vkBuffer = static_cast<VulkanBuffer*>(buffer);
+    vmaDestroyBuffer(vkBuffer->allocator, vkBuffer->buffer, vkBuffer->allocation);
+    delete vkBuffer;
+}
+
+vk::Format VulkanGHI::Convert(EGHITextureFormat textureFormat)
+{
+    switch (textureFormat)
+    {
+        case EGHITextureFormat::RGBA8:              return vk::Format::eR8G8B8A8Unorm;
+        case EGHITextureFormat::BGRA8:              return vk::Format::eB8G8R8A8Unorm;
+        case EGHITextureFormat::Depth24:            return vk::Format::eD24UnormS8Uint;
+        case EGHITextureFormat::Depth24Stencil8:    return vk::Format::eD24UnormS8Uint;
+
+        default:
+            B2D_TRAP_f("Format not supported by Vulkan!");
+    }
+
+    return vk::Format::eUndefined;
 }
 
 bool VulkanGHI::ImGui_Init()
@@ -1019,7 +1208,6 @@ bool VulkanGHI::ImGui_Init()
     {
         vk::AttachmentDescription colorAttachment;
         colorAttachment.format = vk::Format::eB8G8R8A8Unorm; // TMP
-        colorAttachment.samples = vk::SampleCountFlagBits::e1;
         colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
         colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
         colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;

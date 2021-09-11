@@ -16,8 +16,10 @@ public:
     virtual void DestroySurface(GHISurface* surface) override { B2D_NOT_IMPLEMENTED(); }
 
     virtual GHITexture* CreateTexture(uint32 width, uint32 height, EGHITextureFormat format, EGHITextureUsageFlags usage) { B2D_NOT_IMPLEMENTED(); }
-    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, uint8 components) override;
+    virtual GHITexture* CreateTexture(void const* data, uint32 width, uint32 height, EGHITextureFormat format) override;
     virtual void DestroyTexture(GHITexture* texture) override;
+
+    virtual GHISampler* CreateSampler() override { B2D_NOT_IMPLEMENTED(); }
 
     GHIShader* CreateShader(std::vector<uint32> const& data, GLuint type);
     virtual GHIShader* CreateVertexShader(std::vector<uint32> const& data) override;
@@ -43,6 +45,9 @@ public:
     virtual void Submit(std::vector<GHICommandList*>& commandLists) override { B2D_NOT_IMPLEMENTED(); }
 
     virtual GHIBuffer* CreateBuffer(EGHIBufferType bufferType, uint size) override { B2D_NOT_IMPLEMENTED(); }
+    virtual void DestroyBuffer(GHIBuffer* buffer) { B2D_NOT_IMPLEMENTED(); }
+
+    static GLint Convert(EGHITextureFormat format);
 
 protected:
     virtual bool ImGui_Init() override;

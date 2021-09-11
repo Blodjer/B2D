@@ -45,23 +45,31 @@ bool Mesh::Load(ResourcePath const& path)
             {
                 tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 
+                // position
                 tinyobj::real_t vx = attrib.vertices[3 * idx.vertex_index + 0];
                 tinyobj::real_t vy = attrib.vertices[3 * idx.vertex_index + 1];
                 tinyobj::real_t vz = attrib.vertices[3 * idx.vertex_index + 2];
-                
-                tinyobj::real_t nx = attrib.normals[3 * idx.normal_index + 0];
-                tinyobj::real_t ny = attrib.normals[3 * idx.normal_index + 1];
-                tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
-
-                //copy it into our vertex
+               
                 Mesh::Vertex newVertex;
                 newVertex.position.x = vx;
                 newVertex.position.y = vy;
                 newVertex.position.z = vz;
 
+                // normal
+                tinyobj::real_t nx = attrib.normals[3 * idx.normal_index + 0];
+                tinyobj::real_t ny = attrib.normals[3 * idx.normal_index + 1];
+                tinyobj::real_t nz = attrib.normals[3 * idx.normal_index + 2];
+
                 newVertex.normal.x = nx;
                 newVertex.normal.y = ny;
                 newVertex.normal.z = nz;
+
+                // uv
+                tinyobj::real_t ux = idx.texcoord_index < 0 ? 0 : attrib.texcoords[2 * idx.texcoord_index + 0];
+                tinyobj::real_t uy = idx.texcoord_index < 0 ? 0 : attrib.texcoords[2 * idx.texcoord_index + 1];
+
+                newVertex.uv.x = ux;
+                newVertex.uv.y = uy;
 
                 m_vertices.push_back(newVertex);
             }

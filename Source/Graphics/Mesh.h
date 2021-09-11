@@ -17,6 +17,7 @@ public:
     {
         TVec3 position;
         TVec3 normal;
+        TVec2 uv;
     };
 
     std::vector<Vertex> const& GetVertices() const { return m_vertices; }

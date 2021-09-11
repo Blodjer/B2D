@@ -9,6 +9,25 @@ enum class EGHITextureFormat
     Depth24Stencil8,
 };
 
+namespace
+{
+    uint GetBytesPerPixel(EGHITextureFormat format)
+    {
+        switch (format)
+        {
+        case EGHITextureFormat::Depth24:
+            return 3;
+        case EGHITextureFormat::RGBA8:
+        case EGHITextureFormat::BGRA8:
+        case EGHITextureFormat::Depth24Stencil8:
+            return 4;
+        default:
+            B2D_TRAP();
+            return 1;
+        }
+    }
+}
+
 enum EGHITextureUsageFlags
 {
     ColorAttachment = 1 << 1,
