@@ -3,6 +3,10 @@
 
 #include "VulkanDevice.h"
 #include "VulkanTexture.h"
+#include "VulkanCommandList.h"
+
+#include "GameEngine.h" // TMP
+#include "VulkanGHI.h" // TMP
 
 VulkanSurface::VulkanSurface(vk::Instance instance, VulkanDevice const& device, void* nativeWindowHandle)
     : m_instance(instance)
@@ -22,27 +26,11 @@ VulkanSurface::VulkanSurface(vk::Instance instance, VulkanDevice const& device, 
     }
 
     CreateSwapchain();
-
-    vk::CommandPoolCreateInfo commandPoolInfo;
-    commandPoolInfo.queueFamilyIndex = m_device.GetGraphicsQueue().GetFamilyIndex();
-    commandPoolInfo.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer; // Optional
-
-    m_graphicsCommandPool = m_device.GetLogical().createCommandPool(commandPoolInfo);
-
-    vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
-    commandBufferAllocateInfo.commandPool = m_graphicsCommandPool;
-    commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
-    commandBufferAllocateInfo.commandBufferCount = 1;
-
-    m_graphicsCommandBuffer = m_device.GetLogical().allocateCommandBuffers(commandBufferAllocateInfo)[0];
 }
 
 VulkanSurface::~VulkanSurface()
 {
     CleanupSwapchain();
-
-    m_device.GetLogical().freeCommandBuffers(m_graphicsCommandPool, m_graphicsCommandBuffer);
-    m_device.GetLogical().destroyCommandPool(m_graphicsCommandPool);
 }
 
 void VulkanSurface::CreateSwapchain(vk::SwapchainKHR oldSwapchain)
@@ -104,31 +92,10 @@ void VulkanSurface::CreateSwapchain(vk::SwapchainKHR oldSwapchain)
     m_swapchain = logicalDevice.createSwapchainKHR(swapchainCreateInfo);
 
     m_swapchainImages = logicalDevice.getSwapchainImagesKHR(m_swapchain);
-
-    //std::vector<vk::ImageView> swapchainImageViews;
-    //swapchainImageViews.reserve(m_swapchainImages.size());
-
-    //for (vk::Image const& image : m_swapchainImages)
-    //{
-    //    vk::ImageViewCreateInfo createInfo;
-    //    createInfo.image = image;
-    //    createInfo.viewType = vk::ImageViewType::e2D;
-    //    createInfo.format = swapchainCreateInfo.imageFormat;
-    //    createInfo.components.r = vk::ComponentSwizzle::eIdentity;
-    //    createInfo.components.g = vk::ComponentSwizzle::eIdentity;
-    //    createInfo.components.b = vk::ComponentSwizzle::eIdentity;
-    //    createInfo.components.a = vk::ComponentSwizzle::eIdentity;
-    //    createInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-    //    createInfo.subresourceRange.baseMipLevel = 0;
-    //    createInfo.subresourceRange.levelCount = 1;
-    //    createInfo.subresourceRange.baseArrayLayer = 0;
-    //    createInfo.subresourceRange.layerCount = 1;
-
-    //    swapchainImageViews.emplace_back(logicalDevice.createImageView(createInfo));
-    //}
     
     vk::SemaphoreCreateInfo semaphoreInfo;
     m_imageAvailableSemaphore = logicalDevice.createSemaphore(semaphoreInfo);
+    m_transitionSemaphore = logicalDevice.createSemaphore(semaphoreInfo);
 }
 
 void VulkanSurface::CleanupSwapchain()
@@ -138,6 +105,9 @@ void VulkanSurface::CleanupSwapchain()
 
     m_device.GetLogical().destroySemaphore(m_imageAvailableSemaphore);
     m_imageAvailableSemaphore = nullptr;
+
+    m_device.GetLogical().destroySemaphore(m_transitionSemaphore);
+    m_transitionSemaphore = nullptr;
 
     m_device.GetLogical().destroySwapchainKHR(m_swapchain);
     m_swapchain = nullptr;
@@ -225,13 +195,13 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* ren
     m_currentImageIndex = acquireImageResult.value;
     m_currentImage = m_swapchainImages[m_currentImageIndex];
 
-    vk::CommandBufferBeginInfo commandBufferBeginInfo;
-    commandBufferBeginInfo.flags = vk::CommandBufferUsageFlags(0);
+    auto ghi = static_cast<VulkanGHI*>(GameEngine::Instance()->GetGHI());
 
-    m_graphicsCommandBuffer.begin(commandBufferBeginInfo);
-
+    VulkanCommandList* cb = static_cast<VulkanCommandList*>(ghi->AllocateCommandBuffer());
     {
-        Transition(m_graphicsCommandBuffer,
+        cb->Begin();
+
+        Transition(cb->m_commandBuffer,
             vk::PipelineStageFlagBits::eTopOfPipe,
             vk::PipelineStageFlagBits::eTransfer,
             vk::AccessFlags(0),
@@ -249,9 +219,9 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* ren
         copy.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         copy.dstSubresource.layerCount = 1;
 
-        m_graphicsCommandBuffer.copyImage(renderTarget->m_image, vk::ImageLayout::eTransferSrcOptimal, m_currentImage, vk::ImageLayout::eTransferDstOptimal, copy);
+        cb->m_commandBuffer.copyImage(renderTarget->m_image, vk::ImageLayout::eTransferSrcOptimal, m_currentImage, vk::ImageLayout::eTransferDstOptimal, copy);
 
-        Transition(m_graphicsCommandBuffer,
+        Transition(cb->m_commandBuffer,
             vk::PipelineStageFlagBits::eTransfer,
             vk::PipelineStageFlagBits::eTopOfPipe,
             vk::AccessFlagBits::eTransferWrite,
@@ -259,39 +229,40 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* ren
             vk::ImageLayout::eTransferDstOptimal,
             vk::ImageLayout::ePresentSrcKHR,
             m_currentImage);
+
+        cb->End();
+
+        std::vector<GHICommandList*> cmds = { cb };
+        std::array<vk::Semaphore, 1> waitSemaphores = { m_imageAvailableSemaphore };
+        std::array<vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+        std::array<vk::Semaphore, 1> signalSemaphores = { m_transitionSemaphore };
+
+        ghi->Submit(cmds, waitSemaphores, waitStages, signalSemaphores);
     }
 
-    m_graphicsCommandBuffer.end();
-
-    vk::SubmitInfo submitInfo;
-    submitInfo.setCommandBuffers(m_graphicsCommandBuffer);
-
-    vk::Queue graphicsQueue = m_device.GetPresentQueue().GetHandle();
-    graphicsQueue.submit(submitInfo);
-    graphicsQueue.waitIdle();
-
-    vk::Queue presentQueue = m_device.GetPresentQueue().GetHandle();
-
-    vk::PresentInfoKHR presentInfo;
-    presentInfo.waitSemaphoreCount = 0;
-    //presentInfo.pWaitSemaphores = signalSemaphores;
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = &m_swapchain;
-    presentInfo.pImageIndices = &m_currentImageIndex;
-
-    VkPresentInfoKHR const vkPresentInfo = presentInfo;
-    vk::Result presentResult = static_cast<vk::Result>(vkQueuePresentKHR(presentQueue, &vkPresentInfo)); // Use C implementation to prevent an assert on error
-    if (presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR)
     {
-        return EPresentResult::RecreateSwapchain;
-    }
-    else if (presentResult != vk::Result::eSuccess)
-    {
-        B2D_TRAP_f("Failed to present to swapchain!");
-        return EPresentResult::Failed;
+        std::array<vk::Semaphore, 1> waitSemaphores = { m_transitionSemaphore };
+
+        vk::PresentInfoKHR presentInfo;
+        presentInfo.setWaitSemaphores(waitSemaphores);
+        presentInfo.setSwapchains(m_swapchain);
+        presentInfo.pImageIndices = &m_currentImageIndex;
+
+        vk::Queue presentQueue = m_device.GetPresentQueue().GetHandle();
+
+        VkPresentInfoKHR const vkPresentInfo = presentInfo;
+        vk::Result presentResult = static_cast<vk::Result>(vkQueuePresentKHR(presentQueue, &vkPresentInfo)); // Use C implementation to prevent an assert on error
+        if (presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR)
+        {
+            return EPresentResult::RecreateSwapchain;
+        }
+        else if (presentResult != vk::Result::eSuccess)
+        {
+            B2D_TRAP_f("Failed to present to swapchain!");
+            return EPresentResult::Failed;
+        }
     }
 
-    presentQueue.waitIdle();
     return EPresentResult::Success;
 }
 
@@ -320,6 +291,7 @@ vk::PresentModeKHR VulkanSurface::SelectSurfacePresentMode(std::vector<vk::Prese
         }
     }
 
+    return vk::PresentModeKHR::eImmediate;
     return vk::PresentModeKHR::eFifo;
 }
 

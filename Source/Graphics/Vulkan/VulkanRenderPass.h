@@ -9,5 +9,4 @@ public:
     vk::RenderPass m_renderPass;
     vk::Framebuffer m_frameBuffer;
     vk::Extent2D m_extent;
-    vk::Semaphore m_renderFinishedSemaphore;
 };

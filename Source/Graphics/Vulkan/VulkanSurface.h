@@ -28,7 +28,8 @@ private:
 public:
     virtual void Resize(uint32 width, uint32 height) override;
     virtual void Present(GHITexture const* renderTarget) override;
-    vk::Semaphore m_imageAvailableSemaphore; // TMP
+    vk::Semaphore m_imageAvailableSemaphore; // TMP TODO: overlapping
+    vk::Semaphore m_transitionSemaphore; // TMP TODO: overlapping
 
 private:
     EPresentResult TryPresent(VulkanTexture const* renderTarget);
@@ -50,7 +51,4 @@ private:
     std::vector<vk::Image> m_swapchainImages;
     uint32 m_currentImageIndex = 0;
     vk::Image m_currentImage;
-
-    vk::CommandPool m_graphicsCommandPool;
-    vk::CommandBuffer m_graphicsCommandBuffer;
 };

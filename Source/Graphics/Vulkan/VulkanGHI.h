@@ -62,6 +62,7 @@ public:
     virtual void FreeCommandBuffer(GHICommandList* commandBuffer) override;
 
     virtual void Submit(std::vector<GHICommandList*>& commandLists) override;
+    void Submit(std::vector<GHICommandList*>& commandLists, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& waitSemaphores, vk::ArrayProxyNoTemporaries<vk::PipelineStageFlags const> const& waitStages, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& signalSemaphores);
     void ImmediateSubmit(std::function<void(VulkanCommandList&)>&& function);
 
     virtual GHIBuffer* CreateBuffer(EGHIBufferType bufferType, uint size) override;
@@ -79,9 +80,8 @@ protected:
 
 private:
     vk::Instance m_instance;
-public: // TMP
     VulkanDevice* m_device = nullptr;
-private:
+
     VmaAllocator m_allocator;
 
     vk::DebugUtilsMessengerEXT m_debugUtilMessenger;
@@ -89,6 +89,7 @@ private:
     vk::CommandPool m_commandPool;
     vk::CommandPool m_immediateCommandPool;
 
-    VulkanSurface* m_primarySurface = nullptr; // TMP
+    std::vector<VulkanCommandList*> m_availableCommandLists;
+    std::vector<VulkanCommandList*> m_submittedCommandLists;
 };
 

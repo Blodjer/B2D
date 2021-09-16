@@ -4,6 +4,7 @@
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
 #include "Graphics/GHI/GHICommandList.h"
 #include "Graphics/GHI/GHITexture.h"
+#include "Graphics/GHI/GHISurface.h"
 
 namespace std
 {
@@ -47,6 +48,14 @@ void RenderGraph::AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup
     r.executionFunction = execution;
 
     m_renderPassDescs.emplace_back(r);
+}
+
+void RenderGraph::AddPresent(RenderResourcePtr const& output, GHISurface* surface)
+{
+    PresentDesc p;
+    p.output = output;
+    p.surface = surface;
+    m_presentDescs.emplace_back(p);
 }
 
 RenderResourcePtr const RenderGraph::CreateRenderTarget(RenderTargetDesc const& desc)
@@ -183,15 +192,12 @@ void RenderGraph::Prepare()
 
 void RenderGraph::Execute()
 {
-    static std::vector<GHICommandList*> commandLists;
-    for (uint i = commandLists.size(); i < m_compiledRenderPasses.size(); ++i)
+    std::vector<GHICommandList*> commandLists;
+    commandLists.reserve(m_compiledRenderPasses.size());
+
+    for (uint i = 0; i < m_compiledRenderPasses.size(); ++i)
     {
         commandLists.emplace_back(m_ghi.AllocateCommandBuffer());
-    }
-    for (uint i = commandLists.size(); i > m_compiledRenderPasses.size(); --i)
-    {
-        m_ghi.FreeCommandBuffer(commandLists[i - 1]);
-        commandLists.pop_back();
     }
 
     uint commandIndex = 0;
@@ -210,6 +216,11 @@ void RenderGraph::Execute()
     }
 
     m_ghi.Submit(commandLists);
+
+    for (PresentDesc const& present : m_presentDescs)
+    {
+        present.surface->Present(GetRenderTarget(present.output));
+    }
 }
 
 GHITexture const* RenderGraph::GetRenderTarget(RenderResourcePtr const& ptr)

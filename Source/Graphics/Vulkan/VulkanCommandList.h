@@ -9,6 +9,10 @@ class VulkanCommandList : public GHICommandList
 {
 public:
     vk::CommandBuffer m_commandBuffer;
+    vk::Fence m_reuseFence;
+
+private:
+    VulkanGraphicsPipeline const* m_currentPipeline = nullptr; // TMP
 
 public:
     virtual void Begin() override;
@@ -28,8 +32,5 @@ public:
 
     virtual void Draw(uint32 vertexCount, uint32 instanceCount, uint32 firstVertex, uint32 firstInstance) override;
     virtual void DrawIndexed(uint32 indexCount, uint32 instanceCount, uint32 firstIndex, uint32 vertexOffset, uint32 firstInstance) override;
-
-private:
-    VulkanGraphicsPipeline const* m_currentPipeline = nullptr; // TMP
 
 };

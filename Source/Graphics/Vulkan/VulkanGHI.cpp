@@ -258,7 +258,7 @@ std::vector<char const*> VulkanGHI::GetWantedInstanceExtenstions()
     {
         VK_KHR_SURFACE_EXTENSION_NAME,
         VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+        VK_EXT_DEBUG_UTILS_EXTENSION_NAME, // TODO: Disable in non debug mode
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
@@ -290,7 +290,7 @@ std::vector<char const*> VulkanGHI::GetWantedInstanceLayers()
 {
     std::vector<char const*> const wantedLayers =
     {
-#ifdef B2D_BUILD_DEBUG
+#ifndef B2D_BUILD_RELEASE // TODO: Add vulkan preprocessor macro
           "VK_LAYER_KHRONOS_validation"
 #endif
     };
@@ -356,7 +356,7 @@ vk::PhysicalDevice VulkanGHI::SelectPhysicalDevice(std::vector<vk::PhysicalDevic
 
 GHISurface* VulkanGHI::CreateSurface(void* nativeWindowHandle, uint32 width, uint32 height)
 {
-    return m_primarySurface = new VulkanSurface(m_instance, *m_device, nativeWindowHandle);
+    return new VulkanSurface(m_instance, *m_device, nativeWindowHandle);
 }
 
 void VulkanGHI::DestroySurface(GHISurface* surface)
@@ -870,7 +870,7 @@ GHIRenderPass* VulkanGHI::CreateRenderPass(std::vector<GHITexture*> const& rende
     {
         VulkanTexture const* vkRenderTarget = static_cast<VulkanTexture const*>(renderTargets[i]);
 
-        vk::AttachmentDescription colorAttachment;
+        vk::AttachmentDescription& colorAttachment = attachmentDescriptions[i];
         colorAttachment.format = vkRenderTarget->m_format;
         colorAttachment.loadOp = depthTarget != nullptr ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad;
         colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
@@ -879,16 +879,13 @@ GHIRenderPass* VulkanGHI::CreateRenderPass(std::vector<GHITexture*> const& rende
         colorAttachment.initialLayout = depthTarget != nullptr ? vk::ImageLayout::eUndefined : vk::ImageLayout::eTransferSrcOptimal;
         colorAttachment.finalLayout = vk::ImageLayout::eTransferSrcOptimal;
 
-        attachmentDescriptions[i] = colorAttachment;
-
-        vk::AttachmentReference colorAttachmentRef;
+        vk::AttachmentReference& colorAttachmentRef = colorAttachmentRefs[i];
         colorAttachmentRef.attachment = i;
         colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
-
-        colorAttachmentRefs[i] = colorAttachmentRef;
     }
     subpass.setColorAttachments(colorAttachmentRefs);
 
+    vk::AttachmentReference depthAttachmentRef;
     if (depthTarget != nullptr)
     {
         VulkanTexture const* vkDepthTarget = static_cast<VulkanTexture const*>(depthTarget);
@@ -902,13 +899,11 @@ GHIRenderPass* VulkanGHI::CreateRenderPass(std::vector<GHITexture*> const& rende
         depthAttachment.initialLayout = vk::ImageLayout::eUndefined;
         depthAttachment.finalLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
-        attachmentDescriptions.emplace_back(depthAttachment);
-
-        vk::AttachmentReference depthAttachmentRef;
-        depthAttachmentRef.attachment = colorAttachmentRefs.size();
+        depthAttachmentRef.attachment = attachmentDescriptions.size();
         depthAttachmentRef.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+        attachmentDescriptions.emplace_back(depthAttachment);
     }
 
     vk::SubpassDependency subpassDependency;
@@ -965,9 +960,6 @@ GHIRenderPass* VulkanGHI::CreateRenderPass(std::vector<GHITexture*> const& rende
     renderPass->m_extent.width = width;
     renderPass->m_extent.height = height;
 
-    vk::SemaphoreCreateInfo semaphoreInfo;
-    renderPass->m_renderFinishedSemaphore = m_device->GetLogical().createSemaphore(semaphoreInfo);
-
     return renderPass;
 }
 
@@ -976,7 +968,6 @@ void VulkanGHI::DestroyRenderPass(GHIRenderPass* renderPass)
     VulkanRenderPass* vkRenderPass = static_cast<VulkanRenderPass*>(renderPass);
     m_device->GetLogical().destroyRenderPass(vkRenderPass->m_renderPass);
     m_device->GetLogical().destroyFramebuffer(vkRenderPass->m_frameBuffer);
-    m_device->GetLogical().destroySemaphore(vkRenderPass->m_renderFinishedSemaphore);
     delete vkRenderPass;
 }
 
@@ -1026,6 +1017,48 @@ void VulkanGHI::EndRenderPass(GHIRenderPass* renderPass, GHICommandList* command
 
 GHICommandList* VulkanGHI::AllocateCommandBuffer()
 {
+    std::unordered_map<vk::Fence, int32> removeFenceSet;
+    for (auto it = m_submittedCommandLists.begin(); it != m_submittedCommandLists.end();)
+    {
+        VulkanCommandList* commandList = *it;
+        if (m_device->GetLogical().getFenceStatus(commandList->m_reuseFence) == vk::Result::eSuccess)
+        {
+            m_availableCommandLists.emplace_back(commandList);
+            commandList->m_commandBuffer.reset();
+            it = m_submittedCommandLists.erase(it);
+
+            if (removeFenceSet.find(commandList->m_reuseFence) == removeFenceSet.end())
+            {
+                removeFenceSet[commandList->m_reuseFence] = 0;
+            }
+
+            removeFenceSet[commandList->m_reuseFence] += 1;
+            continue;
+        }
+        
+        removeFenceSet[commandList->m_reuseFence] -= 1;
+
+        ++it;
+    }
+
+    for (auto fence : removeFenceSet)
+    {
+        if (fence.second <= 0)
+        {
+            continue;
+        }
+
+        m_device->GetLogical().destroyFence(fence.first);
+    }
+    removeFenceSet.clear();
+
+    if (!m_availableCommandLists.empty())
+    {
+        VulkanCommandList* commandList = m_availableCommandLists.back();
+        m_availableCommandLists.pop_back();
+        return commandList;
+    }
+
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
     commandBufferAllocateInfo.commandPool = m_commandPool;
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
@@ -1045,27 +1078,44 @@ void VulkanGHI::FreeCommandBuffer(GHICommandList* commandBuffer)
 
 void VulkanGHI::Submit(std::vector<GHICommandList*>& commandLists)
 {
+    Submit(commandLists, nullptr, nullptr, nullptr);
+}
+
+void VulkanGHI::Submit(std::vector<GHICommandList*>& commandLists, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& waitSemaphores, vk::ArrayProxyNoTemporaries<vk::PipelineStageFlags const> const& waitStages, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& signalSemaphores)
+{
     std::vector<vk::CommandBuffer> vkCommandBuffers;
     vkCommandBuffers.reserve(commandLists.size());
 
+    vk::FenceCreateInfo fenceCreateInfo;
+    vk::Fence fence = m_device->GetLogical().createFence(fenceCreateInfo); // TODO: Reuse
+
     for (GHICommandList* commandBuffer : commandLists)
     {
-        vk::CommandBuffer vkCommandBuffer = static_cast<VulkanCommandList*>(commandBuffer)->m_commandBuffer;
+        VulkanCommandList* vulkanCommandList = static_cast<VulkanCommandList*>(commandBuffer);
+        vk::CommandBuffer vkCommandBuffer = vulkanCommandList->m_commandBuffer;
         vkCommandBuffers.emplace_back(vkCommandBuffer);
+
+        vulkanCommandList->m_reuseFence = fence;
+
+        m_submittedCommandLists.emplace_back(vulkanCommandList);
     }
 
-    std::array<vk::Semaphore, 1> waitSemaphores = { m_primarySurface->m_imageAvailableSemaphore };
-    std::array<vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-
-    //vk::Semaphore signalSemaphores[] = { m_renderFinishedSemaphore };
-
     vk::SubmitInfo submitInfo;
-    submitInfo.setWaitSemaphores(waitSemaphores);
-    submitInfo.setWaitDstStageMask(waitStages);
     submitInfo.setCommandBuffers(vkCommandBuffers);
+    if (!waitSemaphores.empty())
+    {
+        submitInfo.setWaitSemaphores(waitSemaphores);
+    }
+    if (!waitStages.empty())
+    {
+        submitInfo.setWaitDstStageMask(waitStages);
+    }
+    if (!signalSemaphores.empty())
+    {
+        submitInfo.setSignalSemaphores(signalSemaphores);
+    }
 
-    m_device->GetGraphicsQueue().GetHandle().submit(1, &submitInfo, nullptr);
-    m_device->GetGraphicsQueue().GetHandle().waitIdle();
+    m_device->GetGraphicsQueue().GetHandle().submit({ submitInfo }, fence);
 }
 
 void VulkanGHI::ImmediateSubmit(std::function<void(VulkanCommandList&)>&& function)
@@ -1269,8 +1319,7 @@ bool VulkanGHI::ImGui_Init()
     commandBuffer.end();
 
     m_device->GetGraphicsQueue().GetHandle().submit(1, &submitInfo, nullptr);
-    m_device->GetLogical().waitIdle(); // TODO: Enough to wait for queue?
-    //m_device->GetGraphicsQueue().GetHandle().waitIdle();
+    m_device->GetGraphicsQueue().GetHandle().waitIdle();
 
     m_device->GetLogical().freeCommandBuffers(commandPool, commandBuffer);
     m_device->GetLogical().destroyCommandPool(commandPool);

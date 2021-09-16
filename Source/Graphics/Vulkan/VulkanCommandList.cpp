@@ -21,6 +21,7 @@ void VulkanCommandList::Begin(vk::CommandBufferUsageFlags flags)
 void VulkanCommandList::End()
 {
     m_commandBuffer.end();
+    m_currentPipeline = nullptr;
 }
 
 void VulkanCommandList::BindGraphicsPipeline(GHIGraphicsPipeline const* pipeline)

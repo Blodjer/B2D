@@ -4,6 +4,7 @@ class IGraphicsHardwareInterface;
 class GHIRenderPass;
 class GHICommandList;
 class GHITexture;
+class GHISurface;
 enum class EGHITextureFormat;
 
 class RenderResourcePtr
@@ -76,8 +77,14 @@ struct RenderPassDesc
 
 struct RenderGraphPass
 {
-    GHIRenderPass* ghiRenderPass;
-    RenderPassDesc const* renderPassDesc;
+    GHIRenderPass* ghiRenderPass = nullptr;
+    RenderPassDesc const* renderPassDesc = nullptr;
+};
+
+struct PresentDesc
+{
+    RenderResourcePtr output;
+    GHISurface* surface = nullptr;
 };
 
 class RenderGraph
@@ -94,6 +101,7 @@ public:
     // FullscreenPass?
 
     void AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandList&, GHIRenderPass const*)> execution);
+    void AddPresent(RenderResourcePtr const& output, GHISurface* surface);
 
     RenderResourcePtr const CreateRenderTarget(RenderTargetDesc const& desc);
 
@@ -101,13 +109,14 @@ private:
     void Prepare();
     void Execute();
 
-    GHITexture const* GetRenderTarget(RenderResourcePtr const& ptr); // TMP
+    GHITexture const* GetRenderTarget(RenderResourcePtr const& ptr);
 
 private:
     IGraphicsHardwareInterface& m_ghi;
 
     std::vector<RenderPassDesc> m_renderPassDescs;
     std::vector<RenderTargetDesc> m_renderTargetDescs;
+    std::vector<PresentDesc> m_presentDescs;
 
     std::vector<GHITexture*> m_ghiRenderTargets;
 

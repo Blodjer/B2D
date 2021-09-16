@@ -193,9 +193,6 @@ void ShaderLibrary::Reflect(ShaderBinaryData const& shaderBinaryData, ShaderLayo
         ub.binding = binding;
         
         outShaderLayout.uniformBuffers.emplace_back(ub);
-
-        B2D_LOG_INFO("\t  {}", resource.name);
-        B2D_LOG_INFO("\t    Size = {}, Set = {}, Binding = {}, Members = {}", bufferSize, set, binding, memberCount);
     }
 
     for (auto const& resource : resources.push_constant_buffers)
@@ -211,9 +208,6 @@ void ShaderLibrary::Reflect(ShaderBinaryData const& shaderBinaryData, ShaderLayo
         pcb.size = bufferSize;
 
         outShaderLayout.pushConstantBuffers.emplace_back(pcb);
-
-        B2D_LOG_INFO("\t  {}", resource.name);
-        B2D_LOG_INFO("\t    Size = {}, Offset = {}, Binding = {}, Members = {}", bufferSize, offset, binding, memberCount);
     }
 
     for (auto const& resource : resources.sampled_images)
@@ -227,9 +221,6 @@ void ShaderLibrary::Reflect(ShaderBinaryData const& shaderBinaryData, ShaderLayo
         sampler.binding = binding;
 
         outShaderLayout.samplers.emplace_back(sampler);
-
-        B2D_LOG_INFO("\t  {}", resource.name);
-        B2D_LOG_INFO("\t    Set = {}, Binding = {}", set, binding);
     }
 }
 
@@ -245,8 +236,6 @@ void ShaderLibrary::PreloadAll(EGraphicsAPI const targetApi)
     for (auto const& entry : std::filesystem::recursive_directory_iterator(shaderContentPath))
     {
         std::string path = entry.path().string();
-
-        B2D_LOG_INFO("\t{}", path);
 
         std::vector<uint32>* data = nullptr;
         GetShaderBinaries(targetApi, path, data);

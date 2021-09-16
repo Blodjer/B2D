@@ -224,7 +224,8 @@ void RenderManager::Draw()
             //cb.BindResourceSet(0, rs0c);
 
             //cb.BindVertexBuffer(meshPtr2->GetVertexBuffer());
-            //cb.Draw(meshPtr2->GetVertices().size(), 1, 0, 0);
+            //cb.BindIndexBuffer(meshPtr2->GetIndexBuffer());
+            //cb.DrawIndexed(meshPtr2->GetIndices().size(), 1, 0, 0, 0);
         }
     );
 
@@ -245,11 +246,11 @@ void RenderManager::Draw()
         );
     }
 
-    rg.Prepare();
-    rg.Execute();
-
     if (!GameEngine::Instance()->GetMainWindow()->IsMinimized())
     {
-        GameEngine::Instance()->GetMainWindow()->GetSurface()->Present(rg.GetRenderTarget(rt0));
+        rg.AddPresent(rt0, GameEngine::Instance()->GetMainWindow()->GetSurface());
     }
+
+    rg.Prepare();
+    rg.Execute();
 }
