@@ -8,7 +8,7 @@ class GHIMaterial;
 class GHITexture;
 class GHISurface;
 class GHIRenderPass;
-class GHICommandList;
+class GHICommandBuffer;
 class GHIBuffer;
 class GHIGraphicsPipeline;
 class GHIResourceSet;
@@ -56,12 +56,12 @@ public:
     virtual GHIRenderPass* CreateRenderPass(std::vector<GHITexture*> const& renderTargets, GHITexture const* depthTarget) = 0;
     virtual void DestroyRenderPass(GHIRenderPass* renderPass) = 0;
 
-    /* Command */ virtual void BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* commandList) = 0;
-    /* Command */ virtual void EndRenderPass(GHIRenderPass* renderPass, GHICommandList* commandList) = 0;
+    /* Command */ virtual void BeginRenderPass(GHIRenderPass* renderPass, GHICommandBuffer* commandBuffer) = 0;
+    /* Command */ virtual void EndRenderPass(GHIRenderPass* renderPass, GHICommandBuffer* commandBuffer) = 0;
 
-    virtual GHICommandList* AllocateCommandBuffer() = 0;
-    virtual void FreeCommandBuffer(GHICommandList* commandList) = 0;
-    virtual void Submit(std::vector<GHICommandList*>& commandLists) = 0;
+    virtual GHICommandBuffer* AllocateCommandBuffer() = 0;
+    virtual void FreeCommandBuffer(GHICommandBuffer* commandBuffer) = 0;
+    virtual void Submit(std::vector<GHICommandBuffer*>& commandBuffers) = 0;
 
     virtual GHIBuffer* CreateBuffer(EGHIBufferType bufferType, uint size) = 0;
     virtual void DestroyBuffer(GHIBuffer* buffer) = 0;
@@ -71,5 +71,5 @@ protected:
     virtual bool ImGui_Init() = 0;
     virtual void ImGui_Shutdow() = 0;
     virtual void ImGui_BeginFrame() = 0;
-    virtual void ImGui_Render(GHICommandList* commandList) = 0;
+    virtual void ImGui_Render(GHICommandBuffer* commandBuffer) = 0;
 };

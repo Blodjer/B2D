@@ -9,7 +9,7 @@ class VulkanDevice;
 class VulkanSurface;
 class VulkanRenderPass;
 class VulkanBuffer;
-class VulkanCommandList;
+class VulkanCommandBuffer;
 
 class VulkanGHI final : public IGraphicsHardwareInterface
 {
@@ -55,15 +55,18 @@ public:
     virtual GHIRenderPass* CreateRenderPass(std::vector<GHITexture*> const& renderTargets, GHITexture const* depthTarget) override;
     virtual void DestroyRenderPass(GHIRenderPass* renderPass) override;
 
-    virtual void BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer) override;
-    virtual void EndRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer) override;
+    virtual void BeginRenderPass(GHIRenderPass* renderPass, GHICommandBuffer* commandBuffer) override;
+    virtual void EndRenderPass(GHIRenderPass* renderPass, GHICommandBuffer* commandBuffer) override;
 
-    virtual GHICommandList* AllocateCommandBuffer();
-    virtual void FreeCommandBuffer(GHICommandList* commandBuffer) override;
+    virtual GHICommandBuffer* AllocateCommandBuffer();
+    virtual void FreeCommandBuffer(GHICommandBuffer* commandBuffer) override;
+    void WaitAndResetCommandBuffer(VulkanCommandBuffer* commandBuffer);
+    void DestroyCommandBuffer(VulkanCommandBuffer* commandBuffer);
+    void UpdateCommandBufferStatus();
 
-    virtual void Submit(std::vector<GHICommandList*>& commandLists) override;
-    void Submit(std::vector<GHICommandList*>& commandLists, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& waitSemaphores, vk::ArrayProxyNoTemporaries<vk::PipelineStageFlags const> const& waitStages, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& signalSemaphores);
-    void ImmediateSubmit(std::function<void(VulkanCommandList&)>&& function);
+    virtual void Submit(std::vector<GHICommandBuffer*>& commandBuffer) override;
+    void Submit(std::vector<GHICommandBuffer*>& commandBuffer, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& waitSemaphores, vk::ArrayProxyNoTemporaries<vk::PipelineStageFlags const> const& waitStages, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& signalSemaphores);
+    void ImmediateSubmit(std::function<void(VulkanCommandBuffer&)>&& function);
 
     virtual GHIBuffer* CreateBuffer(EGHIBufferType bufferType, uint size) override;
     VulkanBuffer* CreateBuffer(uint size, vk::BufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage);
@@ -75,7 +78,7 @@ protected:
     virtual bool ImGui_Init() override;
     virtual void ImGui_Shutdow() override;
     virtual void ImGui_BeginFrame() override;
-    virtual void ImGui_Render(GHICommandList* commandBuffer) override;
+    virtual void ImGui_Render(GHICommandBuffer* commandBuffer) override;
     vk::DescriptorPool m_imguiDescriptorpool;
 
 private:
@@ -89,7 +92,7 @@ private:
     vk::CommandPool m_commandPool;
     vk::CommandPool m_immediateCommandPool;
 
-    std::vector<VulkanCommandList*> m_availableCommandLists;
-    std::vector<VulkanCommandList*> m_submittedCommandLists;
+    std::vector<VulkanCommandBuffer*> m_availableCommandBuffers;
+    std::vector<VulkanCommandBuffer*> m_pendingCommandBuffer;
 };
 

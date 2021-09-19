@@ -300,7 +300,7 @@ void OpenGLGHI::ImGui_BeginFrame()
     ImGui_ImplOpenGL3_NewFrame();
 }
 
-void OpenGLGHI::ImGui_Render(GHICommandList* commandList)
+void OpenGLGHI::ImGui_Render(GHICommandBuffer* commandBuffer)
 {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

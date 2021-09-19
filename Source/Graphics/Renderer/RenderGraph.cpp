@@ -2,7 +2,7 @@
 #include "RenderGraph.h"
 
 #include "Graphics/GHI/GraphicsHardwareInterface.h"
-#include "Graphics/GHI/GHICommandList.h"
+#include "Graphics/GHI/GHICommandBuffer.h"
 #include "Graphics/GHI/GHITexture.h"
 #include "Graphics/GHI/GHISurface.h"
 
@@ -41,7 +41,7 @@ RenderGraph::RenderGraph(IGraphicsHardwareInterface& ghi)
 
 }
 
-void RenderGraph::AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandList&, GHIRenderPass const*)> execution)
+void RenderGraph::AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandBuffer&, GHIRenderPass const*)> execution)
 {
     RenderPassDesc r;
     r.setupFunction = setup;
@@ -192,30 +192,35 @@ void RenderGraph::Prepare()
 
 void RenderGraph::Execute()
 {
-    std::vector<GHICommandList*> commandLists;
-    commandLists.reserve(m_compiledRenderPasses.size());
+    std::vector<GHICommandBuffer*> commandBuffers;
+    commandBuffers.reserve(m_compiledRenderPasses.size());
 
     for (uint i = 0; i < m_compiledRenderPasses.size(); ++i)
     {
-        commandLists.emplace_back(m_ghi.AllocateCommandBuffer());
+        commandBuffers.emplace_back(m_ghi.AllocateCommandBuffer());
     }
 
     uint commandIndex = 0;
     for (auto& pass : m_compiledRenderPasses)
     {
-        GHICommandList* commandList = commandLists[commandIndex++];
-        commandList->Begin();
+        GHICommandBuffer* commandBuffer = commandBuffers[commandIndex++];
+        commandBuffer->Begin();
 
-        m_ghi.BeginRenderPass(pass.ghiRenderPass, commandList);
+        m_ghi.BeginRenderPass(pass.ghiRenderPass, commandBuffer);
 
-        pass.renderPassDesc->executionFunction(*commandList, pass.ghiRenderPass);
+        pass.renderPassDesc->executionFunction(*commandBuffer, pass.ghiRenderPass);
 
-        m_ghi.EndRenderPass(pass.ghiRenderPass, commandList);
+        m_ghi.EndRenderPass(pass.ghiRenderPass, commandBuffer);
 
-        commandList->End();
+        commandBuffer->End();
     }
 
-    m_ghi.Submit(commandLists);
+    m_ghi.Submit(commandBuffers);
+
+    for (GHICommandBuffer* commandBuffer : commandBuffers)
+    {
+        m_ghi.FreeCommandBuffer(commandBuffer);
+    }
 
     for (PresentDesc const& present : m_presentDescs)
     {

@@ -5,7 +5,7 @@
 #include "GHI/GraphicsHardwareInterface.h"
 #include "Editor/EditorModule.h"
 #include "Engine/ModuleManager.h"
-#include "GHI/GHICommandList.h"
+#include "GHI/GHICommandBuffer.h"
 #include "Platform/GenericWindow.h"
 #include "Platform/PlatformInterface.h"
 #include "Graphics/Renderer/IRenderer.h"
@@ -191,14 +191,20 @@ void RenderManager::Draw()
         vBuffer->Upload(quad, sizeof(quad));
     }
 
+    //auto p0 = rg.CreatePipeline(vs, ps);
+
     rg.AddPass(
         [=](RenderGraphPassBuilder& rgb)
         {
             rgb.AddOutput(rt0);
             rgb.AddDepthStencil(depth);
+            //rgb.RegisterPipeline(p0);
         },
-        [ghi, vs, ps, ps2](GHICommandList& cb, GHIRenderPass const* renderPass)
+        //[](GHICommandBuffer& cb, PipelineCache const& pipelineCache)
+        [ghi, vs, ps, ps2](GHICommandBuffer& cb, GHIRenderPass const* renderPass)
         {
+            // cb.BindGraphicsPipeline(pipelineCache[p0]);
+
             // TODO: Find a better way to create pipelines
             static GHIGraphicsPipeline* graphicsPipeline1 = ghi->CreateGraphicsPipeline(renderPass, vs, ps);
             static GHIGraphicsPipeline* graphicsPipeline2 = ghi->CreateGraphicsPipeline(renderPass, vs, ps2);
@@ -213,7 +219,11 @@ void RenderManager::Draw()
 
             cb.BindVertexBuffer(meshPtr->GetVertexBuffer());
             cb.BindIndexBuffer(meshPtr->GetIndexBuffer());
-            cb.DrawIndexed(meshPtr->GetIndices().size(), 1, 0, 0, 0);
+
+            //for (uint i = 0; i < 20000; ++i)
+            {
+                cb.DrawIndexed(meshPtr->GetIndices().size(), 1, 0, 0, 0);
+            }
 
             cb.BindResourceSet(2, rs4);
             cb.BindVertexBuffer(vBuffer);
@@ -236,7 +246,7 @@ void RenderManager::Draw()
             {
                 rgb.AddOutput(rt0);
             },
-            [editor](GHICommandList& cb, GHIRenderPass const* renderPass)
+            [editor](GHICommandBuffer& cb, GHIRenderPass const* renderPass)
             {
                 // TODO: ImGui tries to access the render outputs from the renderers. This draw is called from the main thread but the render thread might have already cleared the render output
                 // S1 Change ImGUI to always lookup the latest render output

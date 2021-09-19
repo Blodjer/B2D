@@ -1,15 +1,22 @@
 #pragma once
-#include "Graphics/GHI/GHICommandList.h"
+#include "Graphics/GHI/GHICommandBuffer.h"
 
 #include "VulkanCommon.h"
 
 class VulkanGraphicsPipeline;
 
-class VulkanCommandList : public GHICommandList
+class VulkanCommandBuffer : public GHICommandBuffer
 {
-public:
+    friend class VulkanGHI;
+
+private:
     vk::CommandBuffer m_commandBuffer;
-    vk::Fence m_reuseFence;
+    vk::Fence m_completionFence;
+    bool m_isSubmitted;
+
+public:
+    vk::CommandBuffer Get() const { return m_commandBuffer; }
+    bool IsSubmitted() const { return m_isSubmitted; }
 
 private:
     VulkanGraphicsPipeline const* m_currentPipeline = nullptr; // TMP

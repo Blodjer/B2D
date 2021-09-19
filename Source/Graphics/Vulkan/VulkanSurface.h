@@ -5,6 +5,7 @@
 
 class VulkanDevice;
 class VulkanTexture;
+class VulkanCommandBuffer;
 
 class VulkanSurface : public GHISurface
 {
@@ -27,9 +28,7 @@ private:
 
 public:
     virtual void Resize(uint32 width, uint32 height) override;
-    virtual void Present(GHITexture const* renderTarget) override;
-    vk::Semaphore m_imageAvailableSemaphore; // TMP TODO: overlapping
-    vk::Semaphore m_transitionSemaphore; // TMP TODO: overlapping
+    virtual void Present(GHITexture const* renderTarget) override;    
 
 private:
     EPresentResult TryPresent(VulkanTexture const* renderTarget);
@@ -45,10 +44,21 @@ private:
 
     vk::Extent2D m_extent;
 
-    vk::Instance const& m_instance;
+    vk::Instance m_instance;
     VulkanDevice const& m_device;
 
     std::vector<vk::Image> m_swapchainImages;
     uint32 m_currentImageIndex = 0;
     vk::Image m_currentImage;
+
+    struct Flight
+    {
+        vk::Semaphore imageAvailableSemaphore;
+        vk::Semaphore transitionSemaphore;
+        VulkanCommandBuffer* commandBuffer;
+    };
+
+    INLINE static uint constexpr MAX_FRAMES_IN_FLIGHT = 2;
+    std::array<Flight, MAX_FRAMES_IN_FLIGHT> m_flights;
+    uint32 m_currentFlightIndex = 0;
 };

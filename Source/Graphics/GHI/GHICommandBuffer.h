@@ -4,7 +4,7 @@ class GHIBuffer;
 class GHIGraphicsPipeline;
 class GHIResourceSet;
 
-class GHICommandList
+class GHICommandBuffer
 {
 public:
     virtual void Begin() {};

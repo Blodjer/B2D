@@ -3,7 +3,7 @@
 
 #include "VulkanDevice.h"
 #include "VulkanTexture.h"
-#include "VulkanCommandList.h"
+#include "VulkanCommandBuffer.h"
 
 #include "GameEngine.h" // TMP
 #include "VulkanGHI.h" // TMP
@@ -26,11 +26,32 @@ VulkanSurface::VulkanSurface(vk::Instance instance, VulkanDevice const& device, 
     }
 
     CreateSwapchain();
+
+    vk::SemaphoreCreateInfo semaphoreInfo;
+    auto ghi = static_cast<VulkanGHI*>(GameEngine::Instance()->GetGHI());
+    for (Flight& flight : m_flights)
+    {
+        flight.imageAvailableSemaphore = m_device.GetLogical().createSemaphore(semaphoreInfo);
+        flight.transitionSemaphore = m_device.GetLogical().createSemaphore(semaphoreInfo);
+        flight.commandBuffer = static_cast<VulkanCommandBuffer*>(ghi->AllocateCommandBuffer());
+    }
 }
 
 VulkanSurface::~VulkanSurface()
 {
+    m_device.GetLogical().waitIdle();
+
+    auto ghi = static_cast<VulkanGHI*>(GameEngine::Instance()->GetGHI());
+    for (Flight& flight : m_flights)
+    {
+        m_device.GetLogical().destroySemaphore(flight.imageAvailableSemaphore);
+        m_device.GetLogical().destroySemaphore(flight.transitionSemaphore);
+        ghi->FreeCommandBuffer(flight.commandBuffer);
+    }
+
     CleanupSwapchain();
+
+    m_instance.destroySurfaceKHR(m_surface);
 }
 
 void VulkanSurface::CreateSwapchain(vk::SwapchainKHR oldSwapchain)
@@ -54,10 +75,10 @@ void VulkanSurface::CreateSwapchain(vk::SwapchainKHR oldSwapchain)
 
     vk::PresentModeKHR surfacePresentMode = SelectSurfacePresentMode(surfacePresentModes);
 
-    uint32 imageCount = surfaceCapabilities.minImageCount + 1;
-    if (surfaceCapabilities.maxImageCount != 0)
+    uint32 imageCount = UMath::Max<uint32>(surfaceCapabilities.minImageCount, 3);
+    if (surfaceCapabilities.maxImageCount > 0)
     {
-        imageCount = UMath::Min(imageCount, surfaceCapabilities.maxImageCount);
+        imageCount = UMath::Min<uint32>(imageCount, surfaceCapabilities.maxImageCount);
     }
 
     vk::SwapchainCreateInfoKHR swapchainCreateInfo;
@@ -92,22 +113,12 @@ void VulkanSurface::CreateSwapchain(vk::SwapchainKHR oldSwapchain)
     m_swapchain = logicalDevice.createSwapchainKHR(swapchainCreateInfo);
 
     m_swapchainImages = logicalDevice.getSwapchainImagesKHR(m_swapchain);
-    
-    vk::SemaphoreCreateInfo semaphoreInfo;
-    m_imageAvailableSemaphore = logicalDevice.createSemaphore(semaphoreInfo);
-    m_transitionSemaphore = logicalDevice.createSemaphore(semaphoreInfo);
 }
 
 void VulkanSurface::CleanupSwapchain()
 {
     m_swapchainImages.clear();
     m_currentImage = nullptr;
-
-    m_device.GetLogical().destroySemaphore(m_imageAvailableSemaphore);
-    m_imageAvailableSemaphore = nullptr;
-
-    m_device.GetLogical().destroySemaphore(m_transitionSemaphore);
-    m_transitionSemaphore = nullptr;
 
     m_device.GetLogical().destroySwapchainKHR(m_swapchain);
     m_swapchain = nullptr;
@@ -127,7 +138,7 @@ void VulkanSurface::Resize(uint32 width, uint32 height)
 }
 
 // TMP
-void Transition(vk::CommandBuffer& cb,
+void Transition(VulkanCommandBuffer& cb,
     vk::PipelineStageFlags srcStageMask,
     vk::PipelineStageFlags dstStageMask,
     vk::AccessFlags srcAccessMask,
@@ -146,16 +157,16 @@ void Transition(vk::CommandBuffer& cb,
     imageMemoryBarrier.subresourceRange.layerCount = 1;
     imageMemoryBarrier.subresourceRange.levelCount = 1;
 
-    cb.pipelineBarrier(srcStageMask, dstStageMask, vk::DependencyFlags(0), nullptr, nullptr, imageMemoryBarrier);
+    cb.Get().pipelineBarrier(srcStageMask, dstStageMask, vk::DependencyFlags(0), nullptr, nullptr, imageMemoryBarrier);
 }
 
 void VulkanSurface::Present(GHITexture const* renderTarget)
 {
-    uint32 const maxAttempts = 1;
+    uint32 const maxAttempts = 1; // Max attempts to recreate the swapchain
     
     for (uint32 attempts = 0; ; ++attempts)
     {
-        EPresentResult presentResult = TryPresent(static_cast<VulkanTexture const*>(renderTarget));
+        EPresentResult const presentResult = TryPresent(static_cast<VulkanTexture const*>(renderTarget));
         if (presentResult == EPresentResult::Success)
         {
             break;
@@ -170,6 +181,8 @@ void VulkanSurface::Present(GHITexture const* renderTarget)
             return;
         }
     }
+
+    m_currentFlightIndex = (m_currentFlightIndex + 1) % m_flights.size();
 }
 
 VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* renderTarget)
@@ -181,7 +194,16 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* ren
         return EPresentResult::RecreateSwapchain;
     }
 
-    vk::ResultValue<uint32> acquireImageResult = m_device.GetLogical().acquireNextImageKHR(m_swapchain, UINT64_MAX, m_imageAvailableSemaphore);
+    VulkanGHI* ghi = static_cast<VulkanGHI*>(GameEngine::Instance()->GetGHI());
+
+    Flight& flight = m_flights[m_currentFlightIndex];
+
+    if (flight.commandBuffer->IsSubmitted())
+    {
+        ghi->WaitAndResetCommandBuffer(flight.commandBuffer);
+    }
+
+    vk::ResultValue<uint32> acquireImageResult = m_device.GetLogical().acquireNextImageKHR(m_swapchain, UINT64_MAX, flight.imageAvailableSemaphore);
     if (acquireImageResult.result == vk::Result::eErrorOutOfDateKHR || acquireImageResult.result == vk::Result::eSuboptimalKHR)
     {
         return EPresentResult::RecreateSwapchain;
@@ -195,13 +217,12 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* ren
     m_currentImageIndex = acquireImageResult.value;
     m_currentImage = m_swapchainImages[m_currentImageIndex];
 
-    auto ghi = static_cast<VulkanGHI*>(GameEngine::Instance()->GetGHI());
-
-    VulkanCommandList* cb = static_cast<VulkanCommandList*>(ghi->AllocateCommandBuffer());
     {
-        cb->Begin();
+        VulkanCommandBuffer& commandBuffer = *flight.commandBuffer;
 
-        Transition(cb->m_commandBuffer,
+        commandBuffer.Begin();
+
+        Transition(commandBuffer,
             vk::PipelineStageFlagBits::eTopOfPipe,
             vk::PipelineStageFlagBits::eTransfer,
             vk::AccessFlags(0),
@@ -219,9 +240,9 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* ren
         copy.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
         copy.dstSubresource.layerCount = 1;
 
-        cb->m_commandBuffer.copyImage(renderTarget->m_image, vk::ImageLayout::eTransferSrcOptimal, m_currentImage, vk::ImageLayout::eTransferDstOptimal, copy);
+        commandBuffer.Get().copyImage(renderTarget->m_image, vk::ImageLayout::eTransferSrcOptimal, m_currentImage, vk::ImageLayout::eTransferDstOptimal, copy);
 
-        Transition(cb->m_commandBuffer,
+        Transition(commandBuffer,
             vk::PipelineStageFlagBits::eTransfer,
             vk::PipelineStageFlagBits::eTopOfPipe,
             vk::AccessFlagBits::eTransferWrite,
@@ -230,18 +251,18 @@ VulkanSurface::EPresentResult VulkanSurface::TryPresent(VulkanTexture const* ren
             vk::ImageLayout::ePresentSrcKHR,
             m_currentImage);
 
-        cb->End();
+        commandBuffer.End();
 
-        std::vector<GHICommandList*> cmds = { cb };
-        std::array<vk::Semaphore, 1> waitSemaphores = { m_imageAvailableSemaphore };
+        std::vector<GHICommandBuffer*> commandBuffers = { &commandBuffer };
+        std::array<vk::Semaphore, 1> waitSemaphores = { flight.imageAvailableSemaphore };
         std::array<vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-        std::array<vk::Semaphore, 1> signalSemaphores = { m_transitionSemaphore };
+        std::array<vk::Semaphore, 1> signalSemaphores = { flight.transitionSemaphore };
 
-        ghi->Submit(cmds, waitSemaphores, waitStages, signalSemaphores);
+        ghi->Submit(commandBuffers, waitSemaphores, waitStages, signalSemaphores);
     }
 
     {
-        std::array<vk::Semaphore, 1> waitSemaphores = { m_transitionSemaphore };
+        std::array<vk::Semaphore, 1> waitSemaphores = { flight.transitionSemaphore };
 
         vk::PresentInfoKHR presentInfo;
         presentInfo.setWaitSemaphores(waitSemaphores);
@@ -291,7 +312,6 @@ vk::PresentModeKHR VulkanSurface::SelectSurfacePresentMode(std::vector<vk::Prese
         }
     }
 
-    return vk::PresentModeKHR::eImmediate;
     return vk::PresentModeKHR::eFifo;
 }
 

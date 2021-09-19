@@ -114,10 +114,10 @@ void EditorModule::EndFrame()
     ImGui::EndFrame();
 }
 
-void EditorModule::Draw(GHICommandList& commandList)
+void EditorModule::Draw(GHICommandBuffer& commandBuffer)
 {
     ImGui::Render();
-    GameEngine::Instance()->GetGHI()->ImGui_Render(&commandList);
+    GameEngine::Instance()->GetGHI()->ImGui_Render(&commandBuffer);
 
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();

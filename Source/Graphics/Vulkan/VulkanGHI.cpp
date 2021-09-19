@@ -10,7 +10,7 @@
 #include "VulkanSurface.h"
 #include "VulkanRenderPass.h"
 #include "VulkanTexture.h"
-#include "VulkanCommandList.h"
+#include "VulkanCommandBuffer.h"
 #include "VulkanBuffer.h"
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanResourceSet.h"
@@ -179,11 +179,18 @@ void VulkanGHI::Shutdown()
 {
     m_device->GetLogical().waitIdle();
 
+    UpdateCommandBufferStatus();
+
+    B2D_ASSERT(m_pendingCommandBuffer.empty(), "There should be no command buffer left. UpdateCommandBufferStatus() should have moved all buffer to m_availableCommandBuffers!");
+
+    for (VulkanCommandBuffer* commandBuffer : m_availableCommandBuffers)
+    {
+        DestroyCommandBuffer(commandBuffer);
+    }
+    m_availableCommandBuffers.clear();
+
     m_device->GetLogical().destroyCommandPool(m_commandPool);
     m_device->GetLogical().destroyCommandPool(m_immediateCommandPool);
-
-    //m_device->GetLogical().destroyPipeline(m_pipeline);
-    //m_device->GetLogical().destroyPipelineLayout(m_pipelineLayout);
 
     vmaDestroyAllocator(m_allocator);
 
@@ -769,7 +776,7 @@ GHITexture* VulkanGHI::CreateTexture(void const* data, uint32 width, uint32 heig
     VkImage outImage;
     vmaCreateImage(m_allocator, &static_cast<VkImageCreateInfo>(imageCreateInfo), &allocationCreateInfo, &outImage, &texture->m_allocation, nullptr);
 
-    ImmediateSubmit([&](VulkanCommandList& cmd)
+    ImmediateSubmit([&](VulkanCommandBuffer& cmd)
         {
             vk::ImageSubresourceRange range;
             range.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -971,10 +978,10 @@ void VulkanGHI::DestroyRenderPass(GHIRenderPass* renderPass)
     delete vkRenderPass;
 }
 
-void VulkanGHI::BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer)
+void VulkanGHI::BeginRenderPass(GHIRenderPass* renderPass, GHICommandBuffer* commandBuffer)
 {
     VulkanRenderPass* vkRenderPass = static_cast<VulkanRenderPass*>(renderPass);
-    vk::CommandBuffer& vkCommandBuffer = static_cast<VulkanCommandList*>(commandBuffer)->m_commandBuffer;
+    vk::CommandBuffer& vkCommandBuffer = static_cast<VulkanCommandBuffer*>(commandBuffer)->m_commandBuffer;
 
     vk::ClearColorValue clearColorValue;
     clearColorValue.setFloat32({ 0.5f, 0.5f, 0.5f, 1.0f });
@@ -1008,55 +1015,22 @@ void VulkanGHI::BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* comma
     vkCommandBuffer.setScissor(0, 1, &scissor);
 }
 
-void VulkanGHI::EndRenderPass(GHIRenderPass* renderPass, GHICommandList* commandBuffer)
+void VulkanGHI::EndRenderPass(GHIRenderPass* renderPass, GHICommandBuffer* commandBuffer)
 {
-    vk::CommandBuffer& vkCommandBuffer = static_cast<VulkanCommandList*>(commandBuffer)->m_commandBuffer;
+    vk::CommandBuffer& vkCommandBuffer = static_cast<VulkanCommandBuffer*>(commandBuffer)->m_commandBuffer;
 
     vkCommandBuffer.endRenderPass();
 }
 
-GHICommandList* VulkanGHI::AllocateCommandBuffer()
+GHICommandBuffer* VulkanGHI::AllocateCommandBuffer()
 {
-    std::unordered_map<vk::Fence, int32> removeFenceSet;
-    for (auto it = m_submittedCommandLists.begin(); it != m_submittedCommandLists.end();)
+    UpdateCommandBufferStatus();
+
+    if (!m_availableCommandBuffers.empty())
     {
-        VulkanCommandList* commandList = *it;
-        if (m_device->GetLogical().getFenceStatus(commandList->m_reuseFence) == vk::Result::eSuccess)
-        {
-            m_availableCommandLists.emplace_back(commandList);
-            commandList->m_commandBuffer.reset();
-            it = m_submittedCommandLists.erase(it);
-
-            if (removeFenceSet.find(commandList->m_reuseFence) == removeFenceSet.end())
-            {
-                removeFenceSet[commandList->m_reuseFence] = 0;
-            }
-
-            removeFenceSet[commandList->m_reuseFence] += 1;
-            continue;
-        }
-        
-        removeFenceSet[commandList->m_reuseFence] -= 1;
-
-        ++it;
-    }
-
-    for (auto fence : removeFenceSet)
-    {
-        if (fence.second <= 0)
-        {
-            continue;
-        }
-
-        m_device->GetLogical().destroyFence(fence.first);
-    }
-    removeFenceSet.clear();
-
-    if (!m_availableCommandLists.empty())
-    {
-        VulkanCommandList* commandList = m_availableCommandLists.back();
-        m_availableCommandLists.pop_back();
-        return commandList;
+        VulkanCommandBuffer* commandBuffer = m_availableCommandBuffers.back();
+        m_availableCommandBuffers.pop_back();
+        return commandBuffer;
     }
 
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
@@ -1064,40 +1038,104 @@ GHICommandList* VulkanGHI::AllocateCommandBuffer()
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
     commandBufferAllocateInfo.commandBufferCount = 1;
 
-    VulkanCommandList* cmd = new VulkanCommandList();
-    cmd->m_commandBuffer = m_device->GetLogical().allocateCommandBuffers(commandBufferAllocateInfo)[0];
+    VulkanCommandBuffer* commandBuffer = new VulkanCommandBuffer();
+    commandBuffer->m_commandBuffer = m_device->GetLogical().allocateCommandBuffers(commandBufferAllocateInfo)[0];
 
-    return cmd;
+    return commandBuffer;
 }
 
-void VulkanGHI::FreeCommandBuffer(GHICommandList* commandBuffer)
+void VulkanGHI::FreeCommandBuffer(GHICommandBuffer* commandBuffer)
 {
-    VulkanCommandList* vkCommandBuffer = static_cast<VulkanCommandList*>(commandBuffer);
-    m_device->GetLogical().freeCommandBuffers(m_commandPool, vkCommandBuffer->m_commandBuffer);
+    VulkanCommandBuffer* vkCommandBuffer = static_cast<VulkanCommandBuffer*>(commandBuffer);
+    if (vkCommandBuffer->m_isSubmitted)
+    {
+        m_pendingCommandBuffer.emplace_back(vkCommandBuffer);
+    }
+    else
+    {
+        m_availableCommandBuffers.emplace_back(vkCommandBuffer);
+    }
 }
 
-void VulkanGHI::Submit(std::vector<GHICommandList*>& commandLists)
+void VulkanGHI::WaitAndResetCommandBuffer(VulkanCommandBuffer* commandBuffer)
 {
-    Submit(commandLists, nullptr, nullptr, nullptr);
+    m_device->GetLogical().waitForFences(commandBuffer->m_completionFence, true, UINT64_MAX);
+    m_device->GetLogical().destroyFence(commandBuffer->m_completionFence);
+    commandBuffer->m_completionFence = nullptr;
+    
+    commandBuffer->m_commandBuffer.reset();
+    commandBuffer->m_isSubmitted = false;
 }
 
-void VulkanGHI::Submit(std::vector<GHICommandList*>& commandLists, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& waitSemaphores, vk::ArrayProxyNoTemporaries<vk::PipelineStageFlags const> const& waitStages, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& signalSemaphores)
+void VulkanGHI::DestroyCommandBuffer(VulkanCommandBuffer* commandBuffer)
 {
-    std::vector<vk::CommandBuffer> vkCommandBuffers;
-    vkCommandBuffers.reserve(commandLists.size());
+    m_device->GetLogical().freeCommandBuffers(m_commandPool, commandBuffer->m_commandBuffer);
 
+    if (commandBuffer->m_completionFence)
+    {
+        // TODO: Fences can be use by multiple command buffers. This fence might have been already destroyed.
+        //m_device->GetLogical().destroyFence(commandBuffer->m_completionFence);
+    }
+
+    delete commandBuffer;
+}
+
+void VulkanGHI::UpdateCommandBufferStatus()
+{
+    std::unordered_map<vk::Fence, bool> fenceStatusMap;
+    for (auto it = m_pendingCommandBuffer.begin(); it != m_pendingCommandBuffer.end();)
+    {
+        VulkanCommandBuffer* const commandBuffer = *it;
+        
+        auto [its, isNew] = fenceStatusMap.emplace(commandBuffer->m_completionFence, false);
+        if (isNew)
+        {
+            bool completed = m_device->GetLogical().getFenceStatus(commandBuffer->m_completionFence) == vk::Result::eSuccess;
+            its->second = completed;
+
+            if (completed)
+            {
+                m_device->GetLogical().destroyFence(commandBuffer->m_completionFence);
+                commandBuffer->m_completionFence = nullptr;
+            }
+        }
+
+        if (its->second)
+        {
+            commandBuffer->m_commandBuffer.reset();
+            commandBuffer->m_isSubmitted = false;
+            commandBuffer->m_completionFence = nullptr;
+
+            m_availableCommandBuffers.emplace_back(commandBuffer);
+            it = m_pendingCommandBuffer.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
+void VulkanGHI::Submit(std::vector<GHICommandBuffer*>& commandBuffers)
+{
+    Submit(commandBuffers, nullptr, nullptr, nullptr);
+}
+
+void VulkanGHI::Submit(std::vector<GHICommandBuffer*>& commandBuffers, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& waitSemaphores, vk::ArrayProxyNoTemporaries<vk::PipelineStageFlags const> const& waitStages, vk::ArrayProxyNoTemporaries<vk::Semaphore const> const& signalSemaphores)
+{
     vk::FenceCreateInfo fenceCreateInfo;
     vk::Fence fence = m_device->GetLogical().createFence(fenceCreateInfo); // TODO: Reuse
 
-    for (GHICommandList* commandBuffer : commandLists)
+    std::vector<vk::CommandBuffer> vkCommandBuffers;
+    vkCommandBuffers.reserve(commandBuffers.size());
+
+    for (GHICommandBuffer* commandBuffer : commandBuffers)
     {
-        VulkanCommandList* vulkanCommandList = static_cast<VulkanCommandList*>(commandBuffer);
-        vk::CommandBuffer vkCommandBuffer = vulkanCommandList->m_commandBuffer;
-        vkCommandBuffers.emplace_back(vkCommandBuffer);
+        VulkanCommandBuffer* vulkanCommandBuffer = static_cast<VulkanCommandBuffer*>(commandBuffer);
+        vulkanCommandBuffer->m_completionFence = fence;
+        vulkanCommandBuffer->m_isSubmitted = true;
 
-        vulkanCommandList->m_reuseFence = fence;
-
-        m_submittedCommandLists.emplace_back(vulkanCommandList);
+        vkCommandBuffers.emplace_back(vulkanCommandBuffer->m_commandBuffer);
     }
 
     vk::SubmitInfo submitInfo;
@@ -1118,14 +1156,14 @@ void VulkanGHI::Submit(std::vector<GHICommandList*>& commandLists, vk::ArrayProx
     m_device->GetGraphicsQueue().GetHandle().submit({ submitInfo }, fence);
 }
 
-void VulkanGHI::ImmediateSubmit(std::function<void(VulkanCommandList&)>&& function)
+void VulkanGHI::ImmediateSubmit(std::function<void(VulkanCommandBuffer&)>&& function)
 {
     vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
     commandBufferAllocateInfo.commandPool = m_immediateCommandPool;
     commandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
     commandBufferAllocateInfo.commandBufferCount = 1;
 
-    VulkanCommandList* cmd = new VulkanCommandList();
+    VulkanCommandBuffer* cmd = new VulkanCommandBuffer();
     cmd->m_commandBuffer = m_device->GetLogical().allocateCommandBuffers(commandBufferAllocateInfo)[0];
 
     cmd->Begin(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -1344,8 +1382,8 @@ void VulkanGHI::ImGui_BeginFrame()
     ImGui_ImplVulkan_NewFrame();
 }
 
-void VulkanGHI::ImGui_Render(GHICommandList* commandBuffer)
+void VulkanGHI::ImGui_Render(GHICommandBuffer* commandBuffer)
 {
-    VulkanCommandList* vkCommandBuffer = static_cast<VulkanCommandList*>(commandBuffer);
+    VulkanCommandBuffer* vkCommandBuffer = static_cast<VulkanCommandBuffer*>(commandBuffer);
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), vkCommandBuffer->m_commandBuffer);
 }

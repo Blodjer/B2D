@@ -2,7 +2,7 @@
 
 class IGraphicsHardwareInterface;
 class GHIRenderPass;
-class GHICommandList;
+class GHICommandBuffer;
 class GHITexture;
 class GHISurface;
 enum class EGHITextureFormat;
@@ -72,7 +72,7 @@ struct RenderTargetDesc
 struct RenderPassDesc
 {
     std::function<void(RenderGraphPassBuilder&)> setupFunction = nullptr;
-    std::function<void(GHICommandList&, GHIRenderPass const*)> executionFunction = nullptr;
+    std::function<void(GHICommandBuffer&, GHIRenderPass const*)> executionFunction = nullptr;
 };
 
 struct RenderGraphPass
@@ -100,7 +100,7 @@ public:
 public:
     // FullscreenPass?
 
-    void AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandList&, GHIRenderPass const*)> execution);
+    void AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandBuffer&, GHIRenderPass const*)> execution);
     void AddPresent(RenderResourcePtr const& output, GHISurface* surface);
 
     RenderResourcePtr const CreateRenderTarget(RenderTargetDesc const& desc);

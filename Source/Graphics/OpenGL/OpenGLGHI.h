@@ -36,13 +36,13 @@ public:
     virtual GHIRenderPass* CreateRenderPass(std::vector<GHITexture*> const& renderTargets, GHITexture const* depthTarget) override { B2D_NOT_IMPLEMENTED(); }
     virtual void DestroyRenderPass(GHIRenderPass* renderPass) override { B2D_NOT_IMPLEMENTED(); }
 
-    virtual void BeginRenderPass(GHIRenderPass* renderPass, GHICommandList* commandList) override { B2D_NOT_IMPLEMENTED(); }
-    virtual void EndRenderPass(GHIRenderPass* renderPass, GHICommandList* commandList) override { B2D_NOT_IMPLEMENTED(); }
+    virtual void BeginRenderPass(GHIRenderPass* renderPass, GHICommandBuffer* commandBuffer) override { B2D_NOT_IMPLEMENTED(); }
+    virtual void EndRenderPass(GHIRenderPass* renderPass, GHICommandBuffer* commandBuffer) override { B2D_NOT_IMPLEMENTED(); }
 
-    virtual GHICommandList* AllocateCommandBuffer() override { B2D_NOT_IMPLEMENTED(); }
-    virtual void FreeCommandBuffer(GHICommandList* commandList) override { B2D_NOT_IMPLEMENTED(); }
+    virtual GHICommandBuffer* AllocateCommandBuffer() override { B2D_NOT_IMPLEMENTED(); }
+    virtual void FreeCommandBuffer(GHICommandBuffer* commandBuffer) override { B2D_NOT_IMPLEMENTED(); }
 
-    virtual void Submit(std::vector<GHICommandList*>& commandLists) override { B2D_NOT_IMPLEMENTED(); }
+    virtual void Submit(std::vector<GHICommandBuffer*>& commandBuffers) override { B2D_NOT_IMPLEMENTED(); }
 
     virtual GHIBuffer* CreateBuffer(EGHIBufferType bufferType, uint size) override { B2D_NOT_IMPLEMENTED(); }
     virtual void DestroyBuffer(GHIBuffer* buffer) { B2D_NOT_IMPLEMENTED(); }
@@ -53,7 +53,7 @@ protected:
     virtual bool ImGui_Init() override;
     virtual void ImGui_Shutdow() override;
     virtual void ImGui_BeginFrame() override;
-    virtual void ImGui_Render(GHICommandList* commandList) override;
+    virtual void ImGui_Render(GHICommandBuffer* commandBuffer) override;
 
 };
 
