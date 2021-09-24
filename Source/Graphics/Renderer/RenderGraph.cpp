@@ -6,6 +6,18 @@
 #include "Graphics/GHI/GHITexture.h"
 #include "Graphics/GHI/GHISurface.h"
 
+struct GHIGraphicsPipelineDesc
+{
+    GHIRenderPass* renderPass;
+    GraphicsPipelineDesc desc;
+
+    bool operator==(GHIGraphicsPipelineDesc const& other) const
+    {
+        return renderPass == other.renderPass
+            && desc == other.desc;
+    }
+};
+
 namespace std
 {
     template <>
@@ -33,6 +45,18 @@ namespace std
             return seed;
         }
     };
+
+    template <>
+    struct hash<GHIGraphicsPipelineDesc>
+    {
+        std::size_t operator()(GHIGraphicsPipelineDesc const& k) const
+        {
+            std::size_t seed = std::hash<void*>()(k.renderPass);
+            seed ^= std::hash<PixelShaderRef>()(k.desc.ps) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            seed ^= std::hash<VertexShaderRef>()(k.desc.vs) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            return seed;
+        }
+    };
 }
 
 RenderGraph::RenderGraph(IGraphicsHardwareInterface& ghi)
@@ -41,7 +65,7 @@ RenderGraph::RenderGraph(IGraphicsHardwareInterface& ghi)
 
 }
 
-void RenderGraph::AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandBuffer&, GHIRenderPass const*)> execution)
+void RenderGraph::AddPass(std::function<void(RenderGraphPassBuilder&)> setup, std::function<void(GHICommandBuffer&, PassContext&)> execution)
 {
     RenderPassDesc r;
     r.setupFunction = setup;
@@ -64,10 +88,33 @@ RenderResourcePtr const RenderGraph::CreateRenderTarget(RenderTargetDesc const& 
     return RenderResourcePtr(m_renderTargetDescs.size() - 1);
 }
 
+RenderResourcePtr const RenderGraph::CreateGraphicsPipeline(GraphicsPipelineDesc const& desc)
+{
+    m_graphicsPipelineDescs.emplace_back(desc);
+    return RenderResourcePtr(m_graphicsPipelineDescs.size() - 1);
+}
+
 void RenderGraph::Prepare()
 {
     static std::unordered_map<RenderTargetDesc, std::queue<GHITexture*>> s_ghiRenderTargetCache;
     static std::unordered_map<std::vector<GHITexture*>, GHIRenderPass*> s_ghiRenderPassCache;
+    static std::unordered_map<GHIGraphicsPipelineDesc, GHIGraphicsPipeline*> s_ghiGraphicsPipelineCache;
+
+    /*
+    RenderTarget cache (multiple)
+        key:    RenderTargetDesc
+        value:  GHITexture* (multiple instances)
+
+    RenderPass cache (unique)
+        key:    GHITexture*[] (TODO: change to RenderPassDesc { outputs, depth, inputs } )
+        value:  GHIRenderPass* (unique)
+        GHI -> Caches render pass and can reuse with framebuffers (still returns unique render pass)
+
+    GraphicsPipeline cache (unique)
+        key:    GHIRenderPass* + GraphicsPipelineDesc
+        value:  GHIGraphicsPipeline* (not unique)
+        GHI -> Can return compatible graphics pipeline
+    */
 
     // Setup
 
@@ -103,10 +150,18 @@ void RenderGraph::Prepare()
         }
     }
 
-    // Create actual render passes (cached)
+    // Create render graph passes
 
     for (uint i = 0; i < passBuilders.size(); ++i)
     {
+        RenderGraphPass graphPass;
+
+        // Set execution stage
+
+        graphPass.executionFunction = &m_renderPassDescs[i].executionFunction; // TODO: Does this copy the whole lambda object? Use std::move()?
+
+        // Set render pass
+
         std::vector<GHITexture*> outputRenderTargets;
         outputRenderTargets.reserve(passBuilders[i].output.size());
 
@@ -121,13 +176,13 @@ void RenderGraph::Prepare()
             depthRenderTarget = m_ghiRenderTargets[passBuilders[i].depthStencil.m_virtualId];
         }
 
-        GHIRenderPass* ghiRenderPass = nullptr;
-
-        auto key = outputRenderTargets;
+        std::vector<GHITexture*> key = outputRenderTargets;
         if (depthRenderTarget)
         {
             key.emplace_back(depthRenderTarget);
         }
+
+        GHIRenderPass* ghiRenderPass = nullptr;
 
         auto it = s_ghiRenderPassCache.find(key);
         if (it != s_ghiRenderPassCache.end())
@@ -140,13 +195,40 @@ void RenderGraph::Prepare()
             s_ghiRenderPassCache.insert_or_assign(key, ghiRenderPass);
         }
 
-        RenderGraphPass graphPass;
         graphPass.ghiRenderPass = ghiRenderPass;
-        graphPass.renderPassDesc = &m_renderPassDescs[i];
+
+        // Set graphic pipelines (cached)
+
+        for (RenderResourcePtr const& graphicsPipeline : passBuilders[i].graphicsPipelines)
+        {
+            GraphicsPipelineDesc const& desc = m_graphicsPipelineDescs[graphicsPipeline.m_virtualId];
+
+            GHIGraphicsPipelineDesc ghiDesc;
+            ghiDesc.desc = desc;
+            ghiDesc.renderPass = ghiRenderPass;
+
+            GHIGraphicsPipeline* ghiGraphicsPipeline = nullptr;
+
+            auto it = s_ghiGraphicsPipelineCache.find(ghiDesc);
+            if (it != s_ghiGraphicsPipelineCache.end())
+            {
+                ghiGraphicsPipeline = it->second;
+            }
+            else
+            {
+                ghiGraphicsPipeline = m_ghi.CreateGraphicsPipeline(ghiDesc.renderPass, ghiDesc.desc.vs, ghiDesc.desc.ps);
+                s_ghiGraphicsPipelineCache.insert_or_assign(ghiDesc, ghiGraphicsPipeline);
+            }
+
+            graphPass.context.pipelineCache[graphicsPipeline.m_virtualId] = ghiGraphicsPipeline;
+        }
+
         m_compiledRenderPasses.emplace_back(graphPass);
     }
 
     // Destroy unused render targets
+
+    // TODO: Destruction needs to be delayed if the resource is still in use
 
     // OMG WHAT A MONSTER
     for (auto itRenderTargetCache : s_ghiRenderTargetCache)
@@ -166,9 +248,24 @@ void RenderGraph::Prepare()
                 {
                     if (passRenderTarget == renderTarget)
                     {
+                        // Destroy all pipelines using this render pass
+                        for (auto itGraphicsPipeline = s_ghiGraphicsPipelineCache.begin(); itGraphicsPipeline != s_ghiGraphicsPipelineCache.end();)
+                        {
+                            if (itGraphicsPipeline->first.renderPass == itRenderPassCache->second)
+                            {
+                                m_ghi.DestroyGraphicsPipeline(itGraphicsPipeline->second);
+                                itGraphicsPipeline = s_ghiGraphicsPipelineCache.erase(itGraphicsPipeline);
+                            }
+                            else
+                            {
+                                itGraphicsPipeline++;
+                            }
+                        }
+
                         m_ghi.DestroyRenderPass(itRenderPassCache->second);
                         itRenderPassCache = s_ghiRenderPassCache.erase(itRenderPassCache);
                         erased = true;
+
                         break;
                     }
                 }
@@ -201,14 +298,14 @@ void RenderGraph::Execute()
     }
 
     uint commandIndex = 0;
-    for (auto& pass : m_compiledRenderPasses)
+    for (RenderGraphPass& pass : m_compiledRenderPasses)
     {
         GHICommandBuffer* commandBuffer = commandBuffers[commandIndex++];
         commandBuffer->Begin();
 
         m_ghi.BeginRenderPass(pass.ghiRenderPass, commandBuffer);
 
-        pass.renderPassDesc->executionFunction(*commandBuffer, pass.ghiRenderPass);
+        (*pass.executionFunction)(*commandBuffer, pass.context);
 
         m_ghi.EndRenderPass(pass.ghiRenderPass, commandBuffer);
 

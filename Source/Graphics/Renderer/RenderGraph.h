@@ -1,27 +1,28 @@
 #pragma once
+#include "../Shader.h" // TMP
 
 class IGraphicsHardwareInterface;
 class GHIRenderPass;
 class GHICommandBuffer;
 class GHITexture;
 class GHISurface;
+class GHIGraphicsPipeline;
 enum class EGHITextureFormat;
 
 class RenderResourcePtr
 {
     friend class RenderGraph;
-
-private:
-    using TPtrType = uint;
-    static const TPtrType INVALID = -1;
+    friend struct PassContext;
 
 public:
-    RenderResourcePtr() : m_virtualId(INVALID) {}
+    using TPtrType = uint;
 
 private:
     RenderResourcePtr(TPtrType const virtualId) : m_virtualId(virtualId) {}
 
 public:
+    RenderResourcePtr() : m_virtualId(INVALID) {}
+
     bool IsValid() const { return m_virtualId != INVALID; }
 
     bool operator==(RenderResourcePtr const& other)
@@ -36,6 +37,8 @@ public:
     }
 
 private:
+    INLINE static const TPtrType INVALID = -1;
+
     TPtrType m_virtualId;
 };
 
@@ -46,6 +49,7 @@ class RenderGraphPassBuilder
 private:
     std::vector<RenderResourcePtr> output;
     std::vector<RenderResourcePtr> input;
+    std::vector<RenderResourcePtr> graphicsPipelines;
     RenderResourcePtr depthStencil;
 
 public:
@@ -53,6 +57,24 @@ public:
     void AddDepthStencil(RenderResourcePtr const& ptr) { depthStencil = ptr; }
 
     void AddInput(RenderResourcePtr const& ptr) { input.emplace_back(ptr); }
+
+    void RegisterGraphicsPipeline(RenderResourcePtr const& ptr) { graphicsPipelines.emplace_back(ptr); }
+};
+
+struct PassContext
+{
+    std::unordered_map<RenderResourcePtr::TPtrType, GHIGraphicsPipeline*> pipelineCache;
+
+    GHIGraphicsPipeline* GetGraphicsPipeline(RenderResourcePtr const& ptr) const
+    {
+        auto it = pipelineCache.find(ptr.m_virtualId);
+        if (B2D_CHECK_f(it == pipelineCache.end(), "Graphics pipeline was not registered!"))
+        {
+            return nullptr;
+        }
+
+        return pipelineCache.find(ptr.m_virtualId)->second;
+    }
 };
 
 struct RenderTargetDesc
@@ -69,16 +91,22 @@ struct RenderTargetDesc
     }
 };
 
+struct GraphicsPipelineDesc
+{
+    VertexShaderRef vs;
+    PixelShaderRef ps;
+
+    bool operator==(GraphicsPipelineDesc const& other) const
+    {
+        return vs == other.vs
+            && ps == other.ps;
+    }
+};
+
 struct RenderPassDesc
 {
     std::function<void(RenderGraphPassBuilder&)> setupFunction = nullptr;
-    std::function<void(GHICommandBuffer&, GHIRenderPass const*)> executionFunction = nullptr;
-};
-
-struct RenderGraphPass
-{
-    GHIRenderPass* ghiRenderPass = nullptr;
-    RenderPassDesc const* renderPassDesc = nullptr;
+    std::function<void(GHICommandBuffer&, PassContext&)> executionFunction = nullptr;
 };
 
 struct PresentDesc
@@ -87,10 +115,16 @@ struct PresentDesc
     GHISurface* surface = nullptr;
 };
 
+struct RenderGraphPass
+{
+    GHIRenderPass* ghiRenderPass = nullptr;
+    PassContext context;
+
+    std::function<void(GHICommandBuffer&, PassContext&)>* executionFunction = nullptr;
+};
+
 class RenderGraph
 {
-    friend class RenderManager;
-
 public:
     RenderGraph() = delete;
     RenderGraph(RenderGraph const&) = delete;
@@ -98,27 +132,28 @@ public:
     ~RenderGraph() {}
 
 public:
-    // FullscreenPass?
-
-    void AddPass(std::function<void(RenderGraphPassBuilder& rgb)> setup, std::function<void(GHICommandBuffer&, GHIRenderPass const*)> execution);
+    void AddPass(std::function<void(RenderGraphPassBuilder&)> setup, std::function<void(GHICommandBuffer&, PassContext&)> execution); // FullscreenPass?
     void AddPresent(RenderResourcePtr const& output, GHISurface* surface);
 
     RenderResourcePtr const CreateRenderTarget(RenderTargetDesc const& desc);
+    RenderResourcePtr const CreateGraphicsPipeline(GraphicsPipelineDesc const& desc);
 
-private:
     void Prepare();
     void Execute();
 
+private:
     GHITexture const* GetRenderTarget(RenderResourcePtr const& ptr);
 
 private:
     IGraphicsHardwareInterface& m_ghi;
 
-    std::vector<RenderPassDesc> m_renderPassDescs;
     std::vector<RenderTargetDesc> m_renderTargetDescs;
+    std::vector<GraphicsPipelineDesc> m_graphicsPipelineDescs;
+    std::vector<RenderPassDesc> m_renderPassDescs;
     std::vector<PresentDesc> m_presentDescs;
 
     std::vector<GHITexture*> m_ghiRenderTargets;
+    std::vector<GHIGraphicsPipeline*> m_ghiGraphicPipelines;
 
     std::vector<RenderGraphPass> m_compiledRenderPasses;
 };

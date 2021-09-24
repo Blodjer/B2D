@@ -70,7 +70,7 @@ class ResourcePtr
 	friend IResourceManager;
 
 private:
-	ResourceList::value_type* m_ptr;
+    ResourceList::value_type* m_ptr = nullptr;
 
 private:
 	ResourcePtr(ResourceList::iterator& ptr)
@@ -80,6 +80,8 @@ private:
 	}
 
 public:
+    ResourcePtr() = default;
+
     ResourcePtr(ResourcePtr const& other)
     {
         m_ptr = other.m_ptr;
@@ -104,16 +106,28 @@ public:
 		return static_cast<T const*>(m_ptr->second);
 	}
 
-	bool operator==(ResourcePtr& other) const
+	bool operator==(ResourcePtr const& other) const
 	{
 		return m_ptr == other.m_ptr;
 	}
 
-    FORCEINLINE bool IsValid() const
+    bool IsValid() const
     {
         return m_ptr && m_ptr->second;
     }
 };
+
+namespace std
+{
+    template <class T>
+    struct hash<ResourcePtr<T>>
+    {
+        std::size_t operator()(ResourcePtr<T> const& k) const
+        {
+            return std::hash<void const*>()(k.operator->());
+        }
+    };
+}
 
 class IResourceManager
 {

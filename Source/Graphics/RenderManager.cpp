@@ -17,7 +17,6 @@
 #include "GHI/GHIBuffer.h"
 #include "GHI/GHIResourceSet.h"
 
-#include "Core/Resource.h" // TMP
 #include "Mesh.h" // TMP
 #include "Texture.h" // TMP
 
@@ -191,25 +190,28 @@ void RenderManager::Draw()
         vBuffer->Upload(quad, sizeof(quad));
     }
 
-    //auto p0 = rg.CreatePipeline(vs, ps);
+    GraphicsPipelineDesc p0Desc;
+    p0Desc.vs = vs;
+    p0Desc.ps = ps;
+    RenderResourcePtr const p0 = rg.CreateGraphicsPipeline(p0Desc);
+
+    GraphicsPipelineDesc p1Desc;
+    p1Desc.vs = vs;
+    p1Desc.ps = ps2;
+    RenderResourcePtr const p1 = rg.CreateGraphicsPipeline(p1Desc);
 
     rg.AddPass(
         [=](RenderGraphPassBuilder& rgb)
         {
             rgb.AddOutput(rt0);
             rgb.AddDepthStencil(depth);
-            //rgb.RegisterPipeline(p0);
+
+            rgb.RegisterGraphicsPipeline(p0);
+            rgb.RegisterGraphicsPipeline(p1);
         },
-        //[](GHICommandBuffer& cb, PipelineCache const& pipelineCache)
-        [ghi, vs, ps, ps2](GHICommandBuffer& cb, GHIRenderPass const* renderPass)
+        [p0, p1](GHICommandBuffer& cb, PassContext& context)
         {
-            // cb.BindGraphicsPipeline(pipelineCache[p0]);
-
-            // TODO: Find a better way to create pipelines
-            static GHIGraphicsPipeline* graphicsPipeline1 = ghi->CreateGraphicsPipeline(renderPass, vs, ps);
-            static GHIGraphicsPipeline* graphicsPipeline2 = ghi->CreateGraphicsPipeline(renderPass, vs, ps2);
-
-            cb.BindGraphicsPipeline(graphicsPipeline1);
+            cb.BindGraphicsPipeline(context.GetGraphicsPipeline(p0));
 
             cb.BindResourceSet(0, rs0);
             cb.BindResourceSet(1, rs1);
@@ -229,13 +231,13 @@ void RenderManager::Draw()
             cb.BindVertexBuffer(vBuffer);
             cb.Draw(6, 1, 0, 0);
 
-            //cb.BindGraphicsPipeline(graphicsPipeline2);
+            cb.BindGraphicsPipeline(context.GetGraphicsPipeline(p1));
 
-            //cb.BindResourceSet(0, rs0c);
+            cb.BindResourceSet(0, rs0c);
 
-            //cb.BindVertexBuffer(meshPtr2->GetVertexBuffer());
-            //cb.BindIndexBuffer(meshPtr2->GetIndexBuffer());
-            //cb.DrawIndexed(meshPtr2->GetIndices().size(), 1, 0, 0, 0);
+            cb.BindVertexBuffer(meshPtr2->GetVertexBuffer());
+            cb.BindIndexBuffer(meshPtr2->GetIndexBuffer());
+            cb.DrawIndexed(meshPtr2->GetIndices().size(), 1, 0, 0, 0);
         }
     );
 
@@ -246,7 +248,7 @@ void RenderManager::Draw()
             {
                 rgb.AddOutput(rt0);
             },
-            [editor](GHICommandBuffer& cb, GHIRenderPass const* renderPass)
+            [editor](GHICommandBuffer& cb, PassContext& context)
             {
                 // TODO: ImGui tries to access the render outputs from the renderers. This draw is called from the main thread but the render thread might have already cleared the render output
                 // S1 Change ImGUI to always lookup the latest render output

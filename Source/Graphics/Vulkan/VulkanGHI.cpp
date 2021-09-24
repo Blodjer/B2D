@@ -181,7 +181,7 @@ void VulkanGHI::Shutdown()
 
     UpdateCommandBufferStatus();
 
-    B2D_ASSERT(m_pendingCommandBuffer.empty(), "There should be no command buffer left. UpdateCommandBufferStatus() should have moved all buffer to m_availableCommandBuffers!");
+    B2D_ASSERT_f(m_pendingCommandBuffer.empty(), "There should be no command buffer left. UpdateCommandBufferStatus() should have moved all buffer to m_availableCommandBuffers!");
 
     for (VulkanCommandBuffer* commandBuffer : m_availableCommandBuffers)
     {
